@@ -12,21 +12,23 @@ const averageElement = document.getElementById("average");
 const averageStatus = document.getElementById("average-status");
 const effectsLayer = document.getElementById("effects");
 
-const digitElements = Array.from(numberElement.querySelectorAll("span"));
+const digitElements = Array.from(
+  numberElement.querySelectorAll("span")
+);
 
 let history = [];
 let isDrawing = false;
 let animationTimers = [];
+let animationIntervals = [];
 
-/* 0부터 9,999,999까지 균등한 확률로 추첨 */
+/* 0부터 9,999,999까지 균등한 확률로 난수 생성 */
 function secureRandomNumber() {
   const RANGE = 10_000_000;
   const MAX = 0x100000000;
-
-  // 2^32에서 RANGE의 배수만 남겨 편향을 제거
   const LIMIT = Math.floor(MAX / RANGE) * RANGE;
   const buffer = new Uint32Array(1);
 
+  // 편향이 생기는 일부 난수를 버려 확률을 균등하게 맞춤
   do {
     crypto.getRandomValues(buffer);
   } while (buffer[0] >= LIMIT);
@@ -34,39 +36,56 @@ function secureRandomNumber() {
   return String(buffer[0] % RANGE).padStart(DIGITS, "0");
 }
 
+/* 이전 애니메이션의 타이머와 인터벌 정리 */
 function clearAnimationTimers() {
   animationTimers.forEach(clearTimeout);
+  animationIntervals.forEach(clearInterval);
+
   animationTimers = [];
+  animationIntervals = [];
+}
+
+function setButtonsDisabled(disabled) {
+  drawButton.disabled = disabled;
+  instantButton.disabled = disabled;
 }
 
 function setDisplayedNumber(value, hideLeadingZeros = false) {
   digitElements.forEach((digit, index) => {
     digit.textContent = value[index];
 
-    const shouldHide =
+    const leadingZero =
       hideLeadingZeros &&
-      value.length > 1 &&
       value.slice(0, index + 1).split("").every(char => char === "0");
 
-    digit.style.display = shouldHide ? "none" : "inline-block";
+    digit.style.display = leadingZero ? "none" : "inline-block";
+    digit.classList.remove("rolling");
   });
 }
 
 function resetNumberEffects() {
   numberElement.classList.remove("finished");
   numberBox.classList.remove("impact");
+
+  digitElements.forEach(digit => {
+    digit.classList.remove("rolling");
+  });
 }
 
+/* 버튼을 누를 때 버튼 주위로 퍼지는 임팩트 */
 function triggerButtonImpact(button) {
   button.classList.remove("button-impact");
   void button.offsetWidth;
   button.classList.add("button-impact");
 
-  setTimeout(() => {
+  const timer = setTimeout(() => {
     button.classList.remove("button-impact");
   }, 450);
 
+  animationTimers.push(timer);
+
   const rect = button.getBoundingClientRect();
+
   createBurst(
     rect.left + rect.width / 2,
     rect.top + rect.height / 2,
@@ -75,6 +94,7 @@ function triggerButtonImpact(button) {
   );
 }
 
+/* 숫자 추첨 완료 임팩트 */
 function triggerResultImpact() {
   numberElement.classList.remove("finished");
   numberBox.classList.remove("impact");
@@ -86,7 +106,6 @@ function triggerResultImpact() {
 
   const rect = numberBox.getBoundingClientRect();
 
-  // 숫자 상자 주변으로 별과 파티클이 튀어나옴
   createBurst(
     rect.left + rect.width / 2,
     rect.top + rect.height / 2,
@@ -94,9 +113,14 @@ function triggerResultImpact() {
     Math.min(rect.width * 0.55, 240)
   );
 
-  setTimeout(() => numberBox.classList.remove("impact"), 600);
+  const timer = setTimeout(() => {
+    numberBox.classList.remove("impact");
+  }, 600);
+
+  animationTimers.push(timer);
 }
 
+/* 별과 작은 파티클 생성 */
 function createBurst(x, y, count = 30, distance = 150) {
   const fragment = document.createDocumentFragment();
 
@@ -126,18 +150,28 @@ function createBurst(x, y, count = 30, distance = 150) {
     particle.style.setProperty("--dx", `${dx}px`);
     particle.style.setProperty("--dy", `${dy}px`);
     particle.style.setProperty("--size", size);
-    particle.style.setProperty("--rotation", `${Math.random() * 240 - 120}deg`);
-    particle.style.setProperty("--duration", `${450 + Math.random() * 500}ms`);
+    particle.style.setProperty(
+      "--rotation",
+      `${Math.random() * 240 - 120}deg`
+    );
+    particle.style.setProperty(
+      "--duration",
+      `${450 + Math.random() * 500}ms`
+    );
+
+    particle.addEventListener(
+      "animationend",
+      () => particle.remove(),
+      { once: true }
+    );
 
     fragment.appendChild(particle);
-    particle.addEventListener("animationend", () => particle.remove(), {
-      once: true
-    });
   }
 
   effectsLayer.appendChild(fragment);
 }
 
+/* 추첨 기록 추가 */
 function addToHistory(result) {
   history.unshift(String(Number(result)));
   history = history.slice(0, HISTORY_LIMIT);
@@ -146,6 +180,7 @@ function addToHistory(result) {
   updateAverage();
 }
 
+/* 최근 10회 기록 표시 */
 function renderHistory() {
   historyList.replaceChildren();
 
@@ -173,6 +208,7 @@ function renderHistory() {
   });
 }
 
+/* 기록이 10개 쌓이면 평균 계산 */
 function updateAverage() {
   if (history.length < HISTORY_LIMIT) {
     averageElement.textContent = "—";
@@ -181,19 +217,21 @@ function updateAverage() {
     return;
   }
 
-  const sum = history.reduce((total, value) => total + Number(value), 0);
+  const sum = history.reduce(
+    (total, value) => total + Number(value),
+    0
+  );
+
   const average = sum / HISTORY_LIMIT;
 
   averageElement.textContent = Math.round(average).toLocaleString("en-US");
   averageStatus.textContent = "최근 10회 결과의 평균";
 }
 
-function setButtonsDisabled(disabled) {
-  drawButton.disabled = disabled;
-  instantButton.disabled = disabled;
-}
-
+/* 추첨 결과 확정 */
 function finishDraw(result) {
+  clearAnimationTimers();
+
   setDisplayedNumber(result, true);
   addToHistory(result);
   triggerResultImpact();
@@ -205,6 +243,7 @@ function finishDraw(result) {
   setButtonsDisabled(false);
 }
 
+/* 즉각 뽑기: 애니메이션 없이 결과 표시 */
 function drawInstantly() {
   if (isDrawing) return;
 
@@ -217,10 +256,10 @@ function drawInstantly() {
 
   const result = secureRandomNumber();
 
-  // 즉각 뽑기는 롤링 애니메이션 없이 바로 결과 표시
   finishDraw(result);
 }
 
+/* 일반 뽑기: 숫자가 굴러가며 왼쪽부터 차례대로 멈춤 */
 function drawWithAnimation() {
   if (isDrawing) return;
 
@@ -235,87 +274,51 @@ function drawWithAnimation() {
 
   digitElements.forEach(digit => {
     digit.style.display = "inline-block";
+    digit.classList.add("rolling");
   });
 
+  // 실제 추첨 결과는 애니메이션 시작 시 한 번만 생성
   const result = secureRandomNumber();
-  const startTime = 70;
-  const firstStop = 850;
-  const stopInterval = 300;
 
-  // 추첨 중에 보이는 숫자는 연출용이고,
-  // 최종 결과는 위에서 안전하게 생성한 난수임
-  for (let index = 0; index < DIGITS; index++) {
-    const spin = () => {
-      if (index < DIGITS - 1) {
-        digitElements[index].textContent = String(
-          Math.floor(Math.random() * 10)
-        );
-      }
+  const startDelay = 650;
+  const stopInterval = 260;
+  const spinSpeed = 55;
 
-      const delay = firstStop + index * stopInterval;
+  // 각 자리가 독립적으로 굴러감
+  digitElements.forEach((digit, index) => {
+    const interval = setInterval(() => {
+      digit.textContent = String(
+        Math.floor(Math.random() * 10)
+      );
+    }, spinSpeed);
 
+    animationIntervals.push(interval);
+
+    // 왼쪽 자리부터 차례대로 멈춤
+    const stopTimer = setTimeout(() => {
+      clearInterval(interval);
+
+      digit.classList.remove("rolling");
+      digit.textContent = result[index];
+
+      // 마지막 자리까지 멈춘 뒤 결과를 확정
       if (index === DIGITS - 1) {
-        // 마지막 자리까지 도는 동안 앞자리도 계속 움직임
-        const timer = setTimeout(() => {
-          digitElements.forEach((digit, digitIndex) => {
-            if (digitIndex < DIGITS - 1) {
-              digit.textContent = String(
-                Math.floor(Math.random() * 10)
-              );
-            }
-          });
+        const finishTimer = setTimeout(() => {
+          finishDraw(result);
+        }, 180);
 
-          const finishTimer = setTimeout(() => {
-            finishDraw(result);
-          }, 180);
-
-          animationTimers.push(finishTimer);
-        }, delay);
-
-        animationTimers.push(timer);
-        return;
+        animationTimers.push(finishTimer);
       }
+    }, startDelay + index * stopInterval);
 
-      const timer = setTimeout(() => {
-        digitElements[index].textContent = result[index];
-        spinNextDigit(index + 1);
-      }, delay);
-
-      animationTimers.push(timer);
-    };
-
-    if (index === 0) {
-      const timer = setTimeout(spin, startTime);
-      animationTimers.push(timer);
-    }
-  }
-
-  function spinNextDigit(index) {
-    if (index >= DIGITS) return;
-
-    digitElements[index].textContent = String(
-      Math.floor(Math.random() * 10)
-    );
-
-    if (index === DIGITS - 1) {
-      const timer = setTimeout(() => finishDraw(result), 650);
-      animationTimers.push(timer);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      digitElements[index].textContent = result[index];
-      spinNextDigit(index + 1);
-    }, 250);
-
-    animationTimers.push(timer);
-  }
+    animationTimers.push(stopTimer);
+  });
 }
 
 drawButton.addEventListener("click", drawWithAnimation);
 instantButton.addEventListener("click", drawInstantly);
 
-/* 배경의 은은한 보라색 파티클 */
+/* 은은하게 떠다니는 배경 파티클 */
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
 
@@ -362,7 +365,14 @@ function animateParticles() {
     if (particle.x > width + 5) particle.x = -5;
 
     ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+    ctx.arc(
+      particle.x,
+      particle.y,
+      particle.size,
+      0,
+      Math.PI * 2
+    );
+
     ctx.fillStyle = `rgba(183, 124, 255, ${particle.alpha})`;
     ctx.shadowBlur = 8;
     ctx.shadowColor = "rgba(155, 83, 255, 0.55)";
@@ -377,5 +387,6 @@ window.addEventListener("resize", resizeCanvas);
 
 resizeCanvas();
 animateParticles();
+
 renderHistory();
 updateAverage();
