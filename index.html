@@ -1,0 +1,30 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violet Number Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <main class="container">
+        <h1 class="title">NUMBER GENERATOR</h1>
+        <p class="subtitle">Pick a number between 0 and 999999</p>
+
+        <div class="number-box" aria-label="추첨 결과">
+            <div id="number" class="number" aria-live="polite">
+                <span>0</span><span>0</span><span>0</span>
+                <span>0</span><span>0</span><span>0</span>
+            </div>
+        </div>
+
+        <button id="generate-btn" class="generate-btn" type="button">
+            GENERATE
+        </button>
+
+        <p id="status" class="status">Ready to generate</p>
+    </main>
+</body>
+</html>
