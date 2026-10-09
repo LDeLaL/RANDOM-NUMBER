@@ -1,4 +1,3 @@
-
 :root {
   --purple: #9855f5;
   --purple-bright: #b47aff;
@@ -29,7 +28,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -192,6 +192,8 @@ input {
 .top-actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 5px;
 }
 
@@ -276,7 +278,7 @@ h1 {
   letter-spacing: -2px;
   font-variant-numeric: tabular-nums;
   color: #f8f0ff;
-  text-shadow: 0 0 22px rgba(184, 125, 255, 0.32);
+  text-shadow: 0 0 15px rgba(184, 125, 255, 0.2);
 }
 
 .number span {
@@ -287,19 +289,31 @@ h1 {
 .number.finished {
   animation: result-pop 650ms cubic-bezier(.16, 1.5, .35, 1) both;
   color: white;
-  text-shadow: 0 0 9px white, 0 0 25px #bd8aff, 0 0 55px rgba(154, 78, 255, 0.85);
+  text-shadow:
+    0 0 3px rgba(255, 255, 255, 0.65),
+    0 0 9px rgba(189, 138, 255, 0.48),
+    0 0 18px rgba(154, 78, 255, 0.3);
 }
 
 .number span.rolling {
   color: #d9baff;
-  text-shadow: 0 0 15px rgba(184, 125, 255, 0.6);
+  text-shadow: 0 0 12px rgba(184, 125, 255, 0.45);
   will-change: transform;
 }
 
 @keyframes result-pop {
-  0% { transform: scale(0.83); filter: brightness(1.7); }
-  45% { transform: scale(1.075); filter: brightness(1.4); }
-  100% { transform: scale(1); filter: brightness(1); }
+  0% {
+    transform: scale(0.9);
+    filter: brightness(1.25);
+  }
+  45% {
+    transform: scale(1.045);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 .number-box.impact {
@@ -309,11 +323,11 @@ h1 {
 @keyframes box-impact {
   0% {
     border-color: rgba(207, 164, 255, 0.95);
-    box-shadow: 0 0 0 0 rgba(167, 94, 255, 0.4);
+    box-shadow: 0 0 0 0 rgba(167, 94, 255, 0.3);
   }
   50% {
     border-color: rgba(207, 164, 255, 0.7);
-    box-shadow: 0 0 40px 8px rgba(167, 94, 255, 0.17);
+    box-shadow: 0 0 30px 5px rgba(167, 94, 255, 0.13);
   }
   100% {
     border-color: rgba(176, 117, 255, 0.2);
@@ -330,23 +344,27 @@ h1 {
   font-size: 11px;
   font-weight: 750;
   letter-spacing: 2px;
-  text-shadow: 0 0 15px rgba(190, 130, 255, 0.7);
+  text-shadow: 0 0 10px rgba(190, 130, 255, 0.45);
 }
 
 .number-box.rare {
   border-color: rgba(204, 151, 255, 0.7);
-  box-shadow: 0 0 30px rgba(168, 91, 255, 0.25), inset 0 0 35px rgba(155, 80, 240, 0.12);
+  box-shadow:
+    0 0 30px rgba(168, 91, 255, 0.25),
+    inset 0 0 35px rgba(155, 80, 240, 0.12);
 }
 
 .number-box.rare-legendary {
   border-color: rgba(255, 216, 157, 0.9);
   background: linear-gradient(145deg, rgba(65, 39, 76, 0.94), rgba(21, 12, 29, 0.96));
-  box-shadow: 0 0 45px rgba(191, 121, 255, 0.28), inset 0 0 35px rgba(255, 199, 120, 0.09);
+  box-shadow:
+    0 0 45px rgba(191, 121, 255, 0.28),
+    inset 0 0 35px rgba(255, 199, 120, 0.09);
 }
 
 .number-box.rare-legendary .number {
   color: #fff1d6;
-  text-shadow: 0 0 10px white, 0 0 30px #d8a3ff, 0 0 60px #b477ff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.65), 0 0 18px #b477ff;
 }
 
 .number-box.rare-legendary .rare-label {
@@ -453,7 +471,7 @@ h1 {
 }
 
 @keyframes button-impact {
-  0% { filter: brightness(1.8); }
+  0% { filter: brightness(1.5); }
   100% { filter: brightness(1); }
 }
 
@@ -505,7 +523,10 @@ h1 {
 }
 
 @keyframes burst {
-  0% { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(0deg); }
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3) rotate(0deg);
+  }
   15% { opacity: 1; }
   100% {
     opacity: 0;
@@ -701,6 +722,267 @@ h1 {
   text-align: center;
 }
 
+/* 최근 10회 희귀 기록 강조 */
+
+#history-list li.rare-history-item {
+  border-color: rgba(202, 151, 255, 0.65);
+  background: linear-gradient(100deg, rgba(135, 67, 207, 0.22), rgba(155, 93, 229, 0.08));
+  box-shadow: 0 0 12px rgba(155, 83, 255, 0.12);
+}
+
+#history-list li.rare-history-legendary {
+  border-color: rgba(255, 214, 151, 0.8);
+  background: linear-gradient(100deg, rgba(151, 96, 173, 0.27), rgba(112, 73, 127, 0.13));
+  box-shadow: 0 0 16px rgba(210, 157, 255, 0.18);
+}
+
+.history-rare-mark {
+  color: #d8b5ff;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.rare-history-legendary .history-rare-mark {
+  color: #ffe0a9;
+}
+
+/* 테마 선택 및 치트 입력 */
+
+.theme-select,
+.cheat-number-input {
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid rgba(181, 135, 241, 0.25);
+  border-radius: 10px;
+  outline: none;
+  background: rgba(155, 93, 229, 0.1);
+  color: var(--text);
+}
+
+.theme-select:focus,
+.cheat-number-input:focus {
+  border-color: var(--purple-bright);
+  box-shadow: 0 0 0 3px rgba(180, 122, 255, 0.12);
+}
+
+.theme-select option {
+  background: #21152e;
+  color: #f4edff;
+}
+
+.cheat-panel {
+  width: min(100%, 430px);
+}
+
+.cheat-description {
+  margin: -5px 0 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.cheat-input-label {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cheat-number-input {
+  color-scheme: dark;
+}
+
+/* 자릿수가 낮을수록 결과 카드 임팩트 강화 */
+
+.number-box.magnitude-6 {
+  animation: magnitude-six 760ms ease-out;
+}
+
+.number-box.magnitude-5 {
+  animation: magnitude-five 850ms cubic-bezier(.16, 1.25, .3, 1);
+}
+
+.number-box.magnitude-4 {
+  animation: magnitude-four 950ms cubic-bezier(.16, 1.3, .3, 1);
+}
+
+.number-box.magnitude-3,
+.number-box.magnitude-2,
+.number-box.magnitude-1 {
+  animation: magnitude-legendary 1100ms cubic-bezier(.16, 1.35, .3, 1);
+}
+
+@keyframes magnitude-six {
+  0% { box-shadow: 0 0 0 rgba(155, 83, 255, 0); }
+  45% { box-shadow: 0 0 24px 3px rgba(155, 83, 255, 0.22); }
+  100% { box-shadow: 0 0 45px rgba(122, 57, 199, 0.11); }
+}
+
+@keyframes magnitude-five {
+  0% { transform: scale(1); filter: brightness(1); }
+  35% { transform: scale(1.025); filter: brightness(1.2); box-shadow: 0 0 34px 5px rgba(166, 95, 255, 0.28); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes magnitude-four {
+  0% { transform: scale(1); filter: brightness(1); }
+  25% { transform: scale(1.04); filter: brightness(1.35); box-shadow: 0 0 45px 8px rgba(166, 95, 255, 0.35); }
+  55% { transform: scale(0.99); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes magnitude-legendary {
+  0% { transform: scale(1); filter: brightness(1); }
+  20% { transform: scale(1.06); filter: brightness(1.6); box-shadow: 0 0 60px 12px rgba(190, 121, 255, 0.45); }
+  45% { transform: scale(0.985); }
+  70% { transform: scale(1.035); filter: brightness(1.25); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* 라이트 모드: 보라색 아이덴티티 유지 */
+
+body.light-mode {
+  --text: #28183a;
+  --muted: #746184;
+  --panel: rgba(255, 250, 255, 0.92);
+  background:
+    radial-gradient(ellipse at 65% 40%, #f0e2ff 0%, transparent 48%),
+    radial-gradient(ellipse at 15% 90%, #f4eaff 0%, transparent 42%),
+    #faf7ff;
+  color: var(--text);
+}
+
+body.light-mode .history-panel {
+  border-color: rgba(139, 82, 203, 0.24);
+  box-shadow: 0 0 35px rgba(117, 55, 183, 0.07);
+}
+
+body.light-mode .panel-subtitle,
+body.light-mode .average-panel p,
+body.light-mode .average-panel span,
+body.light-mode .stat-row span,
+body.light-mode .status,
+body.light-mode .cheat-description {
+  color: #78668c;
+}
+
+body.light-mode #history-list li {
+  background: rgba(155, 93, 229, 0.07);
+  border-color: rgba(139, 82, 203, 0.13);
+}
+
+body.light-mode #history-list .history-index { color: #87749b; }
+
+body.light-mode #history-list .history-number,
+body.light-mode .stat-row strong {
+  color: #4d2c70;
+}
+
+body.light-mode .average-panel,
+body.light-mode .stats-panel {
+  background: rgba(146, 87, 205, 0.08);
+  border-color: rgba(139, 82, 203, 0.16);
+}
+
+body.light-mode .average-panel strong { color: #7740ad; }
+body.light-mode .subtitle { color: #77658b; }
+
+body.light-mode .number-box {
+  border-color: rgba(139, 82, 203, 0.24);
+  background: linear-gradient(145deg, rgba(255,255,255,0.94), rgba(244,235,255,0.96));
+  box-shadow:
+    0 0 45px rgba(122, 57, 199, 0.08),
+    inset 0 0 30px rgba(142, 81, 224, 0.025);
+}
+
+body.light-mode .number {
+  color: #51267e;
+  text-shadow: 0 0 10px rgba(153, 89, 218, 0.16);
+}
+
+body.light-mode .number.finished {
+  color: #4b1f79;
+  text-shadow: 0 0 3px rgba(124, 62, 181, 0.2), 0 0 9px rgba(189,138,255,0.3);
+}
+
+body.light-mode .number-info span {
+  background: rgba(155, 93, 229, 0.06);
+  color: #63477f;
+}
+
+body.light-mode .number-info .prime { color: #17663b; }
+body.light-mode .footer { color: #877794; }
+
+body.light-mode .settings-button {
+  color: #693b96;
+  background: rgba(155, 93, 229, 0.08);
+  border-color: rgba(139, 82, 203, 0.25);
+}
+
+body.light-mode .settings-button:hover {
+  background: rgba(155, 93, 229, 0.14);
+}
+
+body.light-mode .settings-overlay {
+  background: rgba(55, 35, 70, 0.38);
+}
+
+body.light-mode .settings-panel {
+  border-color: rgba(139, 82, 203, 0.28);
+  background: linear-gradient(145deg, #fffaff, #f5edff);
+  box-shadow: 0 0 60px rgba(128, 59, 199, 0.15);
+}
+
+body.light-mode .settings-header h2,
+body.light-mode .setting-heading label,
+body.light-mode .setting-toggle strong,
+body.light-mode .cheat-input-label {
+  color: #38204e;
+}
+
+body.light-mode .setting-heading strong { color: #8146b9; }
+
+body.light-mode .setting-item,
+body.light-mode .setting-toggle {
+  border-color: rgba(139, 82, 203, 0.15);
+}
+
+body.light-mode .range-labels,
+body.light-mode .setting-toggle small,
+body.light-mode .settings-message {
+  color: #806d94;
+}
+
+body.light-mode .close-settings {
+  background: rgba(155, 93, 229, 0.08);
+  color: #593778;
+}
+
+body.light-mode .theme-select,
+body.light-mode .cheat-number-input {
+  background: rgba(155, 93, 229, 0.07);
+  border-color: rgba(139, 82, 203, 0.24);
+  color: #38204e;
+  color-scheme: light;
+}
+
+body.light-mode .theme-select option {
+  background: #fffaff;
+  color: #38204e;
+}
+
+body.light-mode #history-list li.rare-history-item {
+  background: linear-gradient(100deg, rgba(176, 126, 226, 0.22), rgba(155, 93, 229, 0.06));
+}
+
+body.light-mode #history-list li.rare-history-legendary {
+  background: linear-gradient(100deg, rgba(255, 222, 164, 0.35), rgba(176, 126, 226, 0.12));
+}
+
 /* 반응형 */
 
 @media (min-width: 901px) {
@@ -786,7 +1068,13 @@ h1 {
   .draw-button.button-impact,
   .burst-particle,
   .rare-flash,
-  .settings-panel {
+  .settings-panel,
+  .number-box.magnitude-6,
+  .number-box.magnitude-5,
+  .number-box.magnitude-4,
+  .number-box.magnitude-3,
+  .number-box.magnitude-2,
+  .number-box.magnitude-1 {
     animation-duration: 0.01ms !important;
   }
 }
