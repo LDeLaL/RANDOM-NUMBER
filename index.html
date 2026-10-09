@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -49,14 +48,14 @@
 
     <main class="container">
       <div class="top-actions">
-        <button
-          id="settings-button"
-          class="settings-button"
-          type="button"
-          aria-expanded="false"
-          aria-controls="settings-overlay"
-        >
+        <button id="settings-button" class="settings-button" type="button"
+          aria-expanded="false" aria-controls="settings-overlay">
           ⚙ 설정
+        </button>
+
+        <button id="cheat-button" class="settings-button cheat-open-button"
+          type="button" aria-expanded="false" aria-controls="cheat-overlay">
+          ✧ 치트
         </button>
       </div>
 
@@ -98,20 +97,15 @@
   </div>
 
   <div id="settings-overlay" class="settings-overlay" hidden>
-    <section
-      class="settings-panel"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-    >
+    <section class="settings-panel" role="dialog" aria-modal="true"
+      aria-labelledby="settings-title">
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
           <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">
-          ✕
-        </button>
+        <button id="close-settings" class="close-settings" type="button"
+          aria-label="설정 닫기">✕</button>
       </div>
 
       <div class="setting-item">
@@ -141,6 +135,17 @@
         <div class="range-labels"><span>없음</span><span>강하게</span></div>
       </div>
 
+      <div class="setting-item theme-setting-item">
+        <div class="setting-heading">
+          <label for="theme-setting">화면 테마</label>
+          <strong id="theme-value">다크 모드</strong>
+        </div>
+        <select id="theme-setting" class="theme-select">
+          <option value="dark">다크 모드</option>
+          <option value="light">라이트 모드</option>
+        </select>
+      </div>
+
       <label class="setting-toggle">
         <span>
           <strong>희귀 숫자 이펙트</strong>
@@ -150,17 +155,46 @@
       </label>
 
       <div class="settings-actions">
-        <button id="reset-settings" class="secondary-button" type="button">
-          기본값
-        </button>
-        <button id="save-settings" class="primary-button" type="button">
-          설정 저장
-        </button>
+        <button id="reset-settings" class="secondary-button" type="button">기본값</button>
+        <button id="save-settings" class="primary-button" type="button">설정 저장</button>
       </div>
 
       <p id="settings-message" class="settings-message" aria-live="polite">
         설정은 이 브라우저에 저장돼.
       </p>
+    </section>
+  </div>
+
+  <div id="cheat-overlay" class="settings-overlay" hidden>
+    <section class="settings-panel cheat-panel" role="dialog" aria-modal="true"
+      aria-labelledby="cheat-title">
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">CHOOSE YOUR NUMBER</p>
+          <h2 id="cheat-title">치트 설정</h2>
+        </div>
+        <button id="close-cheat" class="close-settings" type="button"
+          aria-label="치트 닫기">✕</button>
+      </div>
+
+      <p class="cheat-description">
+        원하는 숫자를 입력하면 다음 추첨에서 해당 숫자가 나와.
+        0부터 9,999,999까지 입력할 수 있어.
+      </p>
+
+      <label class="cheat-input-label" for="cheat-number-input">원하는 숫자</label>
+      <input id="cheat-number-input" class="cheat-number-input" type="number"
+        min="0" max="9999999" step="1" inputmode="numeric"
+        placeholder="예: 1234567">
+
+      <p id="cheat-message" class="settings-message" aria-live="polite">
+        치트를 설정하면 다음 추첨에 한 번 적용돼.
+      </p>
+
+      <div class="settings-actions">
+        <button id="clear-cheat" class="secondary-button" type="button">치트 해제</button>
+        <button id="apply-cheat" class="primary-button" type="button">숫자 설정</button>
+      </div>
     </section>
   </div>
 
