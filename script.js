@@ -1,4 +1,3 @@
-
 "use strict";
 
 const DIGITS = 7;
@@ -9,7 +8,8 @@ const DEFAULT_SETTINGS = {
   particles: 65,
   speed: 2,
   effect: 2,
-  rareEffects: true
+  rareEffects: true,
+  theme: "dark"
 };
 
 const $ = id => document.getElementById(id);
@@ -47,6 +47,16 @@ const rareSetting = $("rare-setting");
 const particleValue = $("particle-value");
 const speedValue = $("speed-value");
 const effectValue = $("effect-value");
+const themeSetting = $("theme-setting");
+const themeValue = $("theme-value");
+
+const cheatButton = $("cheat-button");
+const cheatOverlay = $("cheat-overlay");
+const closeCheatButton = $("close-cheat");
+const cheatNumberInput = $("cheat-number-input");
+const applyCheatButton = $("apply-cheat");
+const clearCheatButton = $("clear-cheat");
+const cheatMessage = $("cheat-message");
 
 const digitElements = Array.from(
   numberElement.querySelectorAll("span")
@@ -59,6 +69,8 @@ let totalDraws = 0;
 let highestNumber = null;
 let lowestNumber = null;
 let isDrawing = false;
+let queuedCheatNumber = null;
+let lastDrawWasCheat = false;
 
 let rollTimeouts = [];
 let rollIntervals = [];
@@ -85,7 +97,8 @@ function loadSettings() {
       rareEffects:
         typeof parsed.rareEffects === "boolean"
           ? parsed.rareEffects
-          : true
+          : true,
+      theme: parsed.theme === "light" ? "light" : "dark"
     };
   } catch {
     return { ...DEFAULT_SETTINGS };
@@ -107,6 +120,7 @@ function populateSettingsControls() {
   speedSetting.value = settings.speed;
   effectSetting.value = settings.effect;
   rareSetting.checked = settings.rareEffects;
+  themeSetting.value = settings.theme;
 
   updateSettingLabels();
 }
@@ -116,7 +130,8 @@ function readSettingsControls() {
     particles: Number(particleSetting.value),
     speed: Number(speedSetting.value),
     effect: Number(effectSetting.value),
-    rareEffects: rareSetting.checked
+    rareEffects: rareSetting.checked,
+    theme: themeSetting.value === "light" ? "light" : "dark"
   };
 }
 
@@ -140,6 +155,8 @@ function updateSettingLabels() {
 
   speedValue.textContent = speedNames[speedSetting.value];
   effectValue.textContent = effectNames[effectSetting.value];
+  themeValue.textContent =
+    themeSetting.value === "light" ? "라이트 모드" : "다크 모드";
 }
 
 function saveSettings() {
@@ -156,6 +173,7 @@ function saveSettings() {
 
 function applySettings() {
   updateSettingLabels();
+  document.body.classList.toggle("light-mode", settings.theme === "light");
   resizeCanvas();
 }
 
@@ -192,7 +210,8 @@ document.addEventListener("keydown", event => {
   particleSetting,
   speedSetting,
   effectSetting,
-  rareSetting
+  rareSetting,
+  themeSetting
 ].forEach(control => {
   control.addEventListener("input", () => {
     readSettingsControls();
@@ -222,6 +241,80 @@ resetSettingsButton.addEventListener("click", () => {
 });
 
 /* =====================================
+   치트 설정
+===================================== */
+
+function openCheat() {
+  cheatOverlay.hidden = false;
+  cheatButton.setAttribute("aria-expanded", "true");
+
+  cheatMessage.textContent = queuedCheatNumber === null
+    ? "치트를 설정하면 다음 추첨에 한 번 적용돼."
+    : `다음 추첨 예약 숫자: ${Number(queuedCheatNumber).toLocaleString("en-US")}`;
+
+  closeCheatButton.focus();
+}
+
+function closeCheat() {
+  cheatOverlay.hidden = true;
+  cheatButton.setAttribute("aria-expanded", "false");
+  cheatButton.focus();
+}
+
+cheatButton.addEventListener("click", openCheat);
+closeCheatButton.addEventListener("click", closeCheat);
+
+cheatOverlay.addEventListener("click", event => {
+  if (event.target === cheatOverlay) {
+    closeCheat();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !cheatOverlay.hidden) {
+    closeCheat();
+  }
+});
+
+applyCheatButton.addEventListener("click", () => {
+  const raw = cheatNumberInput.value.trim();
+  const value = Number(raw);
+
+  if (
+    raw === "" ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > 9999999
+  ) {
+    cheatMessage.textContent = "0부터 9,999,999 사이의 정수를 입력해 줘.";
+    return;
+  }
+
+  queuedCheatNumber = String(value).padStart(DIGITS, "0");
+
+  cheatMessage.textContent =
+    `설정 완료! 다음 추첨에서 ${value.toLocaleString("en-US")}이(가) 나와.`;
+});
+
+clearCheatButton.addEventListener("click", () => {
+  queuedCheatNumber = null;
+  cheatNumberInput.value = "";
+  cheatMessage.textContent = "치트를 해제했어. 이제 무작위 숫자가 나와.";
+});
+
+function getNextResult() {
+  if (queuedCheatNumber !== null) {
+    const result = queuedCheatNumber;
+    queuedCheatNumber = null;
+    lastDrawWasCheat = true;
+    return result;
+  }
+
+  lastDrawWasCheat = false;
+  return secureRandomNumber();
+}
+
+/* =====================================
    균등 확률 난수
 ===================================== */
 
@@ -231,8 +324,6 @@ function secureRandomNumber() {
   const LIMIT = Math.floor(MAX / RANGE) * RANGE;
   const buffer = new Uint32Array(1);
 
-  // 편향을 제거해 0~9,999,999의 모든 결과가
-  // 정확히 같은 확률로 나오도록 한다.
   do {
     crypto.getRandomValues(buffer);
   } while (buffer[0] >= LIMIT);
@@ -265,7 +356,18 @@ function setButtonsDisabled(disabled) {
 
 function resetNumberEffects() {
   numberElement.classList.remove("finished");
-  numberBox.classList.remove("impact", "rare", "rare-legendary");
+
+  numberBox.classList.remove(
+    "impact",
+    "rare",
+    "rare-legendary",
+    "magnitude-6",
+    "magnitude-5",
+    "magnitude-4",
+    "magnitude-3",
+    "magnitude-2",
+    "magnitude-1"
+  );
 
   rareLabel.textContent = "";
 
@@ -281,6 +383,7 @@ function setDisplayedNumber(value, hideLeadingZeros = false) {
 
     const isLeadingZero =
       hideLeadingZeros &&
+      index < DIGITS - 1 &&
       value.slice(0, index + 1).split("").every(char => char === "0");
 
     digit.style.display = isLeadingZero ? "none" : "inline-block";
@@ -343,6 +446,14 @@ function getRarePattern(value) {
     };
   }
 
+  // 3개 이상의 같은 숫자가 연속으로 붙어 있는 패턴
+  if (/(\d)\1{2,}/.test(value)) {
+    return {
+      title: "✦ 연속 반복 숫자 발견 ✦",
+      level: "rare"
+    };
+  }
+
   if (/0{3,}$/.test(value)) {
     return {
       title: "✧ 라운드 숫자 발견 ✧",
@@ -350,7 +461,7 @@ function getRarePattern(value) {
     };
   }
 
-  // 반복되는 2자리 또는 3자리 패턴
+  // 같은 2자리 또는 3자리 묶음이 연속해서 반복되는 패턴
   for (let size = 2; size <= 3; size++) {
     for (let start = 0; start + size * 2 <= DIGITS; start++) {
       const first = value.slice(start, start + size);
@@ -503,15 +614,43 @@ function triggerButtonImpact(button) {
   );
 }
 
-function triggerResultImpact(pattern = null) {
+function triggerResultImpact(pattern = null, result = "0000000") {
   numberElement.classList.remove("finished");
-  numberBox.classList.remove("impact", "rare", "rare-legendary");
+
+  numberBox.classList.remove(
+    "impact",
+    "rare",
+    "rare-legendary",
+    "magnitude-6",
+    "magnitude-5",
+    "magnitude-4",
+    "magnitude-3",
+    "magnitude-2",
+    "magnitude-1"
+  );
 
   void numberElement.offsetWidth;
   numberElement.classList.add("finished");
 
   const rect = numberBox.getBoundingClientRect();
   const rareActive = Boolean(pattern && settings.rareEffects);
+  const visibleDigits = String(Number(result)).length;
+  const magnitudeClass =
+    visibleDigits <= 6 ? `magnitude-${visibleDigits}` : "";
+
+  if (magnitudeClass && settings.effect > 0) {
+    numberBox.classList.add(magnitudeClass);
+  }
+
+  // 자릿수가 적을수록 이펙트 규모가 커진다.
+  const magnitudeScale =
+    visibleDigits >= 7 ? 1 : 1 + (7 - visibleDigits) * 0.42;
+
+  const rareScale = rareActive
+    ? pattern.level === "legendary" ? 1.7 : 1.3
+    : 1;
+
+  const totalScale = magnitudeScale * rareScale;
 
   if (settings.effect > 0) {
     numberBox.classList.add("impact");
@@ -532,24 +671,34 @@ function triggerResultImpact(pattern = null) {
     }
 
     effectsLayer.appendChild(flash);
-
     setTimeout(() => flash.remove(), 900);
-
-    createBurst(
-      rect.left + rect.width / 2,
-      rect.top + rect.height / 2,
-      pattern.level === "legendary" ? 100 : 65,
-      Math.min(rect.width * 0.85, 320),
-      pattern.level
-    );
   } else {
     rareLabel.textContent = "";
+  }
 
+  createBurst(
+    rect.left + rect.width / 2,
+    rect.top + rect.height / 2,
+    Math.round(
+      (rareActive
+        ? pattern.level === "legendary" ? 100 : 65
+        : 30) * totalScale
+    ),
+    Math.min(rect.width * (0.4 + (totalScale - 1) * 0.13), 320),
+    rareActive ? pattern.level : "normal"
+  );
+
+  if (settings.effect > 0 && visibleDigits <= 6) {
     createBurst(
       rect.left + rect.width / 2,
       rect.top + rect.height / 2,
-      42,
-      Math.min(rect.width * 0.55, 240)
+      Math.round(
+        (visibleDigits === 6
+          ? 12
+          : 18 + (6 - visibleDigits) * 12) * (settings.effect / 2)
+      ),
+      Math.min(100 + (6 - visibleDigits) * 45, 300),
+      visibleDigits <= 3 ? "legendary" : "rare"
     );
   }
 
@@ -605,7 +754,30 @@ function renderHistory() {
     number.className = "history-number";
     number.textContent = value.toLocaleString("en-US");
 
-    item.append(rank, number);
+    const pattern = getRarePattern(
+      String(value).padStart(DIGITS, "0")
+    );
+
+    if (pattern) {
+      item.classList.add(
+        "rare-history-item",
+        pattern.level === "legendary"
+          ? "rare-history-legendary"
+          : "rare-history-rare"
+      );
+
+      number.title = pattern.title;
+
+      const mark = document.createElement("span");
+      mark.className = "history-rare-mark";
+      mark.textContent =
+        pattern.level === "legendary" ? "✦ LEGENDARY" : "✧ RARE";
+
+      item.append(rank, mark, number);
+    } else {
+      item.append(rank, number);
+    }
+
     historyList.appendChild(item);
   });
 }
@@ -647,7 +819,6 @@ function updateStatistics() {
 ===================================== */
 
 function finishDraw(result) {
-  // 롤링만 정리한다. 결과 효과에 필요한 타이머는 건드리지 않는다.
   clearRollTimers();
 
   setDisplayedNumber(result, true);
@@ -657,9 +828,12 @@ function finishDraw(result) {
 
   addToHistory(result);
   updateNumberInfo(result);
-  triggerResultImpact(pattern);
+  triggerResultImpact(pattern, result);
 
-  if (pattern && settings.rareEffects) {
+  if (lastDrawWasCheat) {
+    statusElement.textContent =
+      `치트 추첨 완료 · ${value.toLocaleString("en-US")}`;
+  } else if (pattern && settings.rareEffects) {
     statusElement.textContent =
       `특별한 패턴 발견! · ${value.toLocaleString("en-US")}`;
   } else {
@@ -672,6 +846,7 @@ function finishDraw(result) {
 }
 
 /* 즉각 뽑기 */
+
 function drawInstantly() {
   if (isDrawing) return;
 
@@ -682,7 +857,7 @@ function drawInstantly() {
 
   triggerButtonImpact(instantButton);
 
-  const result = secureRandomNumber();
+  const result = getNextResult();
   finishDraw(result);
 }
 
@@ -706,9 +881,8 @@ function drawWithAnimation() {
     digit.classList.add("rolling");
   });
 
-  const result = secureRandomNumber();
+  const result = getNextResult();
 
-  // 1이 가장 느리고, 5가 가장 빠르다.
   const speedSettings = {
     1: { start: 1900, interval: 850, spin: 100 },
     2: { start: 1500, interval: 650, spin: 85 },
@@ -720,7 +894,6 @@ function drawWithAnimation() {
   const timing = speedSettings[settings.speed];
 
   digitElements.forEach((digit, index) => {
-    // 각 자리의 롤링은 추첨 연출용이다.
     const intervalId = setInterval(() => {
       digit.textContent = String(Math.floor(Math.random() * 10));
     }, timing.spin);
@@ -733,7 +906,6 @@ function drawWithAnimation() {
       digit.classList.remove("rolling");
       digit.textContent = result[index];
 
-      // 브라우저가 Web Animations API를 지원할 때만 사용
       if (typeof digit.animate === "function") {
         digit.animate(
           [
