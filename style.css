@@ -1,9 +1,9 @@
 
 :root {
   --purple: #9855f5;
-  --purple-bright: #c08aff;
-  --purple-light: #e2c9ff;
-  --purple-deep: #6d30bd;
+  --purple-bright: #b47aff;
+  --purple-light: #d0aaff;
+  --purple-deep: #7135cb;
   --text: #f4edff;
   --muted: #a99abf;
   --panel: rgba(22, 14, 34, 0.78);
@@ -49,10 +49,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 48px;
   padding: 44px 30px;
 }
 
+/* 왼쪽 추첨 기록 */
 .history-panel {
   width: 240px;
   flex-shrink: 0;
@@ -146,8 +146,9 @@ body {
   font-size: 10px;
 }
 
+/* 중앙 생성기 */
 .container {
-  width: min(100%, 790px);
+  width: min(790px, 100%);
   text-align: center;
 }
 
@@ -180,6 +181,7 @@ h1 {
   font-size: 14px;
 }
 
+/* 결과 숫자 */
 .number-box {
   position: relative;
   display: flex;
@@ -234,6 +236,7 @@ h1 {
 .number span {
   display: inline-block;
   min-width: 0.58em;
+  transform: translateY(0);
 }
 
 .number.finished {
@@ -245,10 +248,40 @@ h1 {
     0 0 55px rgba(154, 78, 255, 0.85);
 }
 
+.number span.rolling {
+  animation: digit-roll 100ms linear infinite;
+  color: #d9baff;
+  filter: blur(0.5px);
+}
+
+@keyframes digit-roll {
+  0% {
+    transform: translateY(-5px);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-5px);
+    opacity: 0.72;
+  }
+}
+
 @keyframes result-pop {
-  0% { transform: scale(0.78); filter: brightness(1.8); }
-  45% { transform: scale(1.09); filter: brightness(1.5); }
-  100% { transform: scale(1); filter: brightness(1); }
+  0% {
+    transform: scale(0.78);
+    filter: brightness(1.8);
+  }
+  45% {
+    transform: scale(1.09);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 .number-box.impact {
@@ -277,11 +310,12 @@ h1 {
   font-size: 12px;
 }
 
+/* 버튼 */
 .button-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .draw-button {
@@ -290,15 +324,18 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
   gap: 9px;
   width: min(100%, 330px);
   min-height: 56px;
   padding: 14px 20px;
-  overflow: visible;
   border: 1px solid rgba(222, 194, 255, 0.5);
   border-radius: 13px;
-  background: linear-gradient(110deg, #7736c5, #a35af4 55%, #7838c7);
+  background: linear-gradient(
+    110deg,
+    #7736c5,
+    #a35af4 55%,
+    #7838c7
+  );
   color: white;
   font-size: 15px;
   font-weight: 750;
@@ -335,21 +372,28 @@ h1 {
   font-size: 17px;
 }
 
+/* 작은 즉각 뽑기 버튼 */
 .instant-button {
-  min-height: 58px;
-  border-color: rgba(218, 186, 255, 0.65);
-  background: linear-gradient(110deg, #3b2458, #7040a4, #3b2458);
+  width: auto;
+  min-height: 38px;
+  padding: 8px 18px;
+  gap: 6px;
+  border-color: rgba(218, 186, 255, 0.55);
+  border-radius: 10px;
+  background: linear-gradient(
+    110deg,
+    #3b2458,
+    #7040a4,
+    #3b2458
+  );
+  font-size: 12px;
   box-shadow:
-    0 5px 0 #261638,
-    0 8px 25px rgba(130, 60, 210, 0.12);
+    0 3px 0 #261638,
+    0 5px 16px rgba(130, 60, 210, 0.12);
 }
 
-.instant-button .button-note {
-  flex-basis: 100%;
-  margin-top: -4px;
-  color: #e0c7ff;
-  font-size: 10px;
-  font-weight: 450;
+.instant-button .button-icon {
+  font-size: 13px;
 }
 
 .draw-button.button-impact {
@@ -363,7 +407,9 @@ h1 {
   }
   100% {
     filter: brightness(1);
-    box-shadow: 0 5px 0 #482078, 0 0 0 23px rgba(190, 130, 255, 0);
+    box-shadow:
+      0 5px 0 #482078,
+      0 0 0 23px rgba(190, 130, 255, 0);
   }
 }
 
@@ -379,7 +425,7 @@ h1 {
   color: var(--purple-bright);
 }
 
-/* 별과 파티클 */
+/* 추첨 시 튀어나오는 별과 파티클 */
 .burst-particle {
   position: fixed;
   left: 0;
@@ -388,7 +434,9 @@ h1 {
   height: var(--size);
   border-radius: 50%;
   background: #d9b6ff;
-  box-shadow: 0 0 8px #b77aff, 0 0 17px rgba(170, 100, 255, 0.7);
+  box-shadow:
+    0 0 8px #b77aff,
+    0 0 17px rgba(170, 100, 255, 0.7);
   animation: burst var(--duration) cubic-bezier(.15, .65, .25, 1) forwards;
 }
 
@@ -400,7 +448,9 @@ h1 {
   color: #f4e5ff;
   font-size: var(--size);
   line-height: 1;
-  text-shadow: 0 0 8px #b77aff, 0 0 16px #8f42e8;
+  text-shadow:
+    0 0 8px #b77aff,
+    0 0 16px #8f42e8;
 }
 
 @keyframes burst {
@@ -420,6 +470,27 @@ h1 {
   }
 }
 
+/* 데스크톱: 기록은 화면 맨 왼쪽에 고정 */
+@media (min-width: 901px) {
+  .app-layout {
+    justify-content: center;
+  }
+
+  .history-panel {
+    position: fixed;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .container {
+    width: min(790px, calc(100vw - 330px));
+    margin-left: 260px;
+    margin-right: 0;
+  }
+}
+
+/* 좁은 화면: 기록을 아래로 이동 */
 @media (max-width: 900px) {
   .app-layout {
     flex-direction: column-reverse;
@@ -429,9 +500,13 @@ h1 {
 
   .container {
     width: min(100%, 700px);
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .history-panel {
+    position: static;
+    transform: none;
     width: min(100%, 700px);
   }
 
