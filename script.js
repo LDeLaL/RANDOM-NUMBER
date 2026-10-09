@@ -1,850 +1,796 @@
 
 "use strict";
 
-const DIGITS = 7;
-const HISTORY_LIMIT = 10;
-const SETTINGS_KEY = "violetRandomSettings";
+document.addEventListener("DOMContentLoaded", () => {
+  const $ = (id) => document.getElementById(id);
 
-const DEFAULT_SETTINGS = {
-  particles: 65,
-  speed: 2,
-  effect: 2,
-  rareEffects: true
-};
-
-const $ = id => document.getElementById(id);
-
-const numberElement = $("number");
-const numberBox = $("number-box");
-const drawButton = $("draw-button");
-const instantButton = $("instant-button");
-const statusElement = $("status");
-const historyList = $("history-list");
-const averageElement = $("average");
-const averageStatus = $("average-status");
-
-const rareLabel = $("rare-label");
-const primeStatus = $("prime-status");
-const divisorStatus = $("divisor-status");
-
-const maxNumberElement = $("max-number");
-const minNumberElement = $("min-number");
-const totalDrawsElement = $("total-draws");
-
-const effectsLayer = $("effects");
-const settingsButton = $("settings-button");
-const settingsOverlay = $("settings-overlay");
-const closeSettingsButton = $("close-settings");
-const saveSettingsButton = $("save-settings");
-const resetSettingsButton = $("reset-settings");
-const settingsMessage = $("settings-message");
-
-const particleSetting = $("particle-setting");
-const speedSetting = $("speed-setting");
-const effectSetting = $("effect-setting");
-const rareSetting = $("rare-setting");
-
-const particleValue = $("particle-value");
-const speedValue = $("speed-value");
-const effectValue = $("effect-value");
-
-const digitElements = Array.from(
-  numberElement.querySelectorAll("span")
-);
-
-let settings = loadSettings();
-
-let history = [];
-let totalDraws = 0;
-let highestNumber = null;
-let lowestNumber = null;
-let isDrawing = false;
-
-let rollTimeouts = [];
-let rollIntervals = [];
-let backgroundParticles = [];
-
-/* =====================================
-   설정
-===================================== */
-
-function loadSettings() {
-  try {
-    const saved = localStorage.getItem(SETTINGS_KEY);
-
-    if (!saved) {
-      return { ...DEFAULT_SETTINGS };
-    }
-
-    const parsed = JSON.parse(saved);
-
-    return {
-      particles: clamp(parsed.particles, 0, 150, 65),
-      speed: clamp(parsed.speed, 1, 5, 2),
-      effect: clamp(parsed.effect, 0, 3, 2),
-      rareEffects:
-        typeof parsed.rareEffects === "boolean"
-          ? parsed.rareEffects
-          : true
-    };
-  } catch {
-    return { ...DEFAULT_SETTINGS };
-  }
-}
-
-function clamp(value, min, max, fallback) {
-  const number = Number(value);
-
-  if (!Number.isFinite(number)) {
-    return fallback;
-  }
-
-  return Math.min(max, Math.max(min, number));
-}
-
-function populateSettingsControls() {
-  particleSetting.value = settings.particles;
-  speedSetting.value = settings.speed;
-  effectSetting.value = settings.effect;
-  rareSetting.checked = settings.rareEffects;
-
-  updateSettingLabels();
-}
-
-function readSettingsControls() {
-  settings = {
-    particles: Number(particleSetting.value),
-    speed: Number(speedSetting.value),
-    effect: Number(effectSetting.value),
-    rareEffects: rareSetting.checked
-  };
-}
-
-function updateSettingLabels() {
-  particleValue.textContent = particleSetting.value;
-
-  const speedNames = {
-    1: "아주 느리게",
-    2: "느리게",
-    3: "보통",
-    4: "빠르게",
-    5: "아주 빠르게"
+  const el = {
+    canvas: $("particle-canvas"),
+    resultCard: $("result-card"),
+    resultNumber: $("result-number"),
+    resultRarity: $("result-rarity"),
+    resultMessage: $("result-message"),
+    drawButton: $("draw-button"),
+    instantButton: $("instant-button"),
+    settingsButton: $("settings-button"),
+    settingsOverlay: $("settings-overlay"),
+    closeSettings: $("close-settings"),
+    saveSettings: $("save-settings"),
+    resetSettings: $("reset-settings"),
+    settingsNotice: $("settings-notice"),
+    historyList: $("history-list"),
+    maxNumber: $("max-number"),
+    minNumber: $("min-number"),
+    totalDraws: $("total-draws"),
+    averageNumber: $("average-number"),
+    particleCount: $("particle-count"),
+    particleCountValue: $("particle-count-value"),
+    effectStrength: $("effect-strength"),
+    effectStrengthValue: $("effect-strength-value"),
+    drawSpeed: $("draw-speed"),
+    drawSpeedValue: $("draw-speed-value"),
+    rareEffects: $("rare-effects"),
+    autoDuration: $("auto-duration"),
+    autoDurationValue: $("auto-duration-value"),
+    autoInterval: $("auto-interval"),
+    autoIntervalValue: $("auto-interval-value"),
+    autoMaxDraws: $("auto-max-draws"),
+    stopOnRare: $("stop-on-rare"),
+    rareStopLevel: $("rare-stop-level"),
+    autoStartButton: $("auto-start-button"),
+    autoStopButton: $("auto-stop-button"),
+    autoStatus: $("auto-status"),
+    autoIndicator: $("auto-indicator"),
+    flashOverlay: $("flash-overlay"),
+    toast: $("toast")
   };
 
-  const effectNames = {
-    0: "없음",
-    1: "약하게",
-    2: "보통",
-    3: "강하게"
+  const MAX_NUMBER = 9_999_999;
+  const SETTINGS_KEY = "violetRandomSettingsV3";
+
+  const defaults = {
+    particles: 70,
+    effect: 2,
+    speed: 1,
+    rareEffects: true,
+    autoDuration: 30,
+    autoInterval: 3,
+    autoMaxDraws: 0,
+    stopOnRare: false,
+    rareStopLevel: 2
   };
 
-  speedValue.textContent = speedNames[speedSetting.value];
-  effectValue.textContent = effectNames[effectSetting.value];
-}
+  let settings = loadSettings();
+  let history = [];
+  let totalDraws = 0;
+  let maxDrawn = null;
+  let minDrawn = null;
 
-function saveSettings() {
-  try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    settingsMessage.textContent = "설정을 저장했어! 💜";
-    return true;
-  } catch {
-    settingsMessage.textContent =
-      "설정 저장에 실패했어. 브라우저 저장 공간을 확인해 줘.";
-    return false;
-  }
-}
+  let isRolling = false;
+  let isAutoRunning = false;
+  let rollTimeouts = [];
+  let autoIntervalId = null;
+  let autoStopTimeout = null;
+  let autoStartedAt = 0;
+  let autoDrawCount = 0;
+  let toastTimeout = null;
+  let flashTimeout = null;
 
-function applySettings() {
-  updateSettingLabels();
-  resizeCanvas();
-}
+  const ctx = el.canvas.getContext("2d");
+  let particles = [];
+  let bursts = [];
+  let animationFrame = null;
+  let lastFrame = 0;
 
-function openSettings() {
-  populateSettingsControls();
-  settingsMessage.textContent = "설정은 이 브라우저에 저장돼.";
-  settingsOverlay.hidden = false;
-  settingsButton.setAttribute("aria-expanded", "true");
-  closeSettingsButton.focus();
-}
-
-function closeSettings() {
-  settingsOverlay.hidden = true;
-  settingsButton.setAttribute("aria-expanded", "false");
-  settingsButton.focus();
-}
-
-settingsButton.addEventListener("click", openSettings);
-closeSettingsButton.addEventListener("click", closeSettings);
-
-settingsOverlay.addEventListener("click", event => {
-  if (event.target === settingsOverlay) {
-    closeSettings();
-  }
-});
-
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !settingsOverlay.hidden) {
-    closeSettings();
-  }
-});
-
-[
-  particleSetting,
-  speedSetting,
-  effectSetting,
-  rareSetting
-].forEach(control => {
-  control.addEventListener("input", () => {
-    readSettingsControls();
-    applySettings();
-
-    settingsMessage.textContent =
-      "미리 보는 중이야. 저장 버튼을 누르면 유지돼.";
-  });
-});
-
-saveSettingsButton.addEventListener("click", () => {
-  readSettingsControls();
-  applySettings();
-
-  if (saveSettings()) {
-    closeSettings();
-  }
-});
-
-resetSettingsButton.addEventListener("click", () => {
-  settings = { ...DEFAULT_SETTINGS };
-  populateSettingsControls();
-  applySettings();
-
-  settingsMessage.textContent =
-    "기본값으로 바꿨어. 저장 버튼을 눌러 적용해 줘.";
-});
-
-/* =====================================
-   균등 확률 난수
-===================================== */
-
-function secureRandomNumber() {
-  const RANGE = 10_000_000;
-  const MAX = 0x100000000;
-  const LIMIT = Math.floor(MAX / RANGE) * RANGE;
-  const buffer = new Uint32Array(1);
-
-  // 편향을 제거해 0~9,999,999의 모든 결과가
-  // 정확히 같은 확률로 나오도록 한다.
-  do {
-    crypto.getRandomValues(buffer);
-  } while (buffer[0] >= LIMIT);
-
-  return String(buffer[0] % RANGE).padStart(DIGITS, "0");
-}
-
-/* =====================================
-   롤링 타이머 관리
-===================================== */
-
-function clearRollTimers() {
-  rollTimeouts.forEach(id => clearTimeout(id));
-  rollIntervals.forEach(id => clearInterval(id));
-
-  rollTimeouts = [];
-  rollIntervals = [];
-}
-
-function scheduleRollTimeout(callback, delay) {
-  const id = setTimeout(callback, delay);
-  rollTimeouts.push(id);
-  return id;
-}
-
-function setButtonsDisabled(disabled) {
-  drawButton.disabled = disabled;
-  instantButton.disabled = disabled;
-}
-
-function resetNumberEffects() {
-  numberElement.classList.remove("finished");
-  numberBox.classList.remove("impact", "rare", "rare-legendary");
-
-  rareLabel.textContent = "";
-
-  digitElements.forEach(digit => {
-    digit.classList.remove("rolling");
-    digit.style.display = "inline-block";
-  });
-}
-
-function setDisplayedNumber(value, hideLeadingZeros = false) {
-  digitElements.forEach((digit, index) => {
-    digit.textContent = value[index];
-
-    const isLeadingZero =
-      hideLeadingZeros &&
-      value.slice(0, index + 1).split("").every(char => char === "0");
-
-    digit.style.display = isLeadingZero ? "none" : "inline-block";
-    digit.classList.remove("rolling");
-  });
-}
-
-/* =====================================
-   희귀 패턴 판별
-===================================== */
-
-function getRarePattern(value) {
-  const digits = value.split("").map(Number);
-
-  if (digits.every(digit => digit === digits[0])) {
-    return {
-      title: "✦ 전설적인 반복 숫자 ✦",
-      level: "legendary"
-    };
-  }
-
-  const ascending = digits.every(
-    (digit, index) =>
-      index === 0 || digit === digits[index - 1] + 1
-  );
-
-  const descending = digits.every(
-    (digit, index) =>
-      index === 0 || digit === digits[index - 1] - 1
-  );
-
-  if (ascending || descending) {
-    return {
-      title: "✦ 완벽한 연속 숫자 ✦",
-      level: "legendary"
-    };
-  }
-
-  const palindrome = digits.every(
-    (digit, index) => digit === digits[DIGITS - 1 - index]
-  );
-
-  if (palindrome) {
-    return {
-      title: "✧ 대칭 숫자 발견 ✧",
-      level: "rare"
-    };
-  }
-
-  const counts = {};
-
-  digits.forEach(digit => {
-    counts[digit] = (counts[digit] || 0) + 1;
-  });
-
-  if (Math.max(...Object.values(counts)) >= 5) {
-    return {
-      title: "✦ 반복 숫자 발견 ✦",
-      level: "rare"
-    };
-  }
-
-  if (/0{3,}$/.test(value)) {
-    return {
-      title: "✧ 라운드 숫자 발견 ✧",
-      level: "rare"
-    };
-  }
-
-  // 반복되는 2자리 또는 3자리 패턴
-  for (let size = 2; size <= 3; size++) {
-    for (let start = 0; start + size * 2 <= DIGITS; start++) {
-      const first = value.slice(start, start + size);
-      const second = value.slice(start + size, start + size * 2);
-
-      if (first === second) {
-        return {
-          title: "✧ 반복 패턴 발견 ✧",
-          level: "rare"
-        };
-      }
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+      return { ...defaults, ...saved };
+    } catch {
+      return { ...defaults };
     }
   }
 
-  return null;
-}
-
-/* =====================================
-   소수 판별
-===================================== */
-
-function isPrime(number) {
-  if (!Number.isInteger(number) || number < 2) {
-    return false;
-  }
-
-  if (number === 2) {
-    return true;
-  }
-
-  if (number % 2 === 0) {
-    return false;
-  }
-
-  for (let divisor = 3; divisor * divisor <= number; divisor += 2) {
-    if (number % divisor === 0) {
-      return false;
+  function saveSettingsToStorage() {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      showToast("설정을 저장하지 못했어. 브라우저 저장 공간을 확인해 줘.");
     }
   }
 
-  return true;
-}
-
-function updateNumberInfo(value) {
-  const number = Number(value);
-  const prime = isPrime(number);
-
-  primeStatus.classList.toggle("prime", prime);
-  primeStatus.classList.toggle("not-prime", !prime);
-
-  if (prime) {
-    primeStatus.textContent = "✦ 소수 · 약수 2개";
-    divisorStatus.textContent =
-      `약수: 1, ${number.toLocaleString("en-US")}`;
-  } else if (number < 2) {
-    primeStatus.textContent = "소수 아님";
-    divisorStatus.textContent =
-      "소수는 2 이상의 자연수 중에서 찾아";
-  } else {
-    primeStatus.textContent = "소수 아님 · 합성수";
-    divisorStatus.textContent = "약수가 2개보다 많아";
+  function formatNumber(number) {
+    return Number(number).toLocaleString("ko-KR");
   }
-}
 
-/* =====================================
-   파티클 및 임팩트
-===================================== */
+  function randomInt(max) {
+    // Rejection sampling: 0부터 max까지 균등하게 추첨.
+    const range = max + 1;
+    const uintRange = 0x100000000;
+    const limit = Math.floor(uintRange / range) * range;
+    const array = new Uint32Array(1);
 
-function createBurst(x, y, count = 30, distance = 150, kind = "normal") {
-  if (settings.effect === 0) return;
+    do {
+      crypto.getRandomValues(array);
+    } while (array[0] >= limit);
 
-  const multiplier = settings.effect / 2;
-  const actualCount = Math.max(1, Math.round(count * multiplier));
-  const actualDistance = distance * (0.55 + multiplier * 0.35);
-  const fragment = document.createDocumentFragment();
+    return array[0] % range;
+  }
 
-  for (let i = 0; i < actualCount; i++) {
-    const particle = document.createElement("span");
-    const isStar = Math.random() < 0.38;
+  function analyzeRarity(number) {
+    const s = String(number);
+    const digits = s.split("").map(Number);
+    const counts = new Map();
 
-    particle.className = isStar
-      ? "burst-particle star"
-      : "burst-particle";
+    digits.forEach((digit) => {
+      counts.set(digit, (counts.get(digit) || 0) + 1);
+    });
 
-    if (isStar) {
-      particle.textContent = Math.random() < 0.5 ? "✦" : "✧";
+    const maxRepeat = Math.max(...counts.values());
+    const allSame = maxRepeat === digits.length && digits.length >= 3;
+    const palindrome = s.length >= 3 && s === s.split("").reverse().join("");
 
-      if (kind === "legendary") {
-        particle.classList.add("gold-star");
-      } else if (kind === "rare") {
-        particle.classList.add("rare-star");
+    const ascending = digits.length >= 4 &&
+      digits.every((d, i) => i === 0 || d === digits[i - 1] + 1);
+
+    const descending = digits.length >= 4 &&
+      digits.every((d, i) => i === 0 || d === digits[i - 1] - 1);
+
+    const roundZeros = /0{3,}$/.test(s) && s.length >= 4;
+
+    let repeatedBlock = false;
+    for (let blockLength = 2; blockLength <= 3; blockLength++) {
+      if (s.length >= blockLength * 2) {
+        const block = s.slice(0, blockLength);
+        const remainder = s.slice(blockLength);
+
+        if (remainder.length > 0 &&
+            (block + block).startsWith(s) &&
+            remainder === block.repeat(Math.ceil(remainder.length / blockLength))
+              .slice(0, remainder.length)) {
+          repeatedBlock = true;
+        }
       }
     }
 
-    const angle = Math.random() * Math.PI * 2;
-    const travelDistance =
-      actualDistance * (0.35 + Math.random() * 0.65);
+    const consecutiveSame = /(.)\1{2,}/.test(s);
+    const fourOrMoreSame = maxRepeat >= 4 && s.length >= 5;
+    const specialSequence = ascending || descending;
+    const exactSevenDigits = s.length === 7;
 
-    const dx = Math.cos(angle) * travelDistance;
-    const dy = Math.sin(angle) * travelDistance;
+    // 점수는 실제 확률이 아니라, 패턴을 기준으로 한 게임식 희귀도야.
+    let score = 0;
+    const reasons = [];
 
-    const size = isStar
-      ? `${8 + Math.random() * 10 * multiplier}px`
-      : `${2 + Math.random() * 4 * multiplier}px`;
+    if (allSame) {
+      score += 5;
+      reasons.push("같은 숫자 반복");
+    } else if (fourOrMoreSame) {
+      score += 3;
+      reasons.push("숫자 반복");
+    } else if (consecutiveSame) {
+      score += 2;
+      reasons.push("연속 반복");
+    }
 
-    particle.style.left = `${x}px`;
-    particle.style.top = `${y}px`;
-    particle.style.setProperty("--dx", `${dx}px`);
-    particle.style.setProperty("--dy", `${dy}px`);
-    particle.style.setProperty("--size", size);
-    particle.style.setProperty(
-      "--rotation",
-      `${Math.random() * 360 - 180}deg`
-    );
-    particle.style.setProperty(
-      "--duration",
-      `${500 + Math.random() * 500}ms`
-    );
+    if (palindrome) {
+      score += 3;
+      reasons.push("회문 숫자");
+    }
 
-    particle.addEventListener(
-      "animationend",
-      () => particle.remove(),
-      { once: true }
-    );
+    if (specialSequence) {
+      score += 5;
+      reasons.push(ascending ? "오름차순" : "내림차순");
+    }
 
-    fragment.appendChild(particle);
+    if (roundZeros) {
+      score += 3;
+      reasons.push("둥근 숫자");
+    }
+
+    if (repeatedBlock) {
+      score += 3;
+      reasons.push("반복 패턴");
+    }
+
+    if (number === 0) {
+      score += 5;
+      reasons.push("제로");
+    }
+
+    if (number === 1_000_000 || number === MAX_NUMBER) {
+      score += 3;
+      reasons.push("특별한 경계값");
+    }
+
+    // 숫자가 짧다는 이유만으로 무조건 최상위 희귀도로 분류하지 않도록 함.
+    if (exactSevenDigits && score === 0) {
+      score = 0;
+    }
+
+    let level = 1;
+    let label = "일반";
+    let message = "평범한 숫자야. 다음 결과를 기대해 봐!";
+
+    if (score >= 7) {
+      level = 4;
+      label = "극도로 희귀";
+      message = "믿기 어려운 패턴이 나타났어!";
+    } else if (score >= 5) {
+      level = 3;
+      label = "매우 희귀";
+      message = "오, 꽤 특별한 숫자가 나왔어!";
+    } else if (score >= 3) {
+      level = 2;
+      label = "희귀";
+      message = "평범하지 않은 숫자야!";
+    }
+
+    return {
+      level,
+      score,
+      label,
+      message,
+      reasons: [...new Set(reasons)]
+    };
   }
 
-  effectsLayer.appendChild(fragment);
-}
+  function clearRollTimeouts() {
+    rollTimeouts.forEach(clearTimeout);
+    rollTimeouts = [];
+  }
 
-function triggerButtonImpact(button) {
-  if (settings.effect === 0) return;
+  function scheduleRollTimeout(callback, delay) {
+    const id = setTimeout(callback, delay);
+    rollTimeouts.push(id);
+    return id;
+  }
 
-  button.classList.remove("button-impact");
-  void button.offsetWidth;
-  button.classList.add("button-impact");
+  function showToast(message) {
+    clearTimeout(toastTimeout);
+    el.toast.textContent = message;
+    el.toast.classList.add("visible");
 
-  scheduleRollTimeout(() => {
+    toastTimeout = setTimeout(() => {
+      el.toast.classList.remove("visible");
+    }, 2600);
+  }
+
+  function triggerButtonImpact(button) {
     button.classList.remove("button-impact");
-  }, 450);
+    void button.offsetWidth;
+    button.classList.add("button-impact");
 
-  const rect = button.getBoundingClientRect();
-
-  createBurst(
-    rect.left + rect.width / 2,
-    rect.top + rect.height / 2,
-    15,
-    65
-  );
-}
-
-function triggerResultImpact(pattern = null) {
-  numberElement.classList.remove("finished");
-  numberBox.classList.remove("impact", "rare", "rare-legendary");
-
-  void numberElement.offsetWidth;
-  numberElement.classList.add("finished");
-
-  const rect = numberBox.getBoundingClientRect();
-  const rareActive = Boolean(pattern && settings.rareEffects);
-
-  if (settings.effect > 0) {
-    numberBox.classList.add("impact");
+    setTimeout(() => button.classList.remove("button-impact"), 400);
+    spawnBurst(window.innerWidth / 2, window.innerHeight * 0.55, 12, 1);
   }
 
-  if (rareActive) {
-    numberBox.classList.add(
-      pattern.level === "legendary" ? "rare-legendary" : "rare"
+  function triggerResultImpact(level) {
+    if (settings.effect <= 0) return;
+
+    const strength = settings.effect;
+    const amount = [0, 10, 25, 45, 75][Math.min(level + strength - 1, 4)];
+    const finalAmount = Math.round(amount * strength / 2);
+
+    spawnBurst(
+      window.innerWidth / 2,
+      Math.min(window.innerHeight * 0.47, 420),
+      finalAmount,
+      level
     );
 
-    rareLabel.textContent = pattern.title;
+    if (settings.rareEffects && level >= 3) {
+      el.flashOverlay.classList.remove("flash");
+      void el.flashOverlay.offsetWidth;
+      el.flashOverlay.classList.add("flash");
 
-    const flash = document.createElement("div");
-    flash.className = "rare-flash";
+      clearTimeout(flashTimeout);
+      flashTimeout = setTimeout(() => {
+        el.flashOverlay.classList.remove("flash");
+      }, 750);
+    }
+  }
 
-    if (pattern.level === "legendary") {
-      flash.classList.add("legendary");
+  function showResult(number, isAuto = false) {
+    const rarity = analyzeRarity(number);
+
+    el.resultNumber.textContent = formatNumber(number);
+    el.resultRarity.textContent = rarity.level > 1
+      ? `✦ ${rarity.label.toUpperCase()} ✦`
+      : "COMMON NUMBER";
+
+    const reasonText = rarity.reasons.length
+      ? ` · ${rarity.reasons.join(" · ")}`
+      : "";
+
+    el.resultMessage.textContent =
+      rarity.message + reasonText + (isAuto ? " · 자동 뽑기" : "");
+
+    el.resultCard.className = "result-card";
+    if (rarity.level > 1) {
+      el.resultCard.classList.add(`rarity-${rarity.level}`);
     }
 
-    effectsLayer.appendChild(flash);
+    el.resultNumber.classList.remove("number-pop");
+    void el.resultNumber.offsetWidth;
+    el.resultNumber.classList.add("number-pop");
 
-    setTimeout(() => flash.remove(), 900);
+    triggerResultImpact(rarity.level);
+    addToHistory(number, rarity);
 
-    createBurst(
-      rect.left + rect.width / 2,
-      rect.top + rect.height / 2,
-      pattern.level === "legendary" ? 100 : 65,
-      Math.min(rect.width * 0.85, 320),
-      pattern.level
-    );
-  } else {
-    rareLabel.textContent = "";
-
-    createBurst(
-      rect.left + rect.width / 2,
-      rect.top + rect.height / 2,
-      42,
-      Math.min(rect.width * 0.55, 240)
-    );
+    return rarity;
   }
 
-  scheduleRollTimeout(() => {
-    numberBox.classList.remove("impact");
-  }, 650);
-}
+  function addToHistory(number, rarity) {
+    history.unshift({ number, rarity });
+    history = history.slice(0, 10);
 
-/* =====================================
-   기록 및 통계
-===================================== */
+    totalDraws += 1;
+    maxDrawn = maxDrawn === null ? number : Math.max(maxDrawn, number);
+    minDrawn = minDrawn === null ? number : Math.min(minDrawn, number);
 
-function addToHistory(result) {
-  const value = Number(result);
-
-  history.unshift(value);
-  history = history.slice(0, HISTORY_LIMIT);
-
-  totalDraws += 1;
-
-  if (highestNumber === null || value > highestNumber) {
-    highestNumber = value;
+    renderHistory();
+    updateStatistics();
   }
 
-  if (lowestNumber === null || value < lowestNumber) {
-    lowestNumber = value;
+  function renderHistory() {
+    el.historyList.replaceChildren();
+
+    if (history.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty-message";
+      empty.textContent = "아직 뽑은 숫자가 없어.";
+      el.historyList.appendChild(empty);
+      return;
+    }
+
+    history.forEach((item, index) => {
+      const row = document.createElement("div");
+      row.className = "history-item";
+
+      if (item.rarity.level > 1) {
+        row.classList.add(`rarity-${item.rarity.level}`);
+      }
+
+      const number = document.createElement("span");
+      number.className = "history-number";
+      number.textContent = `${index + 1}. ${formatNumber(item.number)}`;
+
+      const badge = document.createElement("span");
+      badge.className = "history-badge";
+      badge.textContent = item.rarity.level > 1
+        ? item.rarity.label
+        : "일반";
+
+      row.append(number, badge);
+      el.historyList.appendChild(row);
+    });
   }
 
-  renderHistory();
-  updateAverage();
-  updateStatistics();
-}
+  function updateStatistics() {
+    el.maxNumber.textContent = maxDrawn === null ? "—" : formatNumber(maxDrawn);
+    el.minNumber.textContent = minDrawn === null ? "—" : formatNumber(minDrawn);
+    el.totalDraws.textContent = formatNumber(totalDraws);
 
-function renderHistory() {
-  historyList.replaceChildren();
-
-  if (history.length === 0) {
-    const empty = document.createElement("li");
-    empty.className = "empty-history";
-    empty.textContent = "아직 추첨 기록이 없어!";
-    historyList.appendChild(empty);
-    return;
+    if (history.length === 0) {
+      el.averageNumber.textContent = "—";
+    } else {
+      const average = history.reduce((sum, item) => sum + item.number, 0)
+        / history.length;
+      el.averageNumber.textContent = formatNumber(Math.round(average));
+    }
   }
 
-  history.forEach((value, index) => {
-    const item = document.createElement("li");
+  function finishDraw(number, isAuto = false) {
+    isRolling = false;
+    el.resultCard.classList.remove("rolling");
+    el.drawButton.disabled = isAuto || isAutoRunning;
+    el.instantButton.disabled = isAuto || isAutoRunning;
 
-    const rank = document.createElement("span");
-    rank.className = "history-index";
-    rank.textContent = `#${index + 1}`;
+    const rarity = showResult(number, isAuto);
 
-    const number = document.createElement("span");
-    number.className = "history-number";
-    number.textContent = value.toLocaleString("en-US");
+    if (isAuto) {
+      autoDrawCount += 1;
+      updateAutoStatus();
 
-    item.append(rank, number);
-    historyList.appendChild(item);
-  });
-}
+      if (
+        settings.stopOnRare &&
+        rarity.level >= Number(settings.rareStopLevel)
+      ) {
+        stopAuto(`희귀도 조건 달성! ${rarity.label} 숫자가 나왔어.`);
+        return;
+      }
 
-function updateAverage() {
-  if (history.length < HISTORY_LIMIT) {
-    averageElement.textContent = "—";
-    averageStatus.textContent =
-      `${history.length}/${HISTORY_LIMIT}회 추첨 완료`;
-    return;
+      if (
+        Number(settings.autoMaxDraws) > 0 &&
+        autoDrawCount >= Number(settings.autoMaxDraws)
+      ) {
+        stopAuto("설정한 최대 뽑기 횟수에 도달했어.");
+      }
+    }
   }
 
-  const sum = history.reduce((total, value) => total + value, 0);
-  const average = sum / HISTORY_LIMIT;
+  function drawWithAnimation(isAuto = false) {
+    if (isRolling) return;
 
-  averageElement.textContent =
-    Math.round(average).toLocaleString("en-US");
+    isRolling = true;
+    el.drawButton.disabled = true;
+    el.instantButton.disabled = true;
+    el.resultCard.classList.add("rolling");
+    el.resultRarity.textContent = "DRAWING...";
+    el.resultMessage.textContent = "숫자를 추첨하고 있어...";
+    triggerButtonImpact(el.drawButton);
 
-  averageStatus.textContent = "최근 10회 결과의 평균";
-}
+    const result = randomInt(MAX_NUMBER);
 
-function updateStatistics() {
-  maxNumberElement.textContent =
-    highestNumber === null
-      ? "—"
-      : highestNumber.toLocaleString("en-US");
+    const speedTable = {
+      1: { duration: 7000, steps: 10 },
+      2: { duration: 5500, steps: 9 },
+      3: { duration: 4000, steps: 8 },
+      4: { duration: 2800, steps: 7 },
+      5: { duration: 1800, steps: 6 }
+    };
 
-  minNumberElement.textContent =
-    lowestNumber === null
-      ? "—"
-      : lowestNumber.toLocaleString("en-US");
+    const config = speedTable[settings.speed] || speedTable[1];
+    const started = performance.now();
+    let step = 0;
 
-  totalDrawsElement.textContent =
-    totalDraws.toLocaleString("en-US");
-}
+    function tick() {
+      step += 1;
+      el.resultNumber.textContent = formatNumber(randomInt(MAX_NUMBER));
 
-/* =====================================
-   추첨 완료
-===================================== */
+      const elapsed = performance.now() - started;
+      const progress = Math.min(1, elapsed / config.duration);
 
-function finishDraw(result) {
-  // 롤링만 정리한다. 결과 효과에 필요한 타이머는 건드리지 않는다.
-  clearRollTimers();
+      if (step >= config.steps && progress >= 1) {
+        finishDraw(result, isAuto);
+        return;
+      }
 
-  setDisplayedNumber(result, true);
+      const delay = Math.max(
+        80,
+        config.duration / config.steps * (0.6 + progress * 1.1)
+      );
 
-  const value = Number(result);
-  const pattern = getRarePattern(result);
+      scheduleRollTimeout(tick, delay);
+    }
 
-  addToHistory(result);
-  updateNumberInfo(result);
-  triggerResultImpact(pattern);
-
-  if (pattern && settings.rareEffects) {
-    statusElement.textContent =
-      `특별한 패턴 발견! · ${value.toLocaleString("en-US")}`;
-  } else {
-    statusElement.textContent =
-      `추첨 완료 · ${value.toLocaleString("en-US")}`;
+    scheduleRollTimeout(tick, 100);
   }
 
-  isDrawing = false;
-  setButtonsDisabled(false);
-}
+  function instantDraw() {
+    if (isRolling || isAutoRunning) return;
 
-/* 즉각 뽑기 */
-function drawInstantly() {
-  if (isDrawing) return;
+    clearRollTimeouts();
+    const result = randomInt(MAX_NUMBER);
+    triggerButtonImpact(el.instantButton);
+    finishDraw(result, false);
+  }
 
-  isDrawing = true;
-  clearRollTimers();
-  resetNumberEffects();
-  setButtonsDisabled(true);
+  function populateSettingsControls() {
+    el.particleCount.value = settings.particles;
+    el.effectStrength.value = settings.effect;
+    el.drawSpeed.value = settings.speed;
+    el.rareEffects.checked = settings.rareEffects;
 
-  triggerButtonImpact(instantButton);
+    el.autoDuration.value = settings.autoDuration;
+    el.autoInterval.value = settings.autoInterval;
+    el.autoMaxDraws.value = String(settings.autoMaxDraws);
+    el.stopOnRare.checked = settings.stopOnRare;
+    el.rareStopLevel.value = String(settings.rareStopLevel);
 
-  const result = secureRandomNumber();
-  finishDraw(result);
-}
+    updateSettingLabels();
+  }
 
-/* =====================================
-   느리고 부드러운 숫자 롤링
-===================================== */
+  function updateSettingLabels() {
+    el.particleCountValue.textContent = el.particleCount.value;
+    el.effectStrengthValue.textContent = el.effectStrength.value;
+    el.drawSpeedValue.textContent = el.drawSpeed.value;
+    el.autoDurationValue.textContent = `${el.autoDuration.value}초`;
+    el.autoIntervalValue.textContent = `${el.autoInterval.value}초`;
+  }
 
-function drawWithAnimation() {
-  if (isDrawing) return;
+  function readSettingsFromControls() {
+    settings = {
+      particles: Number(el.particleCount.value),
+      effect: Number(el.effectStrength.value),
+      speed: Number(el.drawSpeed.value),
+      rareEffects: el.rareEffects.checked,
+      autoDuration: Number(el.autoDuration.value),
+      autoInterval: Number(el.autoInterval.value),
+      autoMaxDraws: Number(el.autoMaxDraws.value),
+      stopOnRare: el.stopOnRare.checked,
+      rareStopLevel: Number(el.rareStopLevel.value)
+    };
+  }
 
-  isDrawing = true;
-  clearRollTimers();
-  resetNumberEffects();
-  setButtonsDisabled(true);
+  function applySettings() {
+    updateSettingLabels();
+    resizeCanvas();
+  }
 
-  triggerButtonImpact(drawButton);
-  statusElement.textContent = "숫자를 추첨하는 중...";
+  function openSettings() {
+    el.settingsNotice.textContent = "";
+    populateSettingsControls();
+    el.settingsOverlay.hidden = false;
+    el.closeSettings.focus();
+  }
 
-  digitElements.forEach(digit => {
-    digit.style.display = "inline-block";
-    digit.classList.add("rolling");
-  });
+  function closeSettings() {
+    el.settingsOverlay.hidden = true;
+    el.settingsButton.focus();
+  }
 
-  const result = secureRandomNumber();
+  function saveSettings() {
+    readSettingsFromControls();
+    saveSettingsToStorage();
+    applySettings();
+    el.settingsNotice.textContent = "설정을 저장했어!";
+    showToast("설정을 저장했어. 💜");
+  }
 
-  // 1이 가장 느리고, 5가 가장 빠르다.
-  const speedSettings = {
-    1: { start: 1900, interval: 850, spin: 100 },
-    2: { start: 1500, interval: 650, spin: 85 },
-    3: { start: 1200, interval: 500, spin: 70 },
-    4: { start: 900, interval: 380, spin: 60 },
-    5: { start: 650, interval: 300, spin: 50 }
-  };
+  function resetSettings() {
+    settings = { ...defaults };
+    populateSettingsControls();
+    applySettings();
+    saveSettingsToStorage();
+    el.settingsNotice.textContent = "기본 설정으로 초기화했어.";
+  }
 
-  const timing = speedSettings[settings.speed];
+  function updateAutoStatus() {
+    if (!isAutoRunning) return;
 
-  digitElements.forEach((digit, index) => {
-    // 각 자리의 롤링은 추첨 연출용이다.
-    const intervalId = setInterval(() => {
-      digit.textContent = String(Math.floor(Math.random() * 10));
-    }, timing.spin);
+    const elapsed = Math.floor((Date.now() - autoStartedAt) / 1000);
+    const remaining = Math.max(0, settings.autoDuration - elapsed);
 
-    rollIntervals.push(intervalId);
+    el.autoStatus.textContent =
+      `${autoDrawCount}회 뽑음 · 남은 시간 약 ${remaining}초`;
+  }
 
-    const stopId = setTimeout(() => {
-      clearInterval(intervalId);
+  function startAuto() {
+    if (isAutoRunning || isRolling) {
+      showToast("현재 진행 중인 뽑기가 끝난 뒤 시작해 줘.");
+      return;
+    }
 
-      digit.classList.remove("rolling");
-      digit.textContent = result[index];
+    readSettingsFromControlsIfOpen();
+    isAutoRunning = true;
+    autoDrawCount = 0;
+    autoStartedAt = Date.now();
 
-      // 브라우저가 Web Animations API를 지원할 때만 사용
-      if (typeof digit.animate === "function") {
-        digit.animate(
-          [
-            { transform: "translateY(-5px) scale(0.98)" },
-            { transform: "translateY(2px) scale(1.035)" },
-            { transform: "translateY(0) scale(1)" }
-          ],
-          {
-            duration: 380,
-            easing: "cubic-bezier(.2, .8, .25, 1)"
-          }
+    el.autoStartButton.disabled = true;
+    el.autoStopButton.disabled = false;
+    el.drawButton.disabled = true;
+    el.instantButton.disabled = true;
+    el.autoIndicator.textContent = "실행 중";
+    el.autoIndicator.classList.add("active");
+
+    updateAutoStatus();
+
+    // 첫 추첨은 바로 시작하고, 이후에는 설정한 간격마다 추첨.
+    drawWithAnimation(true);
+
+    autoIntervalId = setInterval(() => {
+      if (!isAutoRunning || isRolling) return;
+      drawWithAnimation(true);
+    }, settings.autoInterval * 1000);
+
+    autoStopTimeout = setTimeout(() => {
+      stopAuto("설정한 자동 뽑기 시간이 끝났어.");
+    }, settings.autoDuration * 1000);
+  }
+
+  function readSettingsFromControlsIfOpen() {
+    if (!el.settingsOverlay.hidden) {
+      readSettingsFromControls();
+      saveSettingsToStorage();
+      applySettings();
+    }
+  }
+
+  function stopAuto(message = "자동 뽑기를 중지했어.") {
+    if (!isAutoRunning) return;
+
+    isAutoRunning = false;
+    clearInterval(autoIntervalId);
+    clearTimeout(autoStopTimeout);
+    autoIntervalId = null;
+    autoStopTimeout = null;
+
+    el.autoStartButton.disabled = false;
+    el.autoStopButton.disabled = true;
+    el.autoIndicator.textContent = "대기 중";
+    el.autoIndicator.classList.remove("active");
+    el.autoStatus.textContent = `${autoDrawCount}회 뽑음 · 종료됨`;
+
+    if (!isRolling) {
+      el.drawButton.disabled = false;
+      el.instantButton.disabled = false;
+    }
+
+    showToast(message);
+  }
+
+  function resizeCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    el.canvas.width = Math.floor(window.innerWidth * dpr);
+    el.canvas.height = Math.floor(window.innerHeight * dpr);
+    el.canvas.style.width = `${window.innerWidth}px`;
+    el.canvas.style.height = `${window.innerHeight}px`;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const count = Math.max(0, Math.min(150, Number(settings.particles)));
+    particles = Array.from({ length: count }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      radius: Math.random() * 1.8 + 0.5,
+      speed: Math.random() * 0.35 + 0.08,
+      drift: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.45 + 0.12,
+      phase: Math.random() * Math.PI * 2
+    }));
+  }
+
+  function spawnBurst(x, y, count, level = 1) {
+    const cappedCount = Math.max(0, Math.min(100, count));
+
+    for (let i = 0; i < cappedCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (Math.random() * 2 + 0.8) * (1 + level * 0.35);
+
+      bursts.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        decay: Math.random() * 0.018 + 0.012,
+        size: Math.random() * 2.8 + 1,
+        hue: level >= 4 ? 38 + Math.random() * 30 : 260 + Math.random() * 50
+      });
+    }
+
+    if (bursts.length > 500) {
+      bursts = bursts.slice(-500);
+    }
+  }
+
+  function drawStar(x, y, size, alpha, hue) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(performance.now() * 0.0004);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = `hsl(${hue}, 100%, 78%)`;
+    ctx.beginPath();
+
+    for (let i = 0; i < 8; i++) {
+      const radius = i % 2 === 0 ? size : size * 0.25;
+      const angle = (Math.PI / 4) * i;
+      const px = Math.cos(angle) * radius;
+      const py = Math.sin(angle) * radius;
+
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function animateParticles(timestamp = 0) {
+    if (document.hidden) {
+      animationFrame = requestAnimationFrame(animateParticles);
+      return;
+    }
+
+    const delta = lastFrame ? Math.min(2, (timestamp - lastFrame) / 16.67) : 1;
+    lastFrame = timestamp;
+
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    particles.forEach((particle) => {
+      particle.y -= particle.speed * delta;
+      particle.x += particle.drift * delta;
+      particle.phase += 0.018 * delta;
+
+      if (particle.y < -5) {
+        particle.y = window.innerHeight + 5;
+        particle.x = Math.random() * window.innerWidth;
+      }
+
+      if (particle.x < -5) particle.x = window.innerWidth + 5;
+      if (particle.x > window.innerWidth + 5) particle.x = -5;
+
+      const alpha = particle.alpha * (0.7 + Math.sin(particle.phase) * 0.3);
+
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(190, 143, 255, ${alpha})`;
+      ctx.fill();
+    });
+
+    bursts = bursts.filter((particle) => particle.life > 0);
+
+    bursts.forEach((particle) => {
+      particle.x += particle.vx * delta;
+      particle.y += particle.vy * delta;
+      particle.vx *= 0.985;
+      particle.vy *= 0.985;
+      particle.life -= particle.decay * delta;
+
+      if (Math.random() < 0.12) {
+        drawStar(
+          particle.x,
+          particle.y,
+          particle.size * 1.5,
+          particle.life,
+          particle.hue
         );
       }
 
-      if (index === DIGITS - 1) {
-        scheduleRollTimeout(() => {
-          finishDraw(result);
-        }, 400);
-      }
-    }, timing.start + index * timing.interval);
+      ctx.beginPath();
+      ctx.arc(
+        particle.x,
+        particle.y,
+        Math.max(0.2, particle.size * particle.life),
+        0,
+        Math.PI * 2
+      );
+      ctx.fillStyle = `hsla(${particle.hue}, 100%, 78%, ${Math.max(0, particle.life)})`;
+      ctx.fill();
+    });
 
-    rollTimeouts.push(stopId);
-  });
-}
-
-drawButton.addEventListener("click", drawWithAnimation);
-instantButton.addEventListener("click", drawInstantly);
-
-/* =====================================
-   배경 파티클
-===================================== */
-
-const canvas = $("particles");
-const ctx = canvas.getContext("2d");
-
-let width = 0;
-let height = 0;
-
-function resizeCanvas() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-  width = window.innerWidth;
-  height = window.innerHeight;
-
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  backgroundParticles = Array.from(
-    { length: settings.particles },
-    () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: 0.6 + Math.random() * 1.8,
-      speed: 0.12 + Math.random() * 0.3,
-      drift: (Math.random() - 0.5) * 0.3,
-      alpha: 0.15 + Math.random() * 0.45
-    })
-  );
-}
-
-function animateParticles() {
-  ctx.clearRect(0, 0, width, height);
-
-  for (const particle of backgroundParticles) {
-    particle.y -= particle.speed;
-    particle.x += particle.drift;
-
-    if (particle.y < -5) {
-      particle.y = height + 5;
-      particle.x = Math.random() * width;
-    }
-
-    if (particle.x < -5) particle.x = width + 5;
-    if (particle.x > width + 5) particle.x = -5;
-
-    ctx.beginPath();
-    ctx.arc(
-      particle.x,
-      particle.y,
-      particle.size,
-      0,
-      Math.PI * 2
-    );
-
-    ctx.fillStyle =
-      `rgba(183, 124, 255, ${particle.alpha})`;
-
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = "rgba(155, 83, 255, 0.55)";
-    ctx.fill();
+    animationFrame = requestAnimationFrame(animateParticles);
   }
 
-  ctx.shadowBlur = 0;
-  requestAnimationFrame(animateParticles);
-}
+  el.drawButton.addEventListener("click", () => {
+    if (!isRolling && !isAutoRunning) drawWithAnimation(false);
+  });
 
-window.addEventListener("resize", resizeCanvas);
+  el.instantButton.addEventListener("click", instantDraw);
+  el.settingsButton.addEventListener("click", openSettings);
+  el.closeSettings.addEventListener("click", closeSettings);
+  el.saveSettings.addEventListener("click", saveSettings);
+  el.resetSettings.addEventListener("click", resetSettings);
 
-/* =====================================
-   초기화
-===================================== */
+  el.settingsOverlay.addEventListener("click", (event) => {
+    if (event.target === el.settingsOverlay) closeSettings();
+  });
 
-populateSettingsControls();
-applySettings();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !el.settingsOverlay.hidden) {
+      closeSettings();
+    }
+  });
 
-renderHistory();
-updateAverage();
-updateStatistics();
+  [
+    el.particleCount,
+    el.effectStrength,
+    el.drawSpeed,
+    el.autoDuration,
+    el.autoInterval
+  ].forEach((input) => {
+    input.addEventListener("input", updateSettingLabels);
+  });
 
-animateParticles();
+  el.autoStartButton.addEventListener("click", startAuto);
+  el.autoStopButton.addEventListener("click", () => stopAuto());
+
+  window.addEventListener("resize", resizeCanvas);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && isAutoRunning) {
+      // 백그라운드 탭에서 자동 추첨이 폭주하지 않도록 안전하게 정지.
+      stopAuto("페이지를 벗어나 자동 뽑기를 정지했어.");
+    }
+  });
+
+  populateSettingsControls();
+  applySettings();
+  renderHistory();
+  updateStatistics();
+  resizeCanvas();
+  animationFrame = requestAnimationFrame(animateParticles);
+});
