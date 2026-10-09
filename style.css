@@ -1105,3 +1105,46 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* 희귀 숫자 표시 - 기존 보라색 테마 유지 */
+.rare-label {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  color: #d0aaff;
+  font-size: 13px;
+  font-weight: 750;
+  text-shadow:
+    0 0 8px rgba(180, 122, 255, 0.8),
+    0 0 18px rgba(152, 85, 245, 0.5);
+  opacity: 0;
+  transform: translateY(5px) scale(0.96);
+  pointer-events: none;
+}
+
+.rare-label.rare-active {
+  animation: rare-pop 1.8s ease both;
+}
+
+@keyframes rare-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(5px) scale(0.96);
+  }
+
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.06);
+  }
+
+  75% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
