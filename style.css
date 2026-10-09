@@ -1,796 +1,481 @@
 
-/* =========================
-   기본 설정
-========================= */
+:root {
+  --purple: #9855f5;
+  --purple-bright: #c08aff;
+  --purple-light: #e2c9ff;
+  --purple-deep: #6d30bd;
+  --text: #f4edff;
+  --muted: #a99abf;
+  --panel: rgba(22, 14, 34, 0.78);
+}
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --purple: #9855f5;
-    --purple-bright: #b47aff;
-    --purple-light: #d0aaff;
-    --purple-deep: #7135cb;
-
-    --ivory: #f3eadc;
-    --ivory-soft: #d9cdbf;
-    --muted: #a497ac;
-
-    --black: #070509;
-    --panel: rgba(17, 10, 24, 0.88);
-}
-
-html {
-    min-height: 100%;
-    background: var(--black);
+  box-sizing: border-box;
 }
 
 body {
-    min-height: 100vh;
-    min-height: 100dvh;
-
-    padding: 48px 38px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background:
-        radial-gradient(
-            ellipse at 58% 45%,
-            rgba(113, 53, 203, 0.12),
-            transparent 62%
-        ),
-        #070509;
-
-    color: var(--ivory);
-    font-family: Arial, Helvetica, sans-serif;
-
-    overflow-x: hidden;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse at 65% 40%, #211333 0%, transparent 48%),
+    radial-gradient(ellipse at 15% 90%, #180f28 0%, transparent 42%),
+    #08070c;
+  color: var(--text);
+  font-family: "Segoe UI", "Malgun Gothic", sans-serif;
 }
-
-/* =========================
-   파티클 배경
-========================= */
 
 #particles {
-    position: fixed;
-    inset: 0;
-
-    width: 100%;
-    height: 100%;
-
-    pointer-events: none;
-    z-index: 0;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* =========================
-   전체 레이아웃
-========================= */
+#effects {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
 
 .app-layout {
-    position: relative;
-    z-index: 1;
-
-    width: 100%;
-    max-width: 1650px;
-
-    display: grid;
-    grid-template-columns: 300px minmax(0, 1fr);
-    align-items: center;
-
-    gap: clamp(45px, 6vw, 110px);
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 44px 30px;
 }
-
-/* =========================
-   기록 패널
-========================= */
 
 .history-panel {
-    width: 100%;
-    padding: 30px 24px;
-
-    background: var(--panel);
-
-    border: 1px solid rgba(152, 85, 245, 0.38);
-    border-radius: 16px;
-
-    box-shadow:
-        0 0 30px rgba(113, 53, 203, 0.08),
-        inset 0 0 24px rgba(152, 85, 245, 0.025);
+  width: 240px;
+  flex-shrink: 0;
+  padding: 24px 20px;
+  border: 1px solid rgba(183, 127, 255, 0.19);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 0 35px rgba(117, 55, 183, 0.08);
+  backdrop-filter: blur(12px);
 }
 
-.history-header {
-    display: flex;
-    align-items: center;
-    gap: 13px;
+.history-panel h2 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--purple-light);
 }
 
-.history-symbol {
-    color: var(--purple-bright);
-    font-size: 27px;
+.panel-subtitle {
+  margin: 8px 0 20px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-.history-header h2 {
-    color: var(--ivory);
-    font-size: 27px;
-    letter-spacing: 3px;
+#history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
 
-.history-subtitle {
-    margin-top: 16px;
-
-    color: var(--muted);
-    font-size: 13px;
-    letter-spacing: 2px;
+#history-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 11px;
+  border-radius: 9px;
+  background: rgba(155, 93, 229, 0.08);
+  border: 1px solid rgba(181, 135, 241, 0.09);
+  font-size: 13px;
 }
 
-.history-count {
-    display: flex;
-    align-items: baseline;
-    gap: 9px;
-
-    margin: 27px 0 22px;
-
-    color: var(--purple-light);
-    font-family: "Courier New", monospace;
-    font-size: 30px;
-    font-weight: bold;
+#history-list .history-index {
+  color: #8e7da4;
+  font-size: 11px;
 }
 
-.count-divider {
-    color: #6e5c7d;
-    font-size: 20px;
+#history-list .history-number {
+  color: #e8d7ff;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
 
-.history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    min-height: 350px;
+#history-list .empty-history {
+  justify-content: center;
+  padding: 20px 5px;
+  color: var(--muted);
+  font-size: 12px;
 }
-
-.history-item {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-
-    padding: 15px 12px;
-
-    background: rgba(152, 85, 245, 0.05);
-
-    border: 1px solid rgba(152, 85, 245, 0.14);
-    border-radius: 8px;
-
-    animation: history-enter 0.35s ease-out;
-}
-
-@keyframes history-enter {
-    from {
-        opacity: 0;
-        transform: translateX(-9px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.history-index {
-    min-width: 27px;
-
-    color: #b49bd8;
-    font-size: 14px;
-    font-family: "Courier New", monospace;
-}
-
-.history-number {
-    color: var(--ivory-soft);
-
-    font-family: "Courier New", monospace;
-    font-size: 19px;
-    font-weight: bold;
-    font-variant-numeric: tabular-nums;
-}
-
-.history-empty {
-    padding: 35px 0;
-
-    color: #887a91;
-    font-size: 15px;
-    line-height: 1.8;
-    text-align: center;
-}
-
-.history-footer {
-    margin-top: 25px;
-    padding-top: 18px;
-
-    border-top: 1px solid rgba(152, 85, 245, 0.18);
-
-    color: #b09abf;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-align: center;
-}
-
-/* =========================
-   평균 통계
-========================= */
 
 .average-panel {
-    margin-top: 25px;
-    padding: 21px 15px;
-
-    text-align: center;
-
-    background: rgba(152, 85, 245, 0.065);
-
-    border: 1px solid rgba(152, 85, 245, 0.2);
-    border-radius: 10px;
-
-    transition:
-        background 0.4s ease,
-        border-color 0.4s ease,
-        box-shadow 0.4s ease;
+  margin-top: 22px;
+  padding: 16px 12px;
+  text-align: center;
+  border-radius: 12px;
+  background: rgba(133, 69, 207, 0.12);
+  border: 1px solid rgba(181, 135, 241, 0.13);
 }
 
-.average-panel.ready {
-    background: rgba(152, 85, 245, 0.12);
-    border-color: rgba(180, 122, 255, 0.65);
-
-    box-shadow: 0 0 22px rgba(152, 85, 245, 0.12);
+.average-panel p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
 }
 
-.average-label {
-    color: var(--purple-light);
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 1.7px;
+.average-panel strong {
+  display: block;
+  color: var(--purple-light);
+  font-size: 20px;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
-.average-value {
-    margin-top: 14px;
-
-    color: var(--ivory);
-    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-    font-size: clamp(25px, 2vw, 32px);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-
-    overflow-wrap: anywhere;
-
-    transition: color 0.3s ease;
+.average-panel span {
+  display: block;
+  margin-top: 8px;
+  color: #8f7ca7;
+  font-size: 10px;
 }
-
-.average-status {
-    margin-top: 12px;
-
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.7;
-}
-
-/* =========================
-   추첨기 본체
-========================= */
 
 .container {
-    width: 100%;
-    max-width: 900px;
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    text-align: center;
-}
-
-.header {
-    width: 100%;
-    margin-bottom: 55px;
+  width: min(100%, 790px);
+  text-align: center;
 }
 
 .eyebrow {
-    margin-bottom: 24px;
-
-    color: var(--purple-light);
-    font-size: 19px;
-    font-weight: 600;
-    letter-spacing: 6px;
+  color: var(--purple-bright);
+  font-size: 11px;
+  letter-spacing: 4px;
 }
 
-.title {
-    color: var(--ivory);
-
-    font-size: clamp(34px, 3.7vw, 53px);
-    font-weight: 700;
-    letter-spacing: clamp(2px, 0.55vw, 7px);
-
-    text-shadow: 0 0 18px rgba(152, 85, 245, 0.2);
+h1 {
+  margin: 15px 0 8px;
+  font-size: clamp(36px, 5vw, 55px);
+  font-weight: 750;
+  letter-spacing: -1.5px;
+  background: linear-gradient(
+    110deg,
+    #f8edff,
+    #c69aff 48%,
+    #9250ed
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 22px rgba(163, 95, 255, 0.18));
 }
 
 .subtitle {
-    margin-top: 26px;
-
-    color: var(--ivory-soft);
-    font-size: 17px;
-    letter-spacing: 2.5px;
-    line-height: 1.8;
+  margin: 0;
+  color: #b5a5c9;
+  font-size: 14px;
 }
-
-.title-line {
-    width: 160px;
-    height: 1px;
-
-    margin: 32px auto 0;
-
-    background: linear-gradient(
-        90deg,
-        transparent,
-        var(--purple-bright),
-        transparent
-    );
-
-    box-shadow: 0 0 14px rgba(152, 85, 245, 0.45);
-}
-
-/* =========================
-   숫자 표시 상자
-========================= */
 
 .number-box {
-    position: relative;
-    isolation: isolate;
-
-    width: 100%;
-    max-width: 760px;
-    min-height: 180px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 28px 24px;
-
-    background: rgba(14, 8, 21, 0.88);
-
-    border: 2px solid var(--purple);
-    border-radius: 15px;
-
-    box-shadow:
-        0 0 17px rgba(152, 85, 245, 0.12),
-        inset 0 0 35px rgba(152, 85, 245, 0.045);
-
-    transition:
-        border-color 0.5s ease,
-        box-shadow 0.7s ease,
-        background 0.5s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 190px;
+  margin: 35px 0 15px;
+  padding: 25px 12px;
+  border: 1px solid rgba(176, 117, 255, 0.2);
+  border-radius: 23px;
+  background: linear-gradient(
+    145deg,
+    rgba(32, 20, 47, 0.83),
+    rgba(12, 9, 19, 0.91)
+  );
+  box-shadow:
+    0 0 45px rgba(122, 57, 199, 0.11),
+    inset 0 0 30px rgba(142, 81, 224, 0.035);
 }
-
-/* 내부 장식 */
 
 .number-box::before {
-    content: "";
-
-    position: absolute;
-    inset: 9px;
-    z-index: -1;
-
-    border: 1px solid rgba(180, 122, 255, 0.13);
-    border-radius: 9px;
-
-    pointer-events: none;
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    rgba(185, 131, 255, 0.17),
+    transparent 75%
+  );
+  opacity: 0.5;
+  pointer-events: none;
 }
-
-/* 추첨 완료 시 퍼지는 원형 파동 */
-
-.number-box::after {
-    content: "";
-
-    position: absolute;
-    inset: -2px;
-    z-index: -1;
-
-    border: 2px solid rgba(180, 122, 255, 0);
-    border-radius: 15px;
-
-    pointer-events: none;
-    opacity: 0;
-}
-
-.number-box.impact::after {
-    animation: result-wave 0.9s ease-out;
-}
-
-@keyframes result-wave {
-    0% {
-        inset: -2px;
-        opacity: 0.9;
-        border-color: rgba(180, 122, 255, 0.8);
-        box-shadow: 0 0 15px rgba(152, 85, 245, 0.5);
-    }
-
-    100% {
-        inset: -30px;
-        opacity: 0;
-        border-color: rgba(180, 122, 255, 0);
-        box-shadow: 0 0 38px rgba(152, 85, 245, 0);
-    }
-}
-
-/* 숫자 */
 
 .number {
-    position: relative;
-    z-index: 1;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    gap: clamp(2px, 0.7vw, 9px);
-
-    color: var(--ivory);
-
-    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-    font-size: clamp(38px, 5.2vw, 72px);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-
-    white-space: nowrap;
-
-    transition:
-        color 0.5s ease,
-        text-shadow 0.7s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1px, 0.6vw, 7px);
+  width: 100%;
+  font-size: clamp(34px, 6.7vw, 76px);
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+  color: #f8f0ff;
+  text-shadow: 0 0 22px rgba(184, 125, 255, 0.32);
 }
 
 .number span {
-    display: inline-block;
-
-    min-width: 0.62em;
-
-    text-align: center;
-
-    will-change: transform, opacity;
+  display: inline-block;
+  min-width: 0.58em;
 }
-
-/* 회전 */
-
-.number span.rolling {
-    animation: digit-roll 0.18s ease-in-out infinite alternate;
-}
-
-@keyframes digit-roll {
-    from {
-        transform: translateY(-2px);
-        opacity: 0.72;
-    }
-
-    to {
-        transform: translateY(2px);
-        opacity: 1;
-    }
-}
-
-/* 자리 확정 */
-
-.number span.locked {
-    animation: digit-lock 0.35s ease-out;
-}
-
-@keyframes digit-lock {
-    0% {
-        transform: translateY(-7px) scale(1.06);
-        opacity: 0.35;
-    }
-
-    65% {
-        transform: translateY(2px) scale(1.02);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-    }
-}
-
-/* 결과 전체가 살짝 커졌다가 안정 */
 
 .number.finished {
-    color: #fff5e8;
-
-    text-shadow:
-        0 0 9px rgba(208, 170, 255, 0.85),
-        0 0 23px rgba(152, 85, 245, 0.55);
-
-    animation: result-pop 0.65s cubic-bezier(0.2, 0.8, 0.25, 1);
+  animation: result-pop 500ms cubic-bezier(.16, 1.5, .35, 1) both;
+  color: white;
+  text-shadow:
+    0 0 9px white,
+    0 0 25px #bd8aff,
+    0 0 55px rgba(154, 78, 255, 0.85);
 }
 
 @keyframes result-pop {
-    0% {
-        transform: scale(1);
-        filter: brightness(1);
-    }
-
-    35% {
-        transform: scale(1.09);
-        filter: brightness(1.4);
-    }
-
-    65% {
-        transform: scale(0.99);
-        filter: brightness(1.15);
-    }
-
-    100% {
-        transform: scale(1);
-        filter: brightness(1);
-    }
+  0% { transform: scale(0.78); filter: brightness(1.8); }
+  45% { transform: scale(1.09); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
 
-.number-box.finished {
-    border-color: var(--purple-light);
-
-    background: rgba(22, 11, 33, 0.94);
-
-    box-shadow:
-        0 0 20px rgba(152, 85, 245, 0.3),
-        0 0 42px rgba(152, 85, 245, 0.15),
-        inset 0 0 30px rgba(152, 85, 245, 0.07);
+.number-box.impact {
+  animation: box-impact 550ms ease-out;
 }
 
-/* =========================
-   추첨 버튼
-========================= */
-
-.generate-btn {
-    position: relative;
-
-    min-width: 320px;
-    min-height: 78px;
-
-    margin-top: 48px;
-    padding: 21px 36px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 26px;
-
-    border: 1px solid var(--purple-light);
-    border-radius: 11px;
-
-    background: linear-gradient(
-        135deg,
-        #a15aef,
-        #853bd7
-    );
-
-    color: #fff5e8;
-
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: 4px;
-
-    cursor: pointer;
-
-    box-shadow:
-        0 5px 0 #572391,
-        0 10px 28px rgba(121, 53, 203, 0.25);
-
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.2s ease,
-        filter 0.2s ease,
-        opacity 0.2s ease;
+@keyframes box-impact {
+  0% {
+    border-color: rgba(207, 164, 255, 0.95);
+    box-shadow: 0 0 0 0 rgba(167, 94, 255, 0.45);
+  }
+  50% {
+    border-color: rgba(207, 164, 255, 0.7);
+    box-shadow: 0 0 40px 8px rgba(167, 94, 255, 0.17);
+  }
+  100% {
+    border-color: rgba(176, 117, 255, 0.2);
+    box-shadow: 0 0 45px rgba(122, 57, 199, 0.11);
+  }
 }
 
-.generate-btn:hover:not(:disabled) {
-    filter: brightness(1.12);
-
-    box-shadow:
-        0 5px 0 #572391,
-        0 10px 35px rgba(152, 85, 245, 0.42);
+.status {
+  min-height: 20px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
-.generate-btn:active:not(:disabled) {
-    transform: translateY(4px);
-
-    box-shadow:
-        0 1px 0 #572391,
-        0 3px 12px rgba(152, 85, 245, 0.2);
+.button-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
-.generate-btn:disabled {
-    cursor: wait;
-    opacity: 0.65;
+.draw-button {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  width: min(100%, 330px);
+  min-height: 56px;
+  padding: 14px 20px;
+  overflow: visible;
+  border: 1px solid rgba(222, 194, 255, 0.5);
+  border-radius: 13px;
+  background: linear-gradient(110deg, #7736c5, #a35af4 55%, #7838c7);
+  color: white;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow:
+    0 5px 0 #482078,
+    0 9px 25px rgba(130, 60, 210, 0.22);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    filter 150ms ease;
+}
+
+.draw-button:hover {
+  filter: brightness(1.15);
+  box-shadow:
+    0 5px 0 #482078,
+    0 0 28px rgba(166, 95, 255, 0.38);
+}
+
+.draw-button:active {
+  transform: translateY(4px) scale(0.985);
+  box-shadow:
+    0 1px 0 #482078,
+    0 0 25px rgba(166, 95, 255, 0.35);
+}
+
+.draw-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .button-icon {
-    color: #f0ddff;
-    font-size: 17px;
-
-    transition: transform 0.3s ease;
+  font-size: 17px;
 }
 
-.generate-btn:hover:not(:disabled) .button-icon {
-    transform: rotate(45deg);
+.instant-button {
+  min-height: 58px;
+  border-color: rgba(218, 186, 255, 0.65);
+  background: linear-gradient(110deg, #3b2458, #7040a4, #3b2458);
+  box-shadow:
+    0 5px 0 #261638,
+    0 8px 25px rgba(130, 60, 210, 0.12);
 }
 
-/* =========================
-   상태 메시지
-========================= */
-
-.status {
-    min-height: 20px;
-
-    margin-top: 32px;
-
-    color: var(--ivory-soft);
-    font-size: 14px;
-    letter-spacing: 3px;
+.instant-button .button-note {
+  flex-basis: 100%;
+  margin-top: -4px;
+  color: #e0c7ff;
+  font-size: 10px;
+  font-weight: 450;
 }
 
-/* =========================
-   하단 장식
-========================= */
+.draw-button.button-impact {
+  animation: button-impact 400ms ease-out;
+}
+
+@keyframes button-impact {
+  0% {
+    filter: brightness(1.8);
+    box-shadow: 0 0 0 0 rgba(190, 130, 255, 0.65);
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow: 0 5px 0 #482078, 0 0 0 23px rgba(190, 130, 255, 0);
+  }
+}
 
 .footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 13px;
-
-    margin-top: 55px;
-
-    color: #b09abf;
-    font-size: 13px;
-    letter-spacing: 3px;
+  margin-top: 35px;
+  color: #7f708f;
+  font-size: 10px;
+  letter-spacing: 1.5px;
 }
 
-.footer-dot {
-    width: 4px;
-    height: 4px;
-
-    border-radius: 50%;
-    background: var(--purple-bright);
-
-    box-shadow: 0 0 8px rgba(152, 85, 245, 0.7);
+.footer span {
+  margin: 0 8px;
+  color: var(--purple-bright);
 }
 
-/* =========================
-   반응형
-========================= */
-
-@media (max-width: 1100px) {
-    body {
-        padding: 35px 24px;
-    }
-
-    .app-layout {
-        grid-template-columns: 250px minmax(0, 1fr);
-        gap: 30px;
-    }
-
-    .history-panel {
-        padding: 24px 18px;
-    }
-
-    .history-list {
-        min-height: 300px;
-    }
-
-    .number-box {
-        min-height: 145px;
-        padding: 20px 12px;
-    }
-
-    .number {
-        font-size: clamp(30px, 4.2vw, 54px);
-        gap: 3px;
-    }
-
-    .title {
-        font-size: clamp(27px, 3vw, 40px);
-    }
-
-    .eyebrow {
-        font-size: 15px;
-        letter-spacing: 4px;
-    }
+/* 별과 파티클 */
+.burst-particle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: #d9b6ff;
+  box-shadow: 0 0 8px #b77aff, 0 0 17px rgba(170, 100, 255, 0.7);
+  animation: burst var(--duration) cubic-bezier(.15, .65, .25, 1) forwards;
 }
 
-@media (max-width: 760px) {
-    body {
-        padding: 28px 16px;
-    }
-
-    .app-layout {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 38px;
-    }
-
-    .container {
-        grid-row: 1;
-    }
-
-    .history-panel {
-        grid-row: 2;
-        max-width: 540px;
-        margin: 0 auto;
-    }
-
-    .history-list {
-        min-height: 0;
-    }
-
-    .header {
-        margin-bottom: 35px;
-    }
-
-    .eyebrow {
-        font-size: 12px;
-        letter-spacing: 3px;
-    }
-
-    .title {
-        font-size: clamp(24px, 6vw, 38px);
-    }
-
-    .subtitle {
-        font-size: 12px;
-    }
-
-    .number-box {
-        min-height: 105px;
-        padding: 18px 6px;
-    }
-
-    .number {
-        font-size: clamp(23px, 6.8vw, 43px);
-        gap: 1px;
-    }
-
-    .number span {
-        min-width: 0.58em;
-    }
-
-    .generate-btn {
-        min-width: 245px;
-        min-height: 66px;
-        margin-top: 32px;
-    }
-
-    .footer {
-        margin-top: 36px;
-    }
+.burst-particle.star {
+  width: auto;
+  height: auto;
+  background: none;
+  box-shadow: none;
+  color: #f4e5ff;
+  font-size: var(--size);
+  line-height: 1;
+  text-shadow: 0 0 8px #b77aff, 0 0 16px #8f42e8;
 }
 
-@media (max-width: 360px) {
-    .number {
-        font-size: 22px;
-        gap: 0;
-    }
+@keyframes burst {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(var(--dx), var(--dy))
+      scale(0.1)
+      rotate(var(--rotation));
+  }
+}
 
-    .number span {
-        min-width: 0.56em;
-    }
+@media (max-width: 900px) {
+  .app-layout {
+    flex-direction: column-reverse;
+    gap: 25px;
+    padding: 35px 18px;
+  }
+
+  .container {
+    width: min(100%, 700px);
+  }
+
+  .history-panel {
+    width: min(100%, 700px);
+  }
+
+  #history-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .average-panel {
+    margin-top: 16px;
+  }
+
+  .number-box {
+    min-height: 145px;
+    margin-top: 27px;
+  }
+}
+
+@media (max-width: 420px) {
+  .number {
+    font-size: 9vw;
+    letter-spacing: -1px;
+  }
+
+  .number-box {
+    min-height: 120px;
+    padding: 18px 5px;
+  }
+
+  #history-list {
+    grid-template-columns: 1fr;
+  }
+
+  .eyebrow {
+    letter-spacing: 2px;
+    font-size: 9px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .number.finished,
-    .number span.rolling,
-    .number span.locked,
-    .number-box.impact::after {
-        animation: none;
-    }
+  .number.finished,
+  .number-box.impact,
+  .draw-button.button-impact,
+  .burst-particle {
+    animation-duration: 0.01ms !important;
+  }
 }
