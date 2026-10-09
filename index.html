@@ -14,52 +14,85 @@
 
     <canvas id="particles"></canvas>
 
-    <main class="container">
+    <div class="app-layout">
 
-        <header class="header">
-            <p class="eyebrow">✦ RANDOM NUMBER SYSTEM ✦</p>
-
-            <h1 class="title">NUMBER GENERATOR</h1>
-
-            <p class="subtitle">
-                PICK A NUMBER BETWEEN 0 AND 9999999
-            </p>
-
-            <div class="title-line"></div>
-        </header>
-
-        <section class="number-box" id="number-box"
-                 aria-label="추첨 결과">
-
-            <div class="number" id="number" aria-live="polite">
-                <span>0</span>
-                <span>0</span>
-                <span>0</span>
-                <span>0</span>
-                <span>0</span>
-                <span>0</span>
-                <span>0</span>
+        <!-- 왼쪽: 최근 추첨 기록 -->
+        <aside class="history-panel">
+            <div class="history-header">
+                <span class="history-symbol">✦</span>
+                <h2>HISTORY</h2>
             </div>
 
-        </section>
+            <p class="history-subtitle">RECENT NUMBERS</p>
 
-        <button id="generate-btn" class="generate-btn" type="button">
-            <span class="button-icon">✦</span>
-            <span id="button-text">GENERATE</span>
-            <span class="button-icon">✦</span>
-        </button>
+            <div class="history-count">
+                <span id="history-count">00</span>
+                <span class="count-divider">/</span>
+                <span>10</span>
+            </div>
 
-        <p id="status" class="status" aria-live="polite">
-            READY TO GENERATE
-        </p>
+            <div id="history-list" class="history-list">
+                <p class="history-empty">No records yet</p>
+            </div>
 
-        <footer class="footer">
-            <span class="footer-dot"></span>
-            <span>VIOLET SYSTEM</span>
-            <span class="footer-dot"></span>
-        </footer>
+            <div class="history-footer">
+                LATEST 10 RESULTS
+            </div>
+        </aside>
 
-    </main>
+        <!-- 중앙: 숫자 추첨기 -->
+        <main class="container">
+
+            <header class="header">
+                <p class="eyebrow">✦ RANDOM NUMBER SYSTEM ✦</p>
+
+                <h1 class="title">NUMBER GENERATOR</h1>
+
+                <p class="subtitle">
+                    PICK A NUMBER BETWEEN 0 AND 9999999
+                </p>
+
+                <div class="title-line"></div>
+            </header>
+
+            <section class="number-box" id="number-box"
+                     aria-label="추첨 결과">
+
+                <div class="number" id="number" aria-live="polite">
+                    <span>0</span>
+                    <span>0</span>
+                    <span>0</span>
+                    <span>0</span>
+                    <span>0</span>
+                    <span>0</span>
+                    <span>0</span>
+                </div>
+
+            </section>
+
+            <button id="generate-btn"
+                    class="generate-btn"
+                    type="button">
+
+                <span class="button-icon">✦</span>
+                <span id="button-text">GENERATE</span>
+                <span class="button-icon">✦</span>
+
+            </button>
+
+            <p id="status" class="status" aria-live="polite">
+                READY TO GENERATE
+            </p>
+
+            <footer class="footer">
+                <span class="footer-dot"></span>
+                <span>VIOLET SYSTEM</span>
+                <span class="footer-dot"></span>
+            </footer>
+
+        </main>
+
+    </div>
 
 </body>
 </html>
