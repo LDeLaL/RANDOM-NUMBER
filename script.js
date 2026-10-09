@@ -12,6 +12,10 @@ const statusElement = document.getElementById("status");
 const historyList = document.getElementById("history-list");
 const historyCount = document.getElementById("history-count");
 
+const averagePanel = document.getElementById("average-panel");
+const averageValue = document.getElementById("average-value");
+const averageStatus = document.getElementById("average-status");
+
 const DIGITS = 7;
 const HISTORY_LIMIT = 10;
 
@@ -23,7 +27,6 @@ let timers = [];
 let rollingIntervals = [];
 let isGenerating = false;
 
-// 최근 추첨 결과
 let history = [];
 
 
@@ -46,11 +49,37 @@ function clearAnimations() {
 
 
 /* =========================
-   추첨 기록 표시
+   앞자리 0 제거
+========================= */
+
+function displayFinalNumber(result, digits) {
+    const visibleNumber = String(Number(result));
+
+    // 숫자 0도 마지막 자리는 표시
+    const firstVisibleIndex = DIGITS - visibleNumber.length;
+
+    digits.forEach((digit, index) => {
+        digit.classList.remove("rolling", "locked");
+
+        if (index < firstVisibleIndex) {
+            digit.style.display = "none";
+        } else {
+            digit.style.display = "inline-block";
+            digit.textContent = result[index];
+        }
+    });
+
+    // 남은 숫자들이 flex 중앙 정렬로 모이도록 한다.
+}
+
+
+/* =========================
+   기록 목록 표시
 ========================= */
 
 function renderHistory() {
-    historyCount.textContent = String(history.length).padStart(2, "0");
+    historyCount.textContent =
+        String(history.length).padStart(2, "0");
 
     historyList.replaceChildren();
 
@@ -70,7 +99,8 @@ function renderHistory() {
 
         const numberIndex = document.createElement("span");
         numberIndex.className = "history-index";
-        numberIndex.textContent = String(index + 1).padStart(2, "0");
+        numberIndex.textContent =
+            String(index + 1).padStart(2, "0");
 
         const number = document.createElement("span");
         number.className = "history-number";
@@ -83,32 +113,98 @@ function renderHistory() {
 
 
 /* =========================
-   기록에 결과 추가
+   평균 계산
 ========================= */
 
-function addToHistory(result) {
-    history.unshift(result);
+function updateAverage() {
+    if (history.length < HISTORY_LIMIT) {
+        averagePanel.classList.remove("ready");
 
-    if (history.length > HISTORY_LIMIT) {
-        history.length = HISTORY_LIMIT;
+        averageValue.textContent = "--";
+
+        const remaining = HISTORY_LIMIT - history.length;
+
+        averageStatus.textContent =
+            `평균 계산까지 ${remaining}회 남음`;
+
+        return;
     }
 
-    renderHistory();
+    // 문자열을 실제 숫자로 변환하여 평균 계산
+    const total = history.reduce((sum, value) => {
+        return sum + Number(value);
+    }, 0);
+
+    const average = total / HISTORY_LIMIT;
+
+    averagePanel.classList.add("ready");
+
+    // 소수점 둘째 자리까지 표시
+    averageValue.textContent = average.toLocaleString(
+        "en-US",
+        {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }
+    );
+
+    averageStatus.textContent = "최근 10회 추첨 평균";
 }
 
 
 /* =========================
-   숫자 확정 효과
+   추첨 결과 기록
+========================= */
+
+function addToHistory(result) {
+    // 앞자리 0을 제거한 결과를 기록
+    const displayValue = String(Number(result));
+
+    history.unshift(displayValue);
+
+    // 최근 10개만 유지
+    if (history.length > HISTORY_LIMIT) {
+        history = history.slice(0, HISTORY_LIMIT);
+    }
+
+    renderHistory();
+    updateAverage();
+}
+
+
+/* =========================
+   숫자 확정 애니메이션
 ========================= */
 
 function digitLockEffect(digit) {
-    digit.classList.remove("rolling");
-    digit.classList.remove("locked");
+    digit.classList.remove("rolling", "locked");
 
-    // 애니메이션 재실행
     void digit.offsetWidth;
 
     digit.classList.add("locked");
+}
+
+
+/* =========================
+   추첨 완료 임팩트
+========================= */
+
+function playResultImpact() {
+    numberElement.classList.remove("finished");
+    numberBox.classList.remove("finished", "impact");
+
+    // 기존 애니메이션을 초기화하여 다시 실행
+    void numberBox.offsetWidth;
+
+    numberElement.classList.add("finished");
+    numberBox.classList.add("finished", "impact");
+
+    // 파동 애니메이션 클래스 정리
+    const impactTimer = setTimeout(() => {
+        numberBox.classList.remove("impact");
+    }, 1000);
+
+    timers.push(impactTimer);
 }
 
 
@@ -120,6 +216,7 @@ function generateNumber() {
     if (isGenerating) return;
 
     isGenerating = true;
+
     clearAnimations();
 
     generateButton.disabled = true;
@@ -128,48 +225,49 @@ function generateNumber() {
     statusElement.textContent = "GENERATING NUMBER...";
 
     numberElement.classList.remove("finished");
-    numberBox.classList.remove("finished");
+    numberBox.classList.remove("finished", "impact");
 
     const digits = numberElement.querySelectorAll("span");
 
-    // 0 ~ 9999999 범위에서 추첨
-    const result = String(
-        Math.floor(Math.random() * 10000000)
-    ).padStart(DIGITS, "0");
-
-    // 모든 숫자를 회전 상태로 설정
+    // 숨겨진 앞자리 0을 다시 표시
     digits.forEach((digit) => {
+        digit.style.display = "inline-block";
         digit.classList.remove("locked");
         digit.classList.add("rolling");
 
         digit.textContent = Math.floor(Math.random() * 10);
     });
 
-    // 각 자릿수 회전
+    // 0 ~ 9999999
+    const result = String(
+        Math.floor(Math.random() * 10000000)
+    ).padStart(DIGITS, "0");
+
+    // 숫자 회전
     digits.forEach((digit, index) => {
         rollingIntervals[index] = setInterval(() => {
             digit.textContent = Math.floor(Math.random() * 10);
         }, SPIN_SPEED + index * 8);
     });
 
-    // 왼쪽부터 한 자리씩 멈춤
+    // 왼쪽부터 순서대로 확정
     for (let i = 0; i < DIGITS; i++) {
         const timer = setTimeout(() => {
             clearInterval(rollingIntervals[i]);
 
-            digits[i].textContent = result[i];
-
             digitLockEffect(digits[i]);
+            digits[i].textContent = result[i];
 
         }, FIRST_STOP + i * STOP_INTERVAL);
 
         timers.push(timer);
     }
 
-    // 모든 숫자가 확정된 뒤 실행
+    // 모든 숫자가 멈춘 뒤 최종 결과 표시
     const finishTimer = setTimeout(() => {
-        numberElement.classList.add("finished");
-        numberBox.classList.add("finished");
+        displayFinalNumber(result, digits);
+
+        playResultImpact();
 
         statusElement.textContent = "NUMBER GENERATED";
 
@@ -178,11 +276,6 @@ function generateNumber() {
 
         isGenerating = false;
 
-        digits.forEach((digit) => {
-            digit.classList.remove("locked");
-        });
-
-        // 추첨이 완전히 끝난 결과만 기록
         addToHistory(result);
 
     }, FIRST_STOP + (DIGITS - 1) * STOP_INTERVAL + 400);
@@ -214,7 +307,10 @@ let canvasHeight = window.innerHeight;
 ========================= */
 
 function resizeCanvas() {
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    const pixelRatio = Math.min(
+        window.devicePixelRatio || 1,
+        2
+    );
 
     canvasWidth = window.innerWidth;
     canvasHeight = window.innerHeight;
@@ -249,10 +345,11 @@ function createParticles() {
             speedY: (Math.random() - 0.5) * 0.22,
 
             alpha: Math.random() * 0.45 + 0.15,
+
             twinkleSpeed: Math.random() * 0.008 + 0.002,
             twinkleOffset: Math.random() * Math.PI * 2,
 
-            // 푸른 남색보다는 보라색에 가까운 계열
+            // 보라색 계열
             hue: Math.random() * 28 + 268
         });
     }
@@ -304,7 +401,6 @@ function animateParticles() {
 
         ctx.fill();
 
-        // 큰 파티클의 은은한 광택
         if (particle.size > 1.3) {
             ctx.beginPath();
 
@@ -332,6 +428,7 @@ function animateParticles() {
 ========================= */
 
 renderHistory();
+updateAverage();
 
 window.addEventListener("resize", resizeCanvas);
 
@@ -340,7 +437,7 @@ animateParticles();
 
 
 /* =========================
-   화면 비활성화 시 최적화
+   화면 비활성화 최적화
 ========================= */
 
 document.addEventListener("visibilitychange", () => {
