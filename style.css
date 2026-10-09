@@ -3,11 +3,9 @@
   --purple: #9855f5;
   --purple-bright: #b47aff;
   --purple-light: #d0aaff;
-  --purple-deep: #7135cb;
   --text: #f4edff;
   --muted: #a99abf;
-  --panel: rgba(22, 14, 34, 0.86);
-  --effect-scale: 1;
+  --panel: rgba(22, 14, 34, 0.9);
 }
 
 * {
@@ -33,10 +31,6 @@ body {
 button,
 input {
   font: inherit;
-}
-
-button {
-  -webkit-tap-highlight-color: transparent;
 }
 
 #particles {
@@ -65,8 +59,6 @@ button {
   justify-content: center;
   padding: 44px 30px;
 }
-
-/* 기록 패널 */
 
 .history-panel {
   width: 240px;
@@ -192,8 +184,6 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
-/* 메인 영역 */
-
 .container {
   width: min(790px, 100%);
   text-align: center;
@@ -216,16 +206,11 @@ button {
   background: rgba(83, 47, 119, 0.24);
   cursor: pointer;
   font-size: 12px;
-  transition: background 150ms ease, border-color 150ms ease;
 }
 
 .settings-button:hover {
   background: rgba(124, 69, 185, 0.3);
   border-color: rgba(183, 127, 255, 0.55);
-}
-
-.settings-button span {
-  font-size: 16px;
 }
 
 .eyebrow {
@@ -252,8 +237,6 @@ h1 {
   font-size: 14px;
 }
 
-/* 숫자 상자 */
-
 .number-box {
   position: relative;
   display: flex;
@@ -264,11 +247,7 @@ h1 {
   padding: 25px 12px;
   border: 1px solid rgba(176, 117, 255, 0.2);
   border-radius: 23px;
-  background: linear-gradient(
-    145deg,
-    rgba(32, 20, 47, 0.83),
-    rgba(12, 9, 19, 0.91)
-  );
+  background: linear-gradient(145deg, rgba(32, 20, 47, 0.83), rgba(12, 9, 19, 0.91));
   box-shadow:
     0 0 45px rgba(122, 57, 199, 0.11),
     inset 0 0 30px rgba(142, 81, 224, 0.035);
@@ -279,12 +258,7 @@ h1 {
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: linear-gradient(
-    120deg,
-    transparent 20%,
-    rgba(185, 131, 255, 0.17),
-    transparent 75%
-  );
+  background: linear-gradient(120deg, transparent 20%, rgba(185, 131, 255, 0.17), transparent 75%);
   opacity: 0.5;
   pointer-events: none;
 }
@@ -308,53 +282,24 @@ h1 {
 .number span {
   display: inline-block;
   min-width: 0.58em;
-  transform: translateY(0);
 }
 
 .number.finished {
   animation: result-pop 650ms cubic-bezier(.16, 1.5, .35, 1) both;
   color: white;
-  text-shadow:
-    0 0 9px white,
-    0 0 25px #bd8aff,
-    0 0 55px rgba(154, 78, 255, 0.85);
+  text-shadow: 0 0 9px white, 0 0 25px #bd8aff, 0 0 55px rgba(154, 78, 255, 0.85);
 }
 
 .number span.rolling {
-  animation: digit-roll 180ms ease-in-out infinite;
   color: #d9baff;
-  filter: blur(0.25px);
+  text-shadow: 0 0 15px rgba(184, 125, 255, 0.6);
   will-change: transform;
 }
 
-@keyframes digit-roll {
-  0% {
-    transform: translateY(-4px);
-    opacity: 0.78;
-  }
-  50% {
-    transform: translateY(3px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-4px);
-    opacity: 0.78;
-  }
-}
-
 @keyframes result-pop {
-  0% {
-    transform: scale(0.83);
-    filter: brightness(1.7);
-  }
-  45% {
-    transform: scale(1.075);
-    filter: brightness(1.4);
-  }
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
+  0% { transform: scale(0.83); filter: brightness(1.7); }
+  45% { transform: scale(1.075); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
 
 .number-box.impact {
@@ -390,37 +335,18 @@ h1 {
 
 .number-box.rare {
   border-color: rgba(204, 151, 255, 0.7);
-  box-shadow:
-    0 0 30px rgba(168, 91, 255, 0.25),
-    inset 0 0 35px rgba(155, 80, 240, 0.12);
-}
-
-.number-box.rare .number {
-  color: #f7eaff;
-  text-shadow:
-    0 0 10px white,
-    0 0 25px #c58aff,
-    0 0 55px #8d39e8;
+  box-shadow: 0 0 30px rgba(168, 91, 255, 0.25), inset 0 0 35px rgba(155, 80, 240, 0.12);
 }
 
 .number-box.rare-legendary {
   border-color: rgba(255, 216, 157, 0.9);
-  background: linear-gradient(
-    145deg,
-    rgba(65, 39, 76, 0.94),
-    rgba(21, 12, 29, 0.96)
-  );
-  box-shadow:
-    0 0 45px rgba(191, 121, 255, 0.28),
-    inset 0 0 35px rgba(255, 199, 120, 0.09);
+  background: linear-gradient(145deg, rgba(65, 39, 76, 0.94), rgba(21, 12, 29, 0.96));
+  box-shadow: 0 0 45px rgba(191, 121, 255, 0.28), inset 0 0 35px rgba(255, 199, 120, 0.09);
 }
 
 .number-box.rare-legendary .number {
   color: #fff1d6;
-  text-shadow:
-    0 0 10px white,
-    0 0 30px #d8a3ff,
-    0 0 60px #b477ff;
+  text-shadow: 0 0 10px white, 0 0 30px #d8a3ff, 0 0 60px #b477ff;
 }
 
 .number-box.rare-legendary .rare-label {
@@ -461,8 +387,6 @@ h1 {
   font-size: 12px;
 }
 
-/* 버튼 */
-
 .button-area {
   display: flex;
   flex-direction: column;
@@ -471,8 +395,6 @@ h1 {
 }
 
 .draw-button {
-  position: relative;
-  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -487,27 +409,18 @@ h1 {
   font-size: 15px;
   font-weight: 750;
   cursor: pointer;
-  box-shadow:
-    0 5px 0 #482078,
-    0 9px 25px rgba(130, 60, 210, 0.22);
-  transition:
-    transform 120ms ease,
-    box-shadow 120ms ease,
-    filter 150ms ease;
+  box-shadow: 0 5px 0 #482078, 0 9px 25px rgba(130, 60, 210, 0.22);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 150ms ease;
 }
 
 .draw-button:hover {
   filter: brightness(1.15);
-  box-shadow:
-    0 5px 0 #482078,
-    0 0 28px rgba(166, 95, 255, 0.38);
+  box-shadow: 0 5px 0 #482078, 0 0 28px rgba(166, 95, 255, 0.38);
 }
 
 .draw-button:active {
   transform: translateY(4px) scale(0.985);
-  box-shadow:
-    0 1px 0 #482078,
-    0 0 25px rgba(166, 95, 255, 0.35);
+  box-shadow: 0 1px 0 #482078, 0 0 25px rgba(166, 95, 255, 0.35);
 }
 
 .draw-button:disabled {
@@ -528,9 +441,7 @@ h1 {
   border-radius: 10px;
   background: linear-gradient(110deg, #3b2458, #7040a4, #3b2458);
   font-size: 12px;
-  box-shadow:
-    0 3px 0 #261638,
-    0 5px 16px rgba(130, 60, 210, 0.12);
+  box-shadow: 0 3px 0 #261638, 0 5px 16px rgba(130, 60, 210, 0.12);
 }
 
 .instant-button .button-icon {
@@ -542,16 +453,8 @@ h1 {
 }
 
 @keyframes button-impact {
-  0% {
-    filter: brightness(1.8);
-    box-shadow: 0 0 0 0 rgba(190, 130, 255, 0.65);
-  }
-  100% {
-    filter: brightness(1);
-    box-shadow:
-      0 5px 0 #482078,
-      0 0 0 23px rgba(190, 130, 255, 0);
-  }
+  0% { filter: brightness(1.8); }
+  100% { filter: brightness(1); }
 }
 
 .footer {
@@ -566,7 +469,7 @@ h1 {
   color: var(--purple-bright);
 }
 
-/* 일반 파티클 */
+/* 파티클 */
 
 .burst-particle {
   position: fixed;
@@ -576,9 +479,7 @@ h1 {
   height: var(--size);
   border-radius: 50%;
   background: #d9b6ff;
-  box-shadow:
-    0 0 8px #b77aff,
-    0 0 17px rgba(170, 100, 255, 0.7);
+  box-shadow: 0 0 8px #b77aff, 0 0 17px rgba(170, 100, 255, 0.7);
   animation: burst var(--duration) cubic-bezier(.15, .65, .25, 1) forwards;
 }
 
@@ -593,61 +494,35 @@ h1 {
   text-shadow: 0 0 8px #b77aff, 0 0 16px #8f42e8;
 }
 
-@keyframes burst {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.3) rotate(0deg);
-  }
-  15% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform:
-      translate(var(--dx), var(--dy))
-      scale(0.1)
-      rotate(var(--rotation));
-  }
-}
-
-/* 희귀 숫자 전용 파티클 */
-
 .burst-particle.rare-star {
   color: #f7d7ff;
-  text-shadow:
-    0 0 10px white,
-    0 0 20px #c37bff,
-    0 0 35px #8d39e8;
+  text-shadow: 0 0 10px white, 0 0 20px #c37bff, 0 0 35px #8d39e8;
 }
 
 .burst-particle.gold-star {
   color: #ffe5ac;
-  text-shadow:
-    0 0 10px white,
-    0 0 22px #ffcc7a,
-    0 0 40px #bd77ff;
+  text-shadow: 0 0 10px white, 0 0 22px #ffcc7a, 0 0 40px #bd77ff;
+}
+
+@keyframes burst {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(0deg); }
+  15% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.1) rotate(var(--rotation));
+  }
 }
 
 .rare-flash {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(
-    circle at 50% 45%,
-    rgba(181, 115, 255, 0.28),
-    rgba(100, 38, 168, 0.08) 38%,
-    transparent 70%
-  );
+  background: radial-gradient(circle at 50% 45%, rgba(181, 115, 255, 0.28), rgba(100, 38, 168, 0.08) 38%, transparent 70%);
   animation: rare-flash 850ms ease-out forwards;
 }
 
 .rare-flash.legendary {
-  background: radial-gradient(
-    circle at 50% 45%,
-    rgba(255, 221, 163, 0.3),
-    rgba(190, 108, 255, 0.16) 35%,
-    transparent 72%
-  );
+  background: radial-gradient(circle at 50% 45%, rgba(255, 221, 163, 0.3), rgba(190, 108, 255, 0.16) 35%, transparent 72%);
 }
 
 @keyframes rare-flash {
@@ -683,14 +558,8 @@ h1 {
 }
 
 @keyframes settings-open {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .settings-header {
@@ -912,10 +781,12 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  .number.finished,
+  .number-box.impact,
+  .draw-button.button-impact,
+  .burst-particle,
+  .rare-flash,
+  .settings-panel {
     animation-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
