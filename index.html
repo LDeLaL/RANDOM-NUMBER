@@ -4,27 +4,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Violet Number Generator</title>
+
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
 <body>
+
+    <!-- 보라색 파티클 배경 -->
+    <canvas id="particles"></canvas>
+
     <main class="container">
-        <h1 class="title">NUMBER GENERATOR</h1>
-        <p class="subtitle">Pick a number between 0 and 999999</p>
 
-        <div class="number-box" aria-label="추첨 결과">
-            <div id="number" class="number" aria-live="polite">
-                <span>0</span><span>0</span><span>0</span>
-                <span>0</span><span>0</span><span>0</span>
+        <header class="header">
+            <p class="eyebrow">✦ RANDOM NUMBER SYSTEM ✦</p>
+            <h1 class="title">NUMBER GENERATOR</h1>
+            <p class="subtitle">
+                PICK A NUMBER BETWEEN 0 AND 999999
+            </p>
+            <div class="title-line"></div>
+        </header>
+
+        <!-- 숫자 표시 영역 -->
+        <section class="number-box" id="number-box"
+                 aria-label="추첨 결과">
+
+            <div class="number" id="number" aria-live="polite">
+                <span>0</span>
+                <span>0</span>
+                <span>0</span>
+                <span>0</span>
+                <span>0</span>
+                <span>0</span>
             </div>
-        </div>
 
+        </section>
+
+        <!-- 추첨 버튼 -->
         <button id="generate-btn" class="generate-btn" type="button">
-            GENERATE
+            <span class="button-icon">✦</span>
+            <span id="button-text">GENERATE</span>
+            <span class="button-icon">✦</span>
         </button>
 
-        <p id="status" class="status">Ready to generate</p>
+        <p id="status" class="status" aria-live="polite">
+            READY TO GENERATE
+        </p>
+
+        <footer class="footer">
+            <span class="footer-dot"></span>
+            <span>VIOLET SYSTEM</span>
+            <span class="footer-dot"></span>
+        </footer>
+
     </main>
+
 </body>
 </html>
