@@ -4,250 +4,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#080510">
+  <meta name="theme-color" content="#08070c">
   <title>Violet Random</title>
   <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
 </head>
 <body>
-  <canvas id="particle-canvas"></canvas>
+  <canvas id="particles"></canvas>
+  <div id="effects"></div>
 
   <div class="app-layout">
-    <aside class="sidebar">
-      <div class="brand">
-        <span class="brand-icon">✦</span>
-        <div>
-          <h2>Violet</h2>
-          <p>RANDOM GENERATOR</p>
-        </div>
+    <aside class="history-panel">
+      <h2>DRAW HISTORY</h2>
+      <p class="panel-subtitle">최근 10회 추첨 결과</p>
+
+      <ol id="history-list">
+        <li class="empty-history">아직 추첨 기록이 없어!</li>
+      </ol>
+
+      <div class="average-panel">
+        <p>최근 10회 평균</p>
+        <strong id="average">—</strong>
+        <span id="average-status">10회 추첨 후 표시</span>
       </div>
 
-      <div class="side-section">
-        <h3>최근 기록 <span class="subtle">LAST 10</span></h3>
-        <div id="history-list" class="history-list">
-          <p class="empty-history">아직 뽑은 숫자가 없어.</p>
-        </div>
-      </div>
+      <div class="stats-panel">
+        <h3>NUMBER STATISTICS</h3>
 
-      <div class="side-section">
-        <h3>최근 10회 통계</h3>
-        <div class="stat-card">
-          <span>평균</span>
-          <strong id="average-number">—</strong>
-        </div>
-        <div class="stat-card">
+        <div class="stat-row">
           <span>최댓값</span>
           <strong id="max-number">—</strong>
         </div>
-        <div class="stat-card">
+
+        <div class="stat-row">
           <span>최솟값</span>
           <strong id="min-number">—</strong>
         </div>
-        <div class="stat-card">
-          <span>총 뽑은 횟수</span>
+
+        <div class="stat-row">
+          <span>전체 추첨 횟수</span>
           <strong id="total-draws">0</strong>
         </div>
       </div>
-
-      <div class="sidebar-footer">
-        <span class="footer-dot"></span>
-        <span>Violet Random</span>
-      </div>
     </aside>
 
-    <main class="main-content">
-      <header class="top-bar">
-        <div class="top-label">
-          <span class="live-dot"></span>
-          RANDOM NUMBER SYSTEM
-        </div>
-        <button id="settings-button" class="settings-button" type="button"
-          aria-label="설정 열기" title="설정">
-          ⚙ <span>설정</span>
+    <main class="container">
+      <div class="top-actions">
+        <button
+          id="settings-button"
+          class="settings-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="settings-overlay"
+        >
+          ⚙ 설정
         </button>
-      </header>
+      </div>
 
-      <section class="generator">
-        <div class="eyebrow">YOUR NUMBER, YOUR LUCK</div>
-        <h1>Violet <span>Random</span></h1>
-        <p class="description">오늘의 행운은 어떤 숫자일까?</p>
+      <div class="eyebrow">✦ RANDOM NUMBER GENERATOR ✦</div>
+      <h1>Violet Random</h1>
+      <p class="subtitle">운명을 결정할 단 하나의 숫자</p>
 
-        <div id="result-stage" class="result-stage">
-          <div class="result-orbit orbit-one"></div>
-          <div class="result-orbit orbit-two"></div>
-          <div id="result-number" class="result-number" aria-live="polite">?</div>
-          <div id="result-rarity" class="result-rarity">READY TO DRAW</div>
+      <div class="number-box" id="number-box">
+        <div class="number" id="number" aria-live="polite">
+          <span>0</span><span>0</span><span>0</span><span>0</span>
+          <span>0</span><span>0</span><span>0</span>
         </div>
+        <div id="rare-label" class="rare-label" aria-live="polite"></div>
+      </div>
 
-        <div id="result-message" class="result-message">
-          버튼을 눌러 숫자를 뽑아 봐.
-        </div>
+      <div class="number-info">
+        <span id="prime-status">아직 추첨 결과가 없어</span>
+        <span id="divisor-status">숫자를 뽑아 봐!</span>
+      </div>
 
-        <div class="button-group">
-          <button id="draw-button" class="draw-button" type="button">
-            <span class="button-star">✦</span>
-            <span>숫자 뽑기</span>
-            <span class="button-arrow">↗</span>
-          </button>
+      <p class="status" id="status">준비 완료 · 추첨을 시작해 봐</p>
 
-          <button id="instant-button" class="instant-button" type="button">
-            <span>⚡</span> 즉각 뽑기
-          </button>
+      <div class="button-area">
+        <button id="draw-button" class="draw-button" type="button">
+          <span class="button-icon">✦</span>
+          숫자 뽑기
+        </button>
 
-          <button id="auto-button" class="auto-button" type="button">
-            <span>⟳</span> 자동 뽑기
-          </button>
-        </div>
+        <button id="instant-button" class="draw-button instant-button" type="button">
+          <span class="button-icon">⚡</span>
+          즉각 뽑기
+        </button>
+      </div>
 
-        <div id="auto-status" class="auto-status" aria-live="polite" hidden>
-          <div class="auto-status-top">
-            <span id="auto-status-text">자동 뽑기 준비 중</span>
-            <span id="auto-count">0회</span>
-          </div>
-          <div class="auto-progress-track">
-            <div id="auto-progress" class="auto-progress"></div>
-          </div>
-          <button id="stop-auto-button" class="stop-auto-button" type="button">
-            자동 뽑기 중지
-          </button>
-        </div>
-
-        <div class="bottom-note">
-          <span>✧</span> 0 — 9,999,999
-          <span class="note-divider">/</span>
-          UNIFORM RANDOM
-        </div>
-      </section>
+      <p class="footer">
+        0 — 9,999,999 <span>•</span> SECURE RANDOM
+      </p>
     </main>
   </div>
 
   <div id="settings-overlay" class="settings-overlay" hidden>
-    <section class="settings-modal" role="dialog" aria-modal="true"
-      aria-labelledby="settings-title">
-      <div class="modal-header">
+    <section
+      class="settings-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+    >
+      <div class="settings-header">
         <div>
-          <p class="modal-eyebrow">PERSONALIZE YOUR EXPERIENCE</p>
-          <h2 id="settings-title">설정 <span>Settings</span></h2>
+          <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
+          <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" type="button"
-          aria-label="설정 닫기">×</button>
+        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">
+          ✕
+        </button>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>파티클 수</strong>
-          <span>배경에 떠다니는 입자의 양</span>
+      <div class="setting-item">
+        <div class="setting-heading">
+          <label for="particle-setting">배경 파티클 양</label>
+          <strong id="particle-value">65</strong>
         </div>
-        <div class="setting-control">
-          <input id="particle-count" type="range" min="0" max="150" value="65">
-          <output id="particle-count-value">65</output>
-        </div>
+        <input id="particle-setting" type="range" min="0" max="150" step="5" value="65">
+        <div class="range-labels"><span>없음</span><span>많음</span></div>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>숫자 뽑기 속도</strong>
-          <span>숫자가 바뀌는 애니메이션 속도</span>
+      <div class="setting-item">
+        <div class="setting-heading">
+          <label for="speed-setting">숫자 롤링 속도</label>
+          <strong id="speed-value">느리게</strong>
         </div>
-        <div class="setting-control">
-          <input id="roll-speed" type="range" min="1" max="5" value="1">
-          <output id="roll-speed-value">1</output>
-        </div>
+        <input id="speed-setting" type="range" min="1" max="5" step="1" value="2">
+        <div class="range-labels"><span>느리게</span><span>빠르게</span></div>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>효과 강도</strong>
-          <span>빛과 파티클의 강도</span>
+      <div class="setting-item">
+        <div class="setting-heading">
+          <label for="effect-setting">임팩트 강도</label>
+          <strong id="effect-value">보통</strong>
         </div>
-        <div class="setting-control">
-          <input id="effect-strength" type="range" min="0" max="3" value="2">
-          <output id="effect-strength-value">2</output>
-        </div>
+        <input id="effect-setting" type="range" min="0" max="3" step="1" value="2">
+        <div class="range-labels"><span>없음</span><span>강하게</span></div>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>희귀 숫자 효과</strong>
-          <span>특별한 숫자가 나왔을 때 효과 적용</span>
-        </div>
-        <label class="switch">
-          <input id="rare-effects" type="checkbox" checked>
-          <span class="switch-track"></span>
-        </label>
+      <label class="setting-toggle">
+        <span>
+          <strong>희귀 숫자 이펙트</strong>
+          <small>특별한 패턴이 나오면 전용 연출 표시</small>
+        </span>
+        <input id="rare-setting" type="checkbox" checked>
+      </label>
+
+      <div class="settings-actions">
+        <button id="reset-settings" class="secondary-button" type="button">
+          기본값
+        </button>
+        <button id="save-settings" class="primary-button" type="button">
+          설정 저장
+        </button>
       </div>
 
-      <div class="modal-divider"></div>
-      <h3 class="modal-subheading">자동 뽑기</h3>
-
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>자동 실행 시간</strong>
-          <span>시간이 지나면 자동으로 종료</span>
-        </div>
-        <div class="setting-control compact-control">
-          <input id="auto-duration" type="number" min="1" max="3600" value="30">
-          <span>초</span>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>뽑기 간격</strong>
-          <span>숫자와 숫자 사이의 대기 시간</span>
-        </div>
-        <div class="setting-control compact-control">
-          <input id="auto-interval" type="number" min="1" max="60" value="3">
-          <span>초</span>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>최대 뽑기 횟수</strong>
-          <span>0이면 횟수 제한 없음</span>
-        </div>
-        <div class="setting-control compact-control">
-          <input id="auto-max-draws" type="number" min="0" max="100000" value="0">
-          <span>회</span>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-label">
-          <strong>희귀 숫자에서 멈추기</strong>
-          <span>설정한 희귀도 이상이면 자동 종료</span>
-        </div>
-        <label class="switch">
-          <input id="auto-stop-rare" type="checkbox">
-          <span class="switch-track"></span>
-        </label>
-      </div>
-
-      <div class="setting-row" id="auto-rarity-row">
-        <div class="setting-label">
-          <strong>정지 희귀도</strong>
-          <span>어느 정도 희귀한 숫자에서 멈출까?</span>
-        </div>
-        <select id="auto-rarity">
-          <option value="rare">희귀</option>
-          <option value="very-rare">매우 희귀</option>
-          <option value="legendary">전설</option>
-        </select>
-      </div>
-
-      <p class="settings-note">
-        자동 뽑기는 메인 숫자 뽑기와 같은 기록 및 통계를 사용해.
-        실행 중에도 중지 버튼으로 멈출 수 있어.
+      <p id="settings-message" class="settings-message" aria-live="polite">
+        설정은 이 브라우저에 저장돼.
       </p>
-
-      <div class="modal-actions">
-        <button id="reset-settings" class="reset-settings" type="button">기본값</button>
-        <button id="save-settings" class="save-settings" type="button">저장하기</button>
-      </div>
     </section>
   </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
 </body>
 </html>
