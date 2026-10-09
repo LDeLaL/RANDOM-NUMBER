@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08070c">
   <title>Violet Random</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -25,23 +26,55 @@
         <strong id="average">—</strong>
         <span id="average-status">10회 추첨 후 표시</span>
       </div>
+
+      <div class="stats-panel">
+        <h3>NUMBER STATISTICS</h3>
+
+        <div class="stat-row">
+          <span>최댓값</span>
+          <strong id="max-number">—</strong>
+        </div>
+
+        <div class="stat-row">
+          <span>최솟값</span>
+          <strong id="min-number">—</strong>
+        </div>
+
+        <div class="stat-row">
+          <span>전체 추첨 횟수</span>
+          <strong id="total-draws">0</strong>
+        </div>
+      </div>
     </aside>
 
     <main class="container">
+      <div class="top-actions">
+        <button
+          id="settings-button"
+          class="settings-button"
+          aria-label="설정 열기"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true">⚙</span>
+          설정
+        </button>
+      </div>
+
       <div class="eyebrow">✦ RANDOM NUMBER GENERATOR ✦</div>
       <h1>Violet Random</h1>
       <p class="subtitle">운명을 결정할 단 하나의 숫자</p>
 
       <div class="number-box" id="number-box">
         <div class="number" id="number" aria-live="polite">
-          <span>0</span>
-          <span>0</span>
-          <span>0</span>
-          <span>0</span>
-          <span>0</span>
-          <span>0</span>
-          <span>0</span>
+          <span>0</span><span>0</span><span>0</span><span>0</span>
+          <span>0</span><span>0</span><span>0</span>
         </div>
+        <div id="rare-label" class="rare-label" aria-live="polite"></div>
+      </div>
+
+      <div class="number-info" id="number-info">
+        <span id="prime-status">아직 추첨 결과가 없어</span>
+        <span id="divisor-status">숫자를 뽑아 봐!</span>
       </div>
 
       <p class="status" id="status">준비 완료 · 추첨을 시작해 봐</p>
@@ -62,6 +95,103 @@
         0 — 9,999,999 <span>•</span> SECURE RANDOM
       </p>
     </main>
+  </div>
+
+  <div id="settings-overlay" class="settings-overlay" hidden>
+    <section
+      class="settings-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+    >
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
+          <h2 id="settings-title">설정</h2>
+        </div>
+        <button id="close-settings" class="close-settings" aria-label="설정 닫기">
+          ✕
+        </button>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-heading">
+          <label for="particle-setting">배경 파티클 양</label>
+          <strong id="particle-value">65</strong>
+        </div>
+        <input
+          id="particle-setting"
+          type="range"
+          min="0"
+          max="150"
+          step="5"
+          value="65"
+        >
+        <div class="range-labels">
+          <span>없음</span>
+          <span>많음</span>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-heading">
+          <label for="speed-setting">숫자 롤링 속도</label>
+          <strong id="speed-value">보통</strong>
+        </div>
+        <input
+          id="speed-setting"
+          type="range"
+          min="1"
+          max="5"
+          step="1"
+          value="3"
+        >
+        <div class="range-labels">
+          <span>느리게</span>
+          <span>빠르게</span>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-heading">
+          <label for="effect-setting">임팩트 강도</label>
+          <strong id="effect-value">보통</strong>
+        </div>
+        <input
+          id="effect-setting"
+          type="range"
+          min="0"
+          max="3"
+          step="1"
+          value="2"
+        >
+        <div class="range-labels">
+          <span>없음</span>
+          <span>강하게</span>
+        </div>
+      </div>
+
+      <label class="setting-toggle">
+        <span>
+          <strong>희귀 숫자 이펙트</strong>
+          <small>특별한 패턴이 나오면 전용 연출 표시</small>
+        </span>
+        <input id="rare-setting" type="checkbox" checked>
+      </label>
+
+      <div class="settings-actions">
+        <button id="reset-settings" class="secondary-button">
+          기본값
+        </button>
+        <button id="save-settings" class="primary-button">
+          설정 저장
+        </button>
+      </div>
+
+      <p id="settings-message" class="settings-message" aria-live="polite">
+        설정은 이 브라우저에 저장돼.
+      </p>
+    </section>
   </div>
 
   <script src="script.js"></script>
