@@ -52,11 +52,11 @@
         <button
           id="settings-button"
           class="settings-button"
-          aria-label="설정 열기"
+          type="button"
           aria-expanded="false"
+          aria-controls="settings-overlay"
         >
-          <span aria-hidden="true">⚙</span>
-          설정
+          ⚙ 설정
         </button>
       </div>
 
@@ -72,7 +72,7 @@
         <div id="rare-label" class="rare-label" aria-live="polite"></div>
       </div>
 
-      <div class="number-info" id="number-info">
+      <div class="number-info">
         <span id="prime-status">아직 추첨 결과가 없어</span>
         <span id="divisor-status">숫자를 뽑아 봐!</span>
       </div>
@@ -80,12 +80,12 @@
       <p class="status" id="status">준비 완료 · 추첨을 시작해 봐</p>
 
       <div class="button-area">
-        <button id="draw-button" class="draw-button">
+        <button id="draw-button" class="draw-button" type="button">
           <span class="button-icon">✦</span>
           숫자 뽑기
         </button>
 
-        <button id="instant-button" class="draw-button instant-button">
+        <button id="instant-button" class="draw-button instant-button" type="button">
           <span class="button-icon">⚡</span>
           즉각 뽑기
         </button>
@@ -109,7 +109,7 @@
           <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
           <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" aria-label="설정 닫기">
+        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">
           ✕
         </button>
       </div>
@@ -119,37 +119,17 @@
           <label for="particle-setting">배경 파티클 양</label>
           <strong id="particle-value">65</strong>
         </div>
-        <input
-          id="particle-setting"
-          type="range"
-          min="0"
-          max="150"
-          step="5"
-          value="65"
-        >
-        <div class="range-labels">
-          <span>없음</span>
-          <span>많음</span>
-        </div>
+        <input id="particle-setting" type="range" min="0" max="150" step="5" value="65">
+        <div class="range-labels"><span>없음</span><span>많음</span></div>
       </div>
 
       <div class="setting-item">
         <div class="setting-heading">
           <label for="speed-setting">숫자 롤링 속도</label>
-          <strong id="speed-value">보통</strong>
+          <strong id="speed-value">느리게</strong>
         </div>
-        <input
-          id="speed-setting"
-          type="range"
-          min="1"
-          max="5"
-          step="1"
-          value="3"
-        >
-        <div class="range-labels">
-          <span>느리게</span>
-          <span>빠르게</span>
-        </div>
+        <input id="speed-setting" type="range" min="1" max="5" step="1" value="2">
+        <div class="range-labels"><span>느리게</span><span>빠르게</span></div>
       </div>
 
       <div class="setting-item">
@@ -157,18 +137,8 @@
           <label for="effect-setting">임팩트 강도</label>
           <strong id="effect-value">보통</strong>
         </div>
-        <input
-          id="effect-setting"
-          type="range"
-          min="0"
-          max="3"
-          step="1"
-          value="2"
-        >
-        <div class="range-labels">
-          <span>없음</span>
-          <span>강하게</span>
-        </div>
+        <input id="effect-setting" type="range" min="0" max="3" step="1" value="2">
+        <div class="range-labels"><span>없음</span><span>강하게</span></div>
       </div>
 
       <label class="setting-toggle">
@@ -180,10 +150,10 @@
       </label>
 
       <div class="settings-actions">
-        <button id="reset-settings" class="secondary-button">
+        <button id="reset-settings" class="secondary-button" type="button">
           기본값
         </button>
-        <button id="save-settings" class="primary-button">
+        <button id="save-settings" class="primary-button" type="button">
           설정 저장
         </button>
       </div>
