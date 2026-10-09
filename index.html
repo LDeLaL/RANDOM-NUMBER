@@ -2,114 +2,62 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Violet Number Generator</title>
-
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Violet Random</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <canvas id="particles"></canvas>
+  <div id="effects"></div>
 
-    <canvas id="particles"></canvas>
+  <div class="app-layout">
+    <aside class="history-panel">
+      <h2>DRAW HISTORY</h2>
+      <p class="panel-subtitle">최근 10회 추첨 결과</p>
 
-    <div class="app-layout">
+      <ol id="history-list">
+        <li class="empty-history">아직 추첨 기록이 없어!</li>
+      </ol>
 
-        <!-- 왼쪽: 최근 추첨 기록 -->
-        <aside class="history-panel">
+      <div class="average-panel">
+        <p>최근 10회 평균</p>
+        <strong id="average">—</strong>
+        <span id="average-status">10회 추첨 후 표시</span>
+      </div>
+    </aside>
 
-            <div class="history-header">
-                <span class="history-symbol">✦</span>
-                <h2>HISTORY</h2>
-            </div>
+    <main class="container">
+      <div class="eyebrow">✦ RANDOM NUMBER GENERATOR ✦</div>
+      <h1>Violet Random</h1>
+      <p class="subtitle">운명을 결정할 단 하나의 숫자</p>
 
-            <p class="history-subtitle">RECENT NUMBERS</p>
+      <div class="number-box" id="number-box">
+        <div class="number" id="number" aria-live="polite">
+          <span>0</span><span>0</span><span>0</span><span>0</span>
+          <span>0</span><span>0</span><span>0</span>
+        </div>
+      </div>
 
-            <div class="history-count">
-                <span id="history-count">00</span>
-                <span class="count-divider">/</span>
-                <span>10</span>
-            </div>
+      <p class="status" id="status">준비 완료 · 추첨을 시작해 봐</p>
 
-            <div id="history-list" class="history-list">
-                <p class="history-empty">No records yet</p>
-            </div>
+      <div class="button-area">
+        <button id="instant-button" class="draw-button instant-button">
+          <span class="button-icon">⚡</span>
+          즉각 뽑기
+          <span class="button-note">애니메이션 없이 바로 결과 확인</span>
+        </button>
 
-            <div class="history-footer">
-                LATEST 10 RESULTS
-            </div>
+        <button id="draw-button" class="draw-button">
+          <span class="button-icon">✦</span>
+          숫자 뽑기
+        </button>
+      </div>
 
-            <!-- 평균 통계 -->
-            <section id="average-panel" class="average-panel">
+      <p class="footer">0 — 9,999,999 <span>•</span> SECURE RANDOM</p>
+    </main>
+  </div>
 
-                <p class="average-label">10-DRAW AVERAGE</p>
-
-                <div id="average-value" class="average-value">
-                    --
-                </div>
-
-                <p id="average-status" class="average-status">
-                    10회 추첨 후 평균 계산
-                </p>
-
-            </section>
-
-        </aside>
-
-        <!-- 중앙: 숫자 추첨기 -->
-        <main class="container">
-
-            <header class="header">
-                <p class="eyebrow">✦ RANDOM NUMBER SYSTEM ✦</p>
-
-                <h1 class="title">NUMBER GENERATOR</h1>
-
-                <p class="subtitle">
-                    PICK A NUMBER BETWEEN 0 AND 9999999
-                </p>
-
-                <div class="title-line"></div>
-            </header>
-
-            <section class="number-box" id="number-box"
-                     aria-label="추첨 결과">
-
-                <div class="number" id="number" aria-live="polite">
-                    <span>0</span>
-                    <span>0</span>
-                    <span>0</span>
-                    <span>0</span>
-                    <span>0</span>
-                    <span>0</span>
-                    <span>0</span>
-                </div>
-
-            </section>
-
-            <button id="generate-btn"
-                    class="generate-btn"
-                    type="button">
-
-                <span class="button-icon">✦</span>
-                <span id="button-text">GENERATE</span>
-                <span class="button-icon">✦</span>
-
-            </button>
-
-            <p id="status" class="status" aria-live="polite">
-                READY TO GENERATE
-            </p>
-
-            <footer class="footer">
-                <span class="footer-dot"></span>
-                <span>VIOLET SYSTEM</span>
-                <span class="footer-dot"></span>
-            </footer>
-
-        </main>
-
-    </div>
-
+  <script src="script.js"></script>
 </body>
 </html>
