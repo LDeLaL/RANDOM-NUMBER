@@ -9,7 +9,11 @@ const generateButton = document.getElementById("generate-btn");
 const buttonText = document.getElementById("button-text");
 const statusElement = document.getElementById("status");
 
+const historyList = document.getElementById("history-list");
+const historyCount = document.getElementById("history-count");
+
 const DIGITS = 7;
+const HISTORY_LIMIT = 10;
 
 const SPIN_SPEED = 85;
 const FIRST_STOP = 1000;
@@ -18,6 +22,9 @@ const STOP_INTERVAL = 450;
 let timers = [];
 let rollingIntervals = [];
 let isGenerating = false;
+
+// 최근 추첨 결과
+let history = [];
 
 
 /* =========================
@@ -35,6 +42,73 @@ function clearAnimations() {
 
     timers = [];
     rollingIntervals = [];
+}
+
+
+/* =========================
+   추첨 기록 표시
+========================= */
+
+function renderHistory() {
+    historyCount.textContent = String(history.length).padStart(2, "0");
+
+    historyList.replaceChildren();
+
+    if (history.length === 0) {
+        const empty = document.createElement("p");
+
+        empty.className = "history-empty";
+        empty.textContent = "No records yet";
+
+        historyList.appendChild(empty);
+        return;
+    }
+
+    history.forEach((value, index) => {
+        const item = document.createElement("div");
+        item.className = "history-item";
+
+        const numberIndex = document.createElement("span");
+        numberIndex.className = "history-index";
+        numberIndex.textContent = String(index + 1).padStart(2, "0");
+
+        const number = document.createElement("span");
+        number.className = "history-number";
+        number.textContent = value;
+
+        item.append(numberIndex, number);
+        historyList.appendChild(item);
+    });
+}
+
+
+/* =========================
+   기록에 결과 추가
+========================= */
+
+function addToHistory(result) {
+    history.unshift(result);
+
+    if (history.length > HISTORY_LIMIT) {
+        history.length = HISTORY_LIMIT;
+    }
+
+    renderHistory();
+}
+
+
+/* =========================
+   숫자 확정 효과
+========================= */
+
+function digitLockEffect(digit) {
+    digit.classList.remove("rolling");
+    digit.classList.remove("locked");
+
+    // 애니메이션 재실행
+    void digit.offsetWidth;
+
+    digit.classList.add("locked");
 }
 
 
@@ -58,6 +132,7 @@ function generateNumber() {
 
     const digits = numberElement.querySelectorAll("span");
 
+    // 0 ~ 9999999 범위에서 추첨
     const result = String(
         Math.floor(Math.random() * 10000000)
     ).padStart(DIGITS, "0");
@@ -70,14 +145,14 @@ function generateNumber() {
         digit.textContent = Math.floor(Math.random() * 10);
     });
 
-    // 자릿수별로 숫자 회전
+    // 각 자릿수 회전
     digits.forEach((digit, index) => {
         rollingIntervals[index] = setInterval(() => {
             digit.textContent = Math.floor(Math.random() * 10);
         }, SPIN_SPEED + index * 8);
     });
 
-    // 왼쪽부터 한 자리씩 멈추기
+    // 왼쪽부터 한 자리씩 멈춤
     for (let i = 0; i < DIGITS; i++) {
         const timer = setTimeout(() => {
             clearInterval(rollingIntervals[i]);
@@ -85,12 +160,13 @@ function generateNumber() {
             digits[i].textContent = result[i];
 
             digitLockEffect(digits[i]);
+
         }, FIRST_STOP + i * STOP_INTERVAL);
 
         timers.push(timer);
     }
 
-    // 마지막 자리까지 확정되면 완료
+    // 모든 숫자가 확정된 뒤 실행
     const finishTimer = setTimeout(() => {
         numberElement.classList.add("finished");
         numberBox.classList.add("finished");
@@ -105,19 +181,13 @@ function generateNumber() {
         digits.forEach((digit) => {
             digit.classList.remove("locked");
         });
+
+        // 추첨이 완전히 끝난 결과만 기록
+        addToHistory(result);
+
     }, FIRST_STOP + (DIGITS - 1) * STOP_INTERVAL + 400);
 
     timers.push(finishTimer);
-}
-
-function digitLockEffect(digit) {
-    digit.classList.remove("rolling");
-    digit.classList.remove("locked");
-
-    // 애니메이션을 다시 실행
-    void digit.offsetWidth;
-
-    digit.classList.add("locked");
 }
 
 generateButton.addEventListener("click", generateNumber);
@@ -182,8 +252,8 @@ function createParticles() {
             twinkleSpeed: Math.random() * 0.008 + 0.002,
             twinkleOffset: Math.random() * Math.PI * 2,
 
-            // 남보라색부터 푸른 보라색까지
-            hue: Math.random() * 35 + 250
+            // 푸른 남색보다는 보라색에 가까운 계열
+            hue: Math.random() * 28 + 268
         });
     }
 }
@@ -200,7 +270,6 @@ function animateParticles() {
         particle.x += particle.speedX;
         particle.y += particle.speedY;
 
-        // 화면 밖으로 나가면 반대편으로 이동
         if (particle.x < -5) {
             particle.x = canvasWidth + 5;
         } else if (particle.x > canvasWidth + 5) {
@@ -213,7 +282,6 @@ function animateParticles() {
             particle.y = -5;
         }
 
-        // 은은하게 반짝이기
         particle.twinkleOffset += particle.twinkleSpeed;
 
         const twinkle =
@@ -232,11 +300,11 @@ function animateParticles() {
         );
 
         ctx.fillStyle =
-            `hsla(${particle.hue}, 80%, 75%, ${opacity})`;
+            `hsla(${particle.hue}, 85%, 75%, ${opacity})`;
 
         ctx.fill();
 
-        // 큰 파티클에는 희미한 빛 추가
+        // 큰 파티클의 은은한 광택
         if (particle.size > 1.3) {
             ctx.beginPath();
 
@@ -249,7 +317,7 @@ function animateParticles() {
             );
 
             ctx.fillStyle =
-                `hsla(${particle.hue}, 80%, 65%, ${opacity * 0.09})`;
+                `hsla(${particle.hue}, 85%, 70%, ${opacity * 0.09})`;
 
             ctx.fill();
         }
@@ -262,6 +330,8 @@ function animateParticles() {
 /* =========================
    초기화
 ========================= */
+
+renderHistory();
 
 window.addEventListener("resize", resizeCanvas);
 
