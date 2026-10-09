@@ -20,7 +20,7 @@
     --muted: #a497ac;
 
     --black: #070509;
-    --panel: rgba(17, 10, 24, 0.84);
+    --panel: rgba(17, 10, 24, 0.88);
 }
 
 html {
@@ -32,7 +32,7 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
 
-    padding: 40px 32px;
+    padding: 48px 38px;
 
     display: flex;
     align-items: center;
@@ -41,8 +41,8 @@ body {
     background:
         radial-gradient(
             ellipse at 58% 45%,
-            rgba(113, 53, 203, 0.10),
-            transparent 60%
+            rgba(113, 53, 203, 0.12),
+            transparent 62%
         ),
         #070509;
 
@@ -76,95 +76,95 @@ body {
     z-index: 1;
 
     width: 100%;
-    max-width: 1450px;
+    max-width: 1650px;
 
     display: grid;
-    grid-template-columns: 250px minmax(0, 1fr);
+    grid-template-columns: 300px minmax(0, 1fr);
     align-items: center;
 
-    gap: clamp(40px, 7vw, 110px);
+    gap: clamp(45px, 6vw, 110px);
 }
 
 /* =========================
-   왼쪽 기록 패널
+   기록 패널
 ========================= */
 
 .history-panel {
     width: 100%;
-    padding: 25px 20px;
+    padding: 30px 24px;
 
     background: var(--panel);
 
-    border: 1px solid rgba(152, 85, 245, 0.32);
-    border-radius: 14px;
+    border: 1px solid rgba(152, 85, 245, 0.38);
+    border-radius: 16px;
 
     box-shadow:
-        0 0 25px rgba(113, 53, 203, 0.06),
-        inset 0 0 20px rgba(152, 85, 245, 0.025);
+        0 0 30px rgba(113, 53, 203, 0.08),
+        inset 0 0 24px rgba(152, 85, 245, 0.025);
 }
 
 .history-header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 13px;
 }
 
 .history-symbol {
     color: var(--purple-bright);
-    font-size: 22px;
+    font-size: 27px;
 }
 
 .history-header h2 {
     color: var(--ivory);
-    font-size: 23px;
+    font-size: 27px;
     letter-spacing: 3px;
 }
 
 .history-subtitle {
-    margin-top: 13px;
+    margin-top: 16px;
 
     color: var(--muted);
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 2px;
 }
 
 .history-count {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 9px;
 
-    margin: 24px 0 20px;
+    margin: 27px 0 22px;
 
     color: var(--purple-light);
     font-family: "Courier New", monospace;
-    font-size: 25px;
+    font-size: 30px;
     font-weight: bold;
 }
 
 .count-divider {
     color: #6e5c7d;
-    font-size: 17px;
+    font-size: 20px;
 }
 
 .history-list {
     display: flex;
     flex-direction: column;
-    gap: 9px;
+    gap: 10px;
 
-    min-height: 280px;
+    min-height: 350px;
 }
 
 .history-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 13px;
 
-    padding: 13px 10px;
+    padding: 15px 12px;
 
-    background: rgba(152, 85, 245, 0.045);
+    background: rgba(152, 85, 245, 0.05);
 
-    border: 1px solid rgba(152, 85, 245, 0.12);
-    border-radius: 7px;
+    border: 1px solid rgba(152, 85, 245, 0.14);
+    border-radius: 8px;
 
     animation: history-enter 0.35s ease-out;
 }
@@ -172,7 +172,7 @@ body {
 @keyframes history-enter {
     from {
         opacity: 0;
-        transform: translateX(-8px);
+        transform: translateX(-9px);
     }
 
     to {
@@ -182,10 +182,10 @@ body {
 }
 
 .history-index {
-    min-width: 23px;
+    min-width: 27px;
 
-    color: #a98ad4;
-    font-size: 12px;
+    color: #b49bd8;
+    font-size: 14px;
     font-family: "Courier New", monospace;
 }
 
@@ -193,32 +193,87 @@ body {
     color: var(--ivory-soft);
 
     font-family: "Courier New", monospace;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: bold;
     font-variant-numeric: tabular-nums;
-
-    letter-spacing: 0.3px;
 }
 
 .history-empty {
-    padding: 30px 0;
+    padding: 35px 0;
 
     color: #887a91;
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.8;
     text-align: center;
 }
 
 .history-footer {
-    margin-top: 24px;
-    padding-top: 17px;
+    margin-top: 25px;
+    padding-top: 18px;
 
-    border-top: 1px solid rgba(152, 85, 245, 0.16);
+    border-top: 1px solid rgba(152, 85, 245, 0.18);
 
-    color: #9a83ad;
-    font-size: 10px;
-    letter-spacing: 1.5px;
+    color: #b09abf;
+    font-size: 11px;
+    letter-spacing: 2px;
     text-align: center;
+}
+
+/* =========================
+   평균 통계
+========================= */
+
+.average-panel {
+    margin-top: 25px;
+    padding: 21px 15px;
+
+    text-align: center;
+
+    background: rgba(152, 85, 245, 0.065);
+
+    border: 1px solid rgba(152, 85, 245, 0.2);
+    border-radius: 10px;
+
+    transition:
+        background 0.4s ease,
+        border-color 0.4s ease,
+        box-shadow 0.4s ease;
+}
+
+.average-panel.ready {
+    background: rgba(152, 85, 245, 0.12);
+    border-color: rgba(180, 122, 255, 0.65);
+
+    box-shadow: 0 0 22px rgba(152, 85, 245, 0.12);
+}
+
+.average-label {
+    color: var(--purple-light);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1.7px;
+}
+
+.average-value {
+    margin-top: 14px;
+
+    color: var(--ivory);
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    font-size: clamp(25px, 2vw, 32px);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+
+    overflow-wrap: anywhere;
+
+    transition: color 0.3s ease;
+}
+
+.average-status {
+    margin-top: 12px;
+
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
 }
 
 /* =========================
@@ -227,7 +282,7 @@ body {
 
 .container {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
     min-width: 0;
 
     display: flex;
@@ -239,43 +294,42 @@ body {
 
 .header {
     width: 100%;
-    margin-bottom: 48px;
+    margin-bottom: 55px;
 }
 
 .eyebrow {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 
     color: var(--purple-light);
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 600;
-    letter-spacing: 5px;
+    letter-spacing: 6px;
 }
 
 .title {
     color: var(--ivory);
 
-    font-size: clamp(30px, 3.4vw, 46px);
+    font-size: clamp(34px, 3.7vw, 53px);
     font-weight: 700;
-    letter-spacing: clamp(2px, 0.5vw, 6px);
+    letter-spacing: clamp(2px, 0.55vw, 7px);
 
-    text-shadow:
-        0 0 15px rgba(152, 85, 245, 0.15);
+    text-shadow: 0 0 18px rgba(152, 85, 245, 0.2);
 }
 
 .subtitle {
-    margin-top: 23px;
+    margin-top: 26px;
 
     color: var(--ivory-soft);
-    font-size: 15px;
-    letter-spacing: 2px;
+    font-size: 17px;
+    letter-spacing: 2.5px;
     line-height: 1.8;
 }
 
 .title-line {
-    width: 135px;
+    width: 160px;
     height: 1px;
 
-    margin: 28px auto 0;
+    margin: 32px auto 0;
 
     background: linear-gradient(
         90deg,
@@ -284,34 +338,35 @@ body {
         transparent
     );
 
-    box-shadow: 0 0 12px rgba(152, 85, 245, 0.4);
+    box-shadow: 0 0 14px rgba(152, 85, 245, 0.45);
 }
 
 /* =========================
-   숫자 상자
+   숫자 표시 상자
 ========================= */
 
 .number-box {
     position: relative;
+    isolation: isolate;
 
     width: 100%;
-    max-width: 690px;
-    min-height: 165px;
+    max-width: 760px;
+    min-height: 180px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding: 26px 16px;
+    padding: 28px 24px;
 
-    background: rgba(14, 8, 21, 0.82);
+    background: rgba(14, 8, 21, 0.88);
 
     border: 2px solid var(--purple);
-    border-radius: 14px;
+    border-radius: 15px;
 
     box-shadow:
-        0 0 15px rgba(152, 85, 245, 0.10),
-        inset 0 0 30px rgba(152, 85, 245, 0.035);
+        0 0 17px rgba(152, 85, 245, 0.12),
+        inset 0 0 35px rgba(152, 85, 245, 0.045);
 
     transition:
         border-color 0.5s ease,
@@ -319,17 +374,58 @@ body {
         background 0.5s ease;
 }
 
+/* 내부 장식 */
+
 .number-box::before {
     content: "";
 
     position: absolute;
-    inset: 8px;
+    inset: 9px;
+    z-index: -1;
 
-    border: 1px solid rgba(180, 122, 255, 0.12);
-    border-radius: 8px;
+    border: 1px solid rgba(180, 122, 255, 0.13);
+    border-radius: 9px;
 
     pointer-events: none;
 }
+
+/* 추첨 완료 시 퍼지는 원형 파동 */
+
+.number-box::after {
+    content: "";
+
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+
+    border: 2px solid rgba(180, 122, 255, 0);
+    border-radius: 15px;
+
+    pointer-events: none;
+    opacity: 0;
+}
+
+.number-box.impact::after {
+    animation: result-wave 0.9s ease-out;
+}
+
+@keyframes result-wave {
+    0% {
+        inset: -2px;
+        opacity: 0.9;
+        border-color: rgba(180, 122, 255, 0.8);
+        box-shadow: 0 0 15px rgba(152, 85, 245, 0.5);
+    }
+
+    100% {
+        inset: -30px;
+        opacity: 0;
+        border-color: rgba(180, 122, 255, 0);
+        box-shadow: 0 0 38px rgba(152, 85, 245, 0);
+    }
+}
+
+/* 숫자 */
 
 .number {
     position: relative;
@@ -339,15 +435,17 @@ body {
     align-items: center;
     justify-content: center;
 
-    gap: clamp(2px, 0.8vw, 10px);
+    width: 100%;
+    gap: clamp(2px, 0.7vw, 9px);
 
     color: var(--ivory);
 
     font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-    font-size: clamp(35px, 5.2vw, 66px);
+    font-size: clamp(38px, 5.2vw, 72px);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0;
+
+    white-space: nowrap;
 
     transition:
         color 0.5s ease,
@@ -356,13 +454,15 @@ body {
 
 .number span {
     display: inline-block;
+
     min-width: 0.62em;
+
     text-align: center;
 
     will-change: transform, opacity;
 }
 
-/* 숫자 회전 */
+/* 회전 */
 
 .number span.rolling {
     animation: digit-roll 0.18s ease-in-out infinite alternate;
@@ -380,7 +480,7 @@ body {
     }
 }
 
-/* 숫자 확정 */
+/* 자리 확정 */
 
 .number span.locked {
     animation: digit-lock 0.35s ease-out;
@@ -403,39 +503,49 @@ body {
     }
 }
 
-/* 추첨 완료 */
-
-.number-box.finished {
-    border-color: var(--purple-light);
-
-    box-shadow:
-        0 0 18px rgba(152, 85, 245, 0.25),
-        0 0 38px rgba(152, 85, 245, 0.12),
-        inset 0 0 25px rgba(152, 85, 245, 0.06);
-}
+/* 결과 전체가 살짝 커졌다가 안정 */
 
 .number.finished {
     color: #fff5e8;
 
     text-shadow:
-        0 0 9px rgba(208, 170, 255, 0.75),
-        0 0 22px rgba(152, 85, 245, 0.45);
+        0 0 9px rgba(208, 170, 255, 0.85),
+        0 0 23px rgba(152, 85, 245, 0.55);
 
-    animation: number-glow 2.4s ease-in-out infinite alternate;
+    animation: result-pop 0.65s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
-@keyframes number-glow {
-    from {
-        text-shadow:
-            0 0 5px rgba(208, 170, 255, 0.3),
-            0 0 12px rgba(152, 85, 245, 0.15);
+@keyframes result-pop {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
     }
 
-    to {
-        text-shadow:
-            0 0 10px rgba(243, 234, 220, 0.85),
-            0 0 27px rgba(152, 85, 245, 0.55);
+    35% {
+        transform: scale(1.09);
+        filter: brightness(1.4);
     }
+
+    65% {
+        transform: scale(0.99);
+        filter: brightness(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+.number-box.finished {
+    border-color: var(--purple-light);
+
+    background: rgba(22, 11, 33, 0.94);
+
+    box-shadow:
+        0 0 20px rgba(152, 85, 245, 0.3),
+        0 0 42px rgba(152, 85, 245, 0.15),
+        inset 0 0 30px rgba(152, 85, 245, 0.07);
 }
 
 /* =========================
@@ -445,29 +555,29 @@ body {
 .generate-btn {
     position: relative;
 
-    min-width: 285px;
-    min-height: 72px;
+    min-width: 320px;
+    min-height: 78px;
 
-    margin-top: 43px;
-    padding: 19px 32px;
+    margin-top: 48px;
+    padding: 21px 36px;
 
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 23px;
+    gap: 26px;
 
     border: 1px solid var(--purple-light);
-    border-radius: 10px;
+    border-radius: 11px;
 
     background: linear-gradient(
         135deg,
-        #9c55ec,
-        #7836c9
+        #a15aef,
+        #853bd7
     );
 
     color: #fff5e8;
 
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 800;
     letter-spacing: 4px;
 
@@ -475,7 +585,7 @@ body {
 
     box-shadow:
         0 5px 0 #572391,
-        0 9px 24px rgba(121, 53, 203, 0.2);
+        0 10px 28px rgba(121, 53, 203, 0.25);
 
     transition:
         transform 0.15s ease,
@@ -489,7 +599,7 @@ body {
 
     box-shadow:
         0 5px 0 #572391,
-        0 9px 32px rgba(152, 85, 245, 0.38);
+        0 10px 35px rgba(152, 85, 245, 0.42);
 }
 
 .generate-btn:active:not(:disabled) {
@@ -497,7 +607,7 @@ body {
 
     box-shadow:
         0 1px 0 #572391,
-        0 3px 10px rgba(152, 85, 245, 0.2);
+        0 3px 12px rgba(152, 85, 245, 0.2);
 }
 
 .generate-btn:disabled {
@@ -507,7 +617,7 @@ body {
 
 .button-icon {
     color: #f0ddff;
-    font-size: 15px;
+    font-size: 17px;
 
     transition: transform 0.3s ease;
 }
@@ -521,15 +631,13 @@ body {
 ========================= */
 
 .status {
-    min-height: 18px;
+    min-height: 20px;
 
-    margin-top: 30px;
+    margin-top: 32px;
 
     color: var(--ivory-soft);
-    font-size: 13px;
+    font-size: 14px;
     letter-spacing: 3px;
-
-    transition: color 0.3s ease;
 }
 
 /* =========================
@@ -540,12 +648,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 13px;
 
-    margin-top: 48px;
+    margin-top: 55px;
 
     color: #b09abf;
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 3px;
 }
 
@@ -560,57 +668,55 @@ body {
 }
 
 /* =========================
-   반응형 레이아웃
+   반응형
 ========================= */
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
     body {
         padding: 35px 24px;
     }
 
     .app-layout {
-        grid-template-columns: 205px minmax(0, 1fr);
-        gap: 32px;
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 30px;
     }
 
     .history-panel {
-        padding: 20px 14px;
+        padding: 24px 18px;
     }
 
-    .history-header h2 {
-        font-size: 19px;
-    }
-
-    .history-number {
-        font-size: 15px;
+    .history-list {
+        min-height: 300px;
     }
 
     .number-box {
-        min-height: 135px;
+        min-height: 145px;
+        padding: 20px 12px;
     }
 
     .number {
-        font-size: clamp(29px, 4.4vw, 48px);
-    }
-
-    .eyebrow {
-        font-size: 13px;
-        letter-spacing: 3px;
+        font-size: clamp(30px, 4.2vw, 54px);
+        gap: 3px;
     }
 
     .title {
-        font-size: clamp(25px, 3vw, 34px);
+        font-size: clamp(27px, 3vw, 40px);
+    }
+
+    .eyebrow {
+        font-size: 15px;
+        letter-spacing: 4px;
     }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
     body {
-        padding: 30px 16px;
+        padding: 28px 16px;
     }
 
     .app-layout {
         grid-template-columns: minmax(0, 1fr);
-        gap: 36px;
+        gap: 38px;
     }
 
     .container {
@@ -627,14 +733,6 @@ body {
         min-height: 0;
     }
 
-    .history-item {
-        padding: 14px;
-    }
-
-    .history-number {
-        font-size: 17px;
-    }
-
     .header {
         margin-bottom: 35px;
     }
@@ -645,7 +743,7 @@ body {
     }
 
     .title {
-        font-size: clamp(25px, 6vw, 36px);
+        font-size: clamp(24px, 6vw, 38px);
     }
 
     .subtitle {
@@ -654,42 +752,45 @@ body {
 
     .number-box {
         min-height: 105px;
-        padding: 18px 5px;
+        padding: 18px 6px;
     }
 
     .number {
-        font-size: clamp(25px, 7.1vw, 44px);
-        gap: 2px;
-    }
-
-    .generate-btn {
-        min-width: 235px;
-        min-height: 64px;
-        margin-top: 30px;
-    }
-
-    .footer {
-        margin-top: 35px;
-    }
-}
-
-@media (max-width: 360px) {
-    .number {
-        font-size: 25px;
+        font-size: clamp(23px, 6.8vw, 43px);
         gap: 1px;
     }
 
     .number span {
         min-width: 0.58em;
     }
+
+    .generate-btn {
+        min-width: 245px;
+        min-height: 66px;
+        margin-top: 32px;
+    }
+
+    .footer {
+        margin-top: 36px;
+    }
 }
 
-/* 모션 감소 설정 */
+@media (max-width: 360px) {
+    .number {
+        font-size: 22px;
+        gap: 0;
+    }
+
+    .number span {
+        min-width: 0.56em;
+    }
+}
 
 @media (prefers-reduced-motion: reduce) {
     .number.finished,
     .number span.rolling,
-    .number span.locked {
+    .number span.locked,
+    .number-box.impact::after {
         animation: none;
     }
 }
