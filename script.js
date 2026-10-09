@@ -1,50 +1,238 @@
+
+"use strict";
+
 const DIGITS = 7;
 const HISTORY_LIMIT = 10;
+const SETTINGS_KEY = "violetRandomSettings";
 
-const numberElement = document.getElementById("number");
-const numberBox = document.getElementById("number-box");
-const drawButton = document.getElementById("draw-button");
-const instantButton = document.getElementById("instant-button");
-const statusElement = document.getElementById("status");
-const historyList = document.getElementById("history-list");
-const averageElement = document.getElementById("average");
-const averageStatus = document.getElementById("average-status");
-const effectsLayer = document.getElementById("effects");
+const DEFAULT_SETTINGS = {
+  particles: 65,
+  speed: 2,
+  effect: 2,
+  rareEffects: true
+};
 
-const maxNumberElement = document.getElementById("max-number");
-const minNumberElement = document.getElementById("min-number");
-const totalDrawsElement = document.getElementById("total-draws");
-const primeStatus = document.getElementById("prime-status");
-const divisorStatus = document.getElementById("divisor-status");
-const rareLabel = document.getElementById("rare-label");
-const rareSetting = document.getElementById("rare-setting");
+const $ = id => document.getElementById(id);
+
+const numberElement = $("number");
+const numberBox = $("number-box");
+const drawButton = $("draw-button");
+const instantButton = $("instant-button");
+const statusElement = $("status");
+const historyList = $("history-list");
+const averageElement = $("average");
+const averageStatus = $("average-status");
+
+const rareLabel = $("rare-label");
+const primeStatus = $("prime-status");
+const divisorStatus = $("divisor-status");
+
+const maxNumberElement = $("max-number");
+const minNumberElement = $("min-number");
+const totalDrawsElement = $("total-draws");
+
+const effectsLayer = $("effects");
+const settingsButton = $("settings-button");
+const settingsOverlay = $("settings-overlay");
+const closeSettingsButton = $("close-settings");
+const saveSettingsButton = $("save-settings");
+const resetSettingsButton = $("reset-settings");
+const settingsMessage = $("settings-message");
+
+const particleSetting = $("particle-setting");
+const speedSetting = $("speed-setting");
+const effectSetting = $("effect-setting");
+const rareSetting = $("rare-setting");
+
+const particleValue = $("particle-value");
+const speedValue = $("speed-value");
+const effectValue = $("effect-value");
 
 const digitElements = Array.from(
   numberElement.querySelectorAll("span")
 );
 
+let settings = loadSettings();
+
 let history = [];
-let isDrawing = false;
-let animationTimers = [];
-let animationIntervals = [];
-
 let totalDraws = 0;
-let maxNumber = null;
-let minNumber = null;
+let highestNumber = null;
+let lowestNumber = null;
+let isDrawing = false;
 
-/* 즉각 뽑기를 일반 뽑기 버튼 위로 이동 */
-drawButton.parentElement.insertBefore(
-  instantButton,
-  drawButton
-);
+let rollTimeouts = [];
+let rollIntervals = [];
+let backgroundParticles = [];
 
-/* 0부터 9,999,999까지 균등한 확률로 난수 생성 */
+/* =====================================
+   설정
+===================================== */
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+
+    if (!saved) {
+      return { ...DEFAULT_SETTINGS };
+    }
+
+    const parsed = JSON.parse(saved);
+
+    return {
+      particles: clamp(parsed.particles, 0, 150, 65),
+      speed: clamp(parsed.speed, 1, 5, 2),
+      effect: clamp(parsed.effect, 0, 3, 2),
+      rareEffects:
+        typeof parsed.rareEffects === "boolean"
+          ? parsed.rareEffects
+          : true
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function clamp(value, min, max, fallback) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, number));
+}
+
+function populateSettingsControls() {
+  particleSetting.value = settings.particles;
+  speedSetting.value = settings.speed;
+  effectSetting.value = settings.effect;
+  rareSetting.checked = settings.rareEffects;
+
+  updateSettingLabels();
+}
+
+function readSettingsControls() {
+  settings = {
+    particles: Number(particleSetting.value),
+    speed: Number(speedSetting.value),
+    effect: Number(effectSetting.value),
+    rareEffects: rareSetting.checked
+  };
+}
+
+function updateSettingLabels() {
+  particleValue.textContent = particleSetting.value;
+
+  const speedNames = {
+    1: "아주 느리게",
+    2: "느리게",
+    3: "보통",
+    4: "빠르게",
+    5: "아주 빠르게"
+  };
+
+  const effectNames = {
+    0: "없음",
+    1: "약하게",
+    2: "보통",
+    3: "강하게"
+  };
+
+  speedValue.textContent = speedNames[speedSetting.value];
+  effectValue.textContent = effectNames[effectSetting.value];
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    settingsMessage.textContent = "설정을 저장했어! 💜";
+    return true;
+  } catch {
+    settingsMessage.textContent =
+      "설정 저장에 실패했어. 브라우저 저장 공간을 확인해 줘.";
+    return false;
+  }
+}
+
+function applySettings() {
+  updateSettingLabels();
+  resizeCanvas();
+}
+
+function openSettings() {
+  populateSettingsControls();
+  settingsMessage.textContent = "설정은 이 브라우저에 저장돼.";
+  settingsOverlay.hidden = false;
+  settingsButton.setAttribute("aria-expanded", "true");
+  closeSettingsButton.focus();
+}
+
+function closeSettings() {
+  settingsOverlay.hidden = true;
+  settingsButton.setAttribute("aria-expanded", "false");
+  settingsButton.focus();
+}
+
+settingsButton.addEventListener("click", openSettings);
+closeSettingsButton.addEventListener("click", closeSettings);
+
+settingsOverlay.addEventListener("click", event => {
+  if (event.target === settingsOverlay) {
+    closeSettings();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !settingsOverlay.hidden) {
+    closeSettings();
+  }
+});
+
+[
+  particleSetting,
+  speedSetting,
+  effectSetting,
+  rareSetting
+].forEach(control => {
+  control.addEventListener("input", () => {
+    readSettingsControls();
+    applySettings();
+
+    settingsMessage.textContent =
+      "미리 보는 중이야. 저장 버튼을 누르면 유지돼.";
+  });
+});
+
+saveSettingsButton.addEventListener("click", () => {
+  readSettingsControls();
+  applySettings();
+
+  if (saveSettings()) {
+    closeSettings();
+  }
+});
+
+resetSettingsButton.addEventListener("click", () => {
+  settings = { ...DEFAULT_SETTINGS };
+  populateSettingsControls();
+  applySettings();
+
+  settingsMessage.textContent =
+    "기본값으로 바꿨어. 저장 버튼을 눌러 적용해 줘.";
+});
+
+/* =====================================
+   균등 확률 난수
+===================================== */
+
 function secureRandomNumber() {
   const RANGE = 10_000_000;
   const MAX = 0x100000000;
   const LIMIT = Math.floor(MAX / RANGE) * RANGE;
   const buffer = new Uint32Array(1);
 
+  // 편향을 제거해 0~9,999,999의 모든 결과가
+  // 정확히 같은 확률로 나오도록 한다.
   do {
     crypto.getRandomValues(buffer);
   } while (buffer[0] >= LIMIT);
@@ -52,13 +240,22 @@ function secureRandomNumber() {
   return String(buffer[0] % RANGE).padStart(DIGITS, "0");
 }
 
-/* 이전 애니메이션 타이머와 인터벌 정리 */
-function clearAnimationTimers() {
-  animationTimers.forEach(clearTimeout);
-  animationIntervals.forEach(clearInterval);
+/* =====================================
+   롤링 타이머 관리
+===================================== */
 
-  animationTimers = [];
-  animationIntervals = [];
+function clearRollTimers() {
+  rollTimeouts.forEach(id => clearTimeout(id));
+  rollIntervals.forEach(id => clearInterval(id));
+
+  rollTimeouts = [];
+  rollIntervals = [];
+}
+
+function scheduleRollTimeout(callback, delay) {
+  const id = setTimeout(callback, delay);
+  rollTimeouts.push(id);
+  return id;
 }
 
 function setButtonsDisabled(disabled) {
@@ -66,113 +263,198 @@ function setButtonsDisabled(disabled) {
   instantButton.disabled = disabled;
 }
 
-/* 숫자 표시 */
+function resetNumberEffects() {
+  numberElement.classList.remove("finished");
+  numberBox.classList.remove("impact", "rare", "rare-legendary");
+
+  rareLabel.textContent = "";
+
+  digitElements.forEach(digit => {
+    digit.classList.remove("rolling");
+    digit.style.display = "inline-block";
+  });
+}
+
 function setDisplayedNumber(value, hideLeadingZeros = false) {
   digitElements.forEach((digit, index) => {
     digit.textContent = value[index];
 
-    const leadingZero =
+    const isLeadingZero =
       hideLeadingZeros &&
-      value.slice(0, index + 1).split("").every(
-        char => char === "0"
-      );
+      value.slice(0, index + 1).split("").every(char => char === "0");
 
-    digit.style.display = leadingZero
-      ? "none"
-      : "inline-block";
-
+    digit.style.display = isLeadingZero ? "none" : "inline-block";
     digit.classList.remove("rolling");
   });
 }
 
-/* 숫자 이펙트 초기화 */
-function resetNumberEffects() {
-  numberElement.classList.remove("finished");
-  numberBox.classList.remove("impact");
+/* =====================================
+   희귀 패턴 판별
+===================================== */
 
-  digitElements.forEach(digit => {
-    digit.classList.remove("rolling");
+function getRarePattern(value) {
+  const digits = value.split("").map(Number);
+
+  if (digits.every(digit => digit === digits[0])) {
+    return {
+      title: "✦ 전설적인 반복 숫자 ✦",
+      level: "legendary"
+    };
+  }
+
+  const ascending = digits.every(
+    (digit, index) =>
+      index === 0 || digit === digits[index - 1] + 1
+  );
+
+  const descending = digits.every(
+    (digit, index) =>
+      index === 0 || digit === digits[index - 1] - 1
+  );
+
+  if (ascending || descending) {
+    return {
+      title: "✦ 완벽한 연속 숫자 ✦",
+      level: "legendary"
+    };
+  }
+
+  const palindrome = digits.every(
+    (digit, index) => digit === digits[DIGITS - 1 - index]
+  );
+
+  if (palindrome) {
+    return {
+      title: "✧ 대칭 숫자 발견 ✧",
+      level: "rare"
+    };
+  }
+
+  const counts = {};
+
+  digits.forEach(digit => {
+    counts[digit] = (counts[digit] || 0) + 1;
   });
 
-  rareLabel.textContent = "";
-  rareLabel.classList.remove("rare-active");
+  if (Math.max(...Object.values(counts)) >= 5) {
+    return {
+      title: "✦ 반복 숫자 발견 ✦",
+      level: "rare"
+    };
+  }
+
+  if (/0{3,}$/.test(value)) {
+    return {
+      title: "✧ 라운드 숫자 발견 ✧",
+      level: "rare"
+    };
+  }
+
+  // 반복되는 2자리 또는 3자리 패턴
+  for (let size = 2; size <= 3; size++) {
+    for (let start = 0; start + size * 2 <= DIGITS; start++) {
+      const first = value.slice(start, start + size);
+      const second = value.slice(start + size, start + size * 2);
+
+      if (first === second) {
+        return {
+          title: "✧ 반복 패턴 발견 ✧",
+          level: "rare"
+        };
+      }
+    }
+  }
+
+  return null;
 }
 
-/* 버튼을 누르면 주변으로 작은 별과 파티클 생성 */
-function triggerButtonImpact(button) {
-  button.classList.remove("button-impact");
-  void button.offsetWidth;
-  button.classList.add("button-impact");
+/* =====================================
+   소수 판별
+===================================== */
 
-  const timer = setTimeout(() => {
-    button.classList.remove("button-impact");
-  }, 450);
+function isPrime(number) {
+  if (!Number.isInteger(number) || number < 2) {
+    return false;
+  }
 
-  animationTimers.push(timer);
+  if (number === 2) {
+    return true;
+  }
 
-  const rect = button.getBoundingClientRect();
+  if (number % 2 === 0) {
+    return false;
+  }
 
-  createBurst(
-    rect.left + rect.width / 2,
-    rect.top + rect.height / 2,
-    12,
-    55
-  );
+  for (let divisor = 3; divisor * divisor <= number; divisor += 2) {
+    if (number % divisor === 0) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-/* 추첨 완료 시 결과 숫자에 임팩트 */
-function triggerResultImpact() {
-  numberElement.classList.remove("finished");
-  numberBox.classList.remove("impact");
+function updateNumberInfo(value) {
+  const number = Number(value);
+  const prime = isPrime(number);
 
-  void numberElement.offsetWidth;
+  primeStatus.classList.toggle("prime", prime);
+  primeStatus.classList.toggle("not-prime", !prime);
 
-  numberElement.classList.add("finished");
-  numberBox.classList.add("impact");
-
-  const rect = numberBox.getBoundingClientRect();
-
-  createBurst(
-    rect.left + rect.width / 2,
-    rect.top + rect.height / 2,
-    24,
-    Math.min(rect.width * 0.35, 150)
-  );
-
-  const timer = setTimeout(() => {
-    numberBox.classList.remove("impact");
-  }, 600);
-
-  animationTimers.push(timer);
+  if (prime) {
+    primeStatus.textContent = "✦ 소수 · 약수 2개";
+    divisorStatus.textContent =
+      `약수: 1, ${number.toLocaleString("en-US")}`;
+  } else if (number < 2) {
+    primeStatus.textContent = "소수 아님";
+    divisorStatus.textContent =
+      "소수는 2 이상의 자연수 중에서 찾아";
+  } else {
+    primeStatus.textContent = "소수 아님 · 합성수";
+    divisorStatus.textContent = "약수가 2개보다 많아";
+  }
 }
 
-/* 별과 파티클 생성: 기존 CSS 애니메이션 사용 */
-function createBurst(x, y, count = 30, distance = 150) {
+/* =====================================
+   파티클 및 임팩트
+===================================== */
+
+function createBurst(x, y, count = 30, distance = 150, kind = "normal") {
+  if (settings.effect === 0) return;
+
+  const multiplier = settings.effect / 2;
+  const actualCount = Math.max(1, Math.round(count * multiplier));
+  const actualDistance = distance * (0.55 + multiplier * 0.35);
   const fragment = document.createDocumentFragment();
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < actualCount; i++) {
     const particle = document.createElement("span");
-    const isStar = Math.random() < 0.32;
+    const isStar = Math.random() < 0.38;
 
     particle.className = isStar
       ? "burst-particle star"
       : "burst-particle";
 
     if (isStar) {
-      particle.textContent =
-        Math.random() < 0.5 ? "✦" : "✧";
+      particle.textContent = Math.random() < 0.5 ? "✦" : "✧";
+
+      if (kind === "legendary") {
+        particle.classList.add("gold-star");
+      } else if (kind === "rare") {
+        particle.classList.add("rare-star");
+      }
     }
 
     const angle = Math.random() * Math.PI * 2;
     const travelDistance =
-      distance * (0.35 + Math.random() * 0.65);
+      actualDistance * (0.35 + Math.random() * 0.65);
 
     const dx = Math.cos(angle) * travelDistance;
     const dy = Math.sin(angle) * travelDistance;
 
     const size = isStar
-      ? `${8 + Math.random() * 10}px`
-      : `${2 + Math.random() * 4}px`;
+      ? `${8 + Math.random() * 10 * multiplier}px`
+      : `${2 + Math.random() * 4 * multiplier}px`;
 
     particle.style.left = `${x}px`;
     particle.style.top = `${y}px`;
@@ -181,11 +463,11 @@ function createBurst(x, y, count = 30, distance = 150) {
     particle.style.setProperty("--size", size);
     particle.style.setProperty(
       "--rotation",
-      `${Math.random() * 240 - 120}deg`
+      `${Math.random() * 360 - 180}deg`
     );
     particle.style.setProperty(
       "--duration",
-      `${450 + Math.random() * 500}ms`
+      `${500 + Math.random() * 500}ms`
     );
 
     particle.addEventListener(
@@ -200,182 +482,114 @@ function createBurst(x, y, count = 30, distance = 150) {
   effectsLayer.appendChild(fragment);
 }
 
-/* 소수 판별 */
-function isPrime(number) {
-  if (number < 2) return false;
-  if (number === 2) return true;
-  if (number % 2 === 0) return false;
+function triggerButtonImpact(button) {
+  if (settings.effect === 0) return;
 
-  for (let i = 3; i * i <= number; i += 2) {
-    if (number % i === 0) return false;
-  }
+  button.classList.remove("button-impact");
+  void button.offsetWidth;
+  button.classList.add("button-impact");
 
-  return true;
-}
+  scheduleRollTimeout(() => {
+    button.classList.remove("button-impact");
+  }, 450);
 
-/* 약수 계산 */
-function getDivisors(number) {
-  if (number === 0) return null;
-
-  const divisors = [];
-  const upperDivisors = [];
-
-  for (let i = 1; i * i <= number; i++) {
-    if (number % i === 0) {
-      divisors.push(i);
-
-      if (i !== number / i) {
-        upperDivisors.push(number / i);
-      }
-    }
-  }
-
-  return divisors.concat(upperDivisors.reverse());
-}
-
-/* 소수 여부와 약수 표시 */
-function updateNumberInfo(value) {
-  const number = Number(value);
-
-  if (isPrime(number)) {
-    primeStatus.textContent = "✦ 소수";
-  } else if (number >= 2) {
-    primeStatus.textContent = "합성수";
-  } else {
-    primeStatus.textContent = "소수도 합성수도 아님";
-  }
-
-  if (number === 0) {
-    divisorStatus.textContent = "0의 약수는 무한히 많아";
-    return;
-  }
-
-  const divisors = getDivisors(number);
-
-  const previewLimit = 12;
-  const preview = divisors
-    .slice(0, previewLimit)
-    .map(value => value.toLocaleString("en-US"));
-
-  if (divisors.length > previewLimit) {
-    preview.push("...");
-  }
-
-  divisorStatus.textContent =
-    `약수 ${divisors.length}개 · ${preview.join(", ")}`;
-}
-
-/* 희귀 숫자 패턴 판별 */
-function getRarePattern(value) {
-  /* 럭키 세븐 */
-  if (value === "7777777") {
-    return "💜 LUCKY SEVEN!";
-  }
-
-  /* 같은 숫자 7개 */
-  if (/^(\d)\1{6}$/.test(value)) {
-    return "✨ ALL SAME DIGITS!";
-  }
-
-  /* 연속 숫자 */
-  if (value === "1234567" || value === "7654321") {
-    return "🌟 SEQUENTIAL!";
-  }
-
-  /* 앞뒤가 같은 대칭 숫자 */
-  if (value === value.split("").reverse().join("")) {
-    return "🔮 PALINDROME!";
-  }
-
-  /* 12 또는 123 같은 짧은 패턴 반복 */
-  for (let size = 1; size <= 3; size++) {
-    const pattern = value.slice(0, size);
-
-    if (pattern.repeat(Math.ceil(7 / size)).slice(0, 7) === value) {
-      return "💎 REPEATING PATTERN!";
-    }
-  }
-
-  /* 앞부분에 0이 4개 이상 */
-  if (/^0{4,}/.test(value)) {
-    return "🌙 ZERO PATTERN!";
-  }
-
-  return "";
-}
-
-/* 희귀 숫자 전용 이펙트 */
-function triggerRareEffect(value) {
-  const pattern = getRarePattern(value);
-
-  if (!pattern || (rareSetting && !rareSetting.checked)) {
-    rareLabel.textContent = "";
-    rareLabel.classList.remove("rare-active");
-    return false;
-  }
-
-  rareLabel.textContent = pattern;
-  rareLabel.classList.remove("rare-active");
-
-  void rareLabel.offsetWidth;
-
-  rareLabel.classList.add("rare-active");
-
-  const rect = numberBox.getBoundingClientRect();
+  const rect = button.getBoundingClientRect();
 
   createBurst(
     rect.left + rect.width / 2,
     rect.top + rect.height / 2,
-    42,
-    Math.min(rect.width * 0.5, 210)
+    15,
+    65
   );
-
-  return true;
 }
 
-/* 최댓값, 최솟값, 전체 추첨 횟수 */
-function updateStatistics(result) {
-  const number = Number(result);
+function triggerResultImpact(pattern = null) {
+  numberElement.classList.remove("finished");
+  numberBox.classList.remove("impact", "rare", "rare-legendary");
 
-  totalDraws++;
+  void numberElement.offsetWidth;
+  numberElement.classList.add("finished");
 
-  if (maxNumber === null || number > maxNumber) {
-    maxNumber = number;
+  const rect = numberBox.getBoundingClientRect();
+  const rareActive = Boolean(pattern && settings.rareEffects);
+
+  if (settings.effect > 0) {
+    numberBox.classList.add("impact");
   }
 
-  if (minNumber === null || number < minNumber) {
-    minNumber = number;
+  if (rareActive) {
+    numberBox.classList.add(
+      pattern.level === "legendary" ? "rare-legendary" : "rare"
+    );
+
+    rareLabel.textContent = pattern.title;
+
+    const flash = document.createElement("div");
+    flash.className = "rare-flash";
+
+    if (pattern.level === "legendary") {
+      flash.classList.add("legendary");
+    }
+
+    effectsLayer.appendChild(flash);
+
+    setTimeout(() => flash.remove(), 900);
+
+    createBurst(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      pattern.level === "legendary" ? 100 : 65,
+      Math.min(rect.width * 0.85, 320),
+      pattern.level
+    );
+  } else {
+    rareLabel.textContent = "";
+
+    createBurst(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      42,
+      Math.min(rect.width * 0.55, 240)
+    );
   }
 
-  maxNumberElement.textContent =
-    maxNumber.toLocaleString("en-US");
-
-  minNumberElement.textContent =
-    minNumber.toLocaleString("en-US");
-
-  totalDrawsElement.textContent =
-    totalDraws.toLocaleString("en-US");
+  scheduleRollTimeout(() => {
+    numberBox.classList.remove("impact");
+  }, 650);
 }
 
-/* 추첨 기록 추가 */
+/* =====================================
+   기록 및 통계
+===================================== */
+
 function addToHistory(result) {
-  history.unshift(String(Number(result)));
+  const value = Number(result);
+
+  history.unshift(value);
   history = history.slice(0, HISTORY_LIMIT);
+
+  totalDraws += 1;
+
+  if (highestNumber === null || value > highestNumber) {
+    highestNumber = value;
+  }
+
+  if (lowestNumber === null || value < lowestNumber) {
+    lowestNumber = value;
+  }
 
   renderHistory();
   updateAverage();
+  updateStatistics();
 }
 
-/* 최근 10회 기록 표시 */
 function renderHistory() {
   historyList.replaceChildren();
 
   if (history.length === 0) {
     const empty = document.createElement("li");
-
     empty.className = "empty-history";
     empty.textContent = "아직 추첨 기록이 없어!";
-
     historyList.appendChild(empty);
     return;
   }
@@ -389,21 +603,13 @@ function renderHistory() {
 
     const number = document.createElement("span");
     number.className = "history-number";
-    number.textContent = value;
-
-    /* 희귀 패턴이 있는 기록도 강조 */
-    if (getRarePattern(value)) {
-      number.style.color = "#d0aaff";
-      number.style.textShadow = "0 0 10px rgba(180, 122, 255, 0.6)";
-      number.style.fontWeight = "800";
-    }
+    number.textContent = value.toLocaleString("en-US");
 
     item.append(rank, number);
     historyList.appendChild(item);
   });
 }
 
-/* 최근 10회 평균 */
 function updateAverage() {
   if (history.length < HISTORY_LIMIT) {
     averageElement.textContent = "—";
@@ -412,11 +618,7 @@ function updateAverage() {
     return;
   }
 
-  const sum = history.reduce(
-    (total, value) => total + Number(value),
-    0
-  );
-
+  const sum = history.reduce((total, value) => total + value, 0);
   const average = sum / HISTORY_LIMIT;
 
   averageElement.textContent =
@@ -425,23 +627,45 @@ function updateAverage() {
   averageStatus.textContent = "최근 10회 결과의 평균";
 }
 
-/* 추첨 결과 확정 */
+function updateStatistics() {
+  maxNumberElement.textContent =
+    highestNumber === null
+      ? "—"
+      : highestNumber.toLocaleString("en-US");
+
+  minNumberElement.textContent =
+    lowestNumber === null
+      ? "—"
+      : lowestNumber.toLocaleString("en-US");
+
+  totalDrawsElement.textContent =
+    totalDraws.toLocaleString("en-US");
+}
+
+/* =====================================
+   추첨 완료
+===================================== */
+
 function finishDraw(result) {
-  clearAnimationTimers();
+  // 롤링만 정리한다. 결과 효과에 필요한 타이머는 건드리지 않는다.
+  clearRollTimers();
 
   setDisplayedNumber(result, true);
 
-  updateStatistics(result);
-  updateNumberInfo(result);
+  const value = Number(result);
+  const pattern = getRarePattern(result);
+
   addToHistory(result);
+  updateNumberInfo(result);
+  triggerResultImpact(pattern);
 
-  triggerResultImpact();
-
-  const isRare = triggerRareEffect(result);
-
-  statusElement.textContent = isRare
-    ? `희귀 숫자 발견! · ${getRarePattern(result)}`
-    : `추첨 완료 · ${Number(result).toLocaleString("en-US")}`;
+  if (pattern && settings.rareEffects) {
+    statusElement.textContent =
+      `특별한 패턴 발견! · ${value.toLocaleString("en-US")}`;
+  } else {
+    statusElement.textContent =
+      `추첨 완료 · ${value.toLocaleString("en-US")}`;
+  }
 
   isDrawing = false;
   setButtonsDisabled(false);
@@ -452,30 +676,29 @@ function drawInstantly() {
   if (isDrawing) return;
 
   isDrawing = true;
-
-  clearAnimationTimers();
-  setButtonsDisabled(true);
+  clearRollTimers();
   resetNumberEffects();
+  setButtonsDisabled(true);
 
   triggerButtonImpact(instantButton);
 
   const result = secureRandomNumber();
-
   finishDraw(result);
 }
 
-/* 일반 뽑기: 숫자가 굴러가며 왼쪽부터 차례대로 멈춤 */
+/* =====================================
+   느리고 부드러운 숫자 롤링
+===================================== */
+
 function drawWithAnimation() {
   if (isDrawing) return;
 
   isDrawing = true;
-
-  clearAnimationTimers();
-  setButtonsDisabled(true);
+  clearRollTimers();
   resetNumberEffects();
+  setButtonsDisabled(true);
 
   triggerButtonImpact(drawButton);
-
   statusElement.textContent = "숫자를 추첨하는 중...";
 
   digitElements.forEach(digit => {
@@ -483,50 +706,69 @@ function drawWithAnimation() {
     digit.classList.add("rolling");
   });
 
-  /* 실제 결과는 애니메이션 시작 시 한 번만 생성 */
   const result = secureRandomNumber();
 
-  const startDelay = 650;
-  const stopInterval = 260;
-  const spinSpeed = 55;
+  // 1이 가장 느리고, 5가 가장 빠르다.
+  const speedSettings = {
+    1: { start: 1900, interval: 850, spin: 100 },
+    2: { start: 1500, interval: 650, spin: 85 },
+    3: { start: 1200, interval: 500, spin: 70 },
+    4: { start: 900, interval: 380, spin: 60 },
+    5: { start: 650, interval: 300, spin: 50 }
+  };
+
+  const timing = speedSettings[settings.speed];
 
   digitElements.forEach((digit, index) => {
-    const interval = setInterval(() => {
-      digit.textContent = String(
-        Math.floor(Math.random() * 10)
-      );
-    }, spinSpeed);
+    // 각 자리의 롤링은 추첨 연출용이다.
+    const intervalId = setInterval(() => {
+      digit.textContent = String(Math.floor(Math.random() * 10));
+    }, timing.spin);
 
-    animationIntervals.push(interval);
+    rollIntervals.push(intervalId);
 
-    /* 왼쪽 자리부터 차례대로 멈춤 */
-    const stopTimer = setTimeout(() => {
-      clearInterval(interval);
+    const stopId = setTimeout(() => {
+      clearInterval(intervalId);
 
       digit.classList.remove("rolling");
       digit.textContent = result[index];
 
-      if (index === DIGITS - 1) {
-        const finishTimer = setTimeout(() => {
-          finishDraw(result);
-        }, 180);
-
-        animationTimers.push(finishTimer);
+      // 브라우저가 Web Animations API를 지원할 때만 사용
+      if (typeof digit.animate === "function") {
+        digit.animate(
+          [
+            { transform: "translateY(-5px) scale(0.98)" },
+            { transform: "translateY(2px) scale(1.035)" },
+            { transform: "translateY(0) scale(1)" }
+          ],
+          {
+            duration: 380,
+            easing: "cubic-bezier(.2, .8, .25, 1)"
+          }
+        );
       }
-    }, startDelay + index * stopInterval);
 
-    animationTimers.push(stopTimer);
+      if (index === DIGITS - 1) {
+        scheduleRollTimeout(() => {
+          finishDraw(result);
+        }, 400);
+      }
+    }, timing.start + index * timing.interval);
+
+    rollTimeouts.push(stopId);
   });
 }
 
 drawButton.addEventListener("click", drawWithAnimation);
 instantButton.addEventListener("click", drawInstantly);
 
-/* 은은하게 떠다니는 기존 배경 파티클 */
-const canvas = document.getElementById("particles");
+/* =====================================
+   배경 파티클
+===================================== */
+
+const canvas = $("particles");
 const ctx = canvas.getContext("2d");
 
-let particles = [];
 let width = 0;
 let height = 0;
 
@@ -538,26 +780,28 @@ function resizeCanvas() {
 
   canvas.width = width * dpr;
   canvas.height = height * dpr;
-
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  particles = Array.from({ length: 65 }, () => ({
-    x: Math.random() * width,
-    y: Math.random() * height,
-    size: 0.6 + Math.random() * 1.8,
-    speed: 0.12 + Math.random() * 0.3,
-    drift: (Math.random() - 0.5) * 0.3,
-    alpha: 0.15 + Math.random() * 0.45
-  }));
+  backgroundParticles = Array.from(
+    { length: settings.particles },
+    () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: 0.6 + Math.random() * 1.8,
+      speed: 0.12 + Math.random() * 0.3,
+      drift: (Math.random() - 0.5) * 0.3,
+      alpha: 0.15 + Math.random() * 0.45
+    })
+  );
 }
 
 function animateParticles() {
   ctx.clearRect(0, 0, width, height);
 
-  for (const particle of particles) {
+  for (const particle of backgroundParticles) {
     particle.y -= particle.speed;
     particle.x += particle.drift;
 
@@ -570,7 +814,6 @@ function animateParticles() {
     if (particle.x > width + 5) particle.x = -5;
 
     ctx.beginPath();
-
     ctx.arc(
       particle.x,
       particle.y,
@@ -584,19 +827,24 @@ function animateParticles() {
 
     ctx.shadowBlur = 8;
     ctx.shadowColor = "rgba(155, 83, 255, 0.55)";
-
     ctx.fill();
   }
 
   ctx.shadowBlur = 0;
-
   requestAnimationFrame(animateParticles);
 }
 
 window.addEventListener("resize", resizeCanvas);
 
-resizeCanvas();
-animateParticles();
+/* =====================================
+   초기화
+===================================== */
+
+populateSettingsControls();
+applySettings();
 
 renderHistory();
 updateAverage();
+updateStatistics();
+
+animateParticles();
