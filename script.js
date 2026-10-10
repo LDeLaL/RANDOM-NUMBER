@@ -3,6 +3,8 @@
 const DIGITS = 7;
 const HISTORY_LIMIT = 10;
 const SETTINGS_KEY = "violetRandomSettings";
+const PROGRESS_KEY = "violetRandomProgress";
+const FEATURE_PASSWORD = "0708";
 
 const DEFAULT_SETTINGS = {
   particles: 65,
@@ -28,12 +30,35 @@ const autoMessage = $("auto-message");
 const autoCountInput = $("auto-count");
 const autoDurationSetting = $("auto-duration-setting");
 const autoCountSetting = $("auto-count-setting");
+
 const statisticsButton = $("statistics-button");
 const statisticsOverlay = $("statistics-overlay");
 const closeStatisticsButton = $("close-statistics");
+
+const replayButton = $("replay-button");
+const replayOverlay = $("replay-overlay");
+const closeReplayButton = $("close-replay");
+const replayMessage = $("replay-message");
+
+const passwordOverlay = $("password-overlay");
+const passwordInput = $("password-input");
+const passwordMessage = $("password-message");
+const submitPasswordButton = $("submit-password");
+const closePasswordButton = $("close-password");
+const cancelPasswordButton = $("cancel-password");
+
+const turboButton = $("turbo-button");
+const turboOverlay = $("turbo-overlay");
+const closeTurboButton = $("close-turbo");
+const cancelTurboButton = $("cancel-turbo");
+const startTurboButton = $("start-turbo");
+const turboCountInput = $("turbo-count");
+const turboMessage = $("turbo-message");
+
 const autoSummaryOverlay = $("auto-summary-overlay");
 const closeAutoSummaryButton = $("close-auto-summary");
 const closeSummaryDoneButton = $("close-summary-done");
+
 const rareHistoryList = $("rare-history-list");
 const statusElement = $("status");
 const historyList = $("history-list");
@@ -91,9 +116,12 @@ let rareHistory = [];
 let totalDraws = 0;
 let highestNumber = null;
 let lowestNumber = null;
+let lastResult = "0000000";
+
 let isDrawing = false;
 let queuedCheatNumber = null;
 let lastDrawWasCheat = false;
+let pendingProtectedAction = null;
 
 let autoRunning = false;
 let autoEndsAt = 0;
@@ -113,8 +141,12 @@ const drawStats = {
   prime: 0,
   composite: 0,
   total: 0,
+  sum: 0,
   digits: Object.fromEntries(
     Array.from({ length: 8 }, (_, i) => [String(i), 0])
+  ),
+  lastDigits: Object.fromEntries(
+    Array.from({ length: 10 }, (_, i) => [String(i), 0])
   ),
   rarities: {
     uncommon: 0,
@@ -306,7 +338,7 @@ resetSettingsButton.addEventListener("click", () => {
    치트 설정
 ===================================== */
 
-function openCheat() {
+function openCheatPanel() {
   cheatOverlay.hidden = false;
   cheatButton.setAttribute("aria-expanded", "true");
 
@@ -323,7 +355,10 @@ function closeCheat() {
   cheatButton.focus();
 }
 
-cheatButton.addEventListener("click", openCheat);
+cheatButton.addEventListener("click", () => {
+  requestProtectedAccess("cheat");
+});
+
 closeCheatButton.addEventListener("click", closeCheat);
 
 cheatOverlay.addEventListener("click", event => {
@@ -383,7 +418,7 @@ function getNextResult() {
 ===================================== */
 
 function secureRandomNumber() {
-  const RANGE = 10_000_000;
+  const RANGE = 10000000;
   const MAX = 0x100000000;
   const LIMIT = Math.floor(MAX / RANGE) * RANGE;
   const buffer = new Uint32Array(1);
@@ -715,12 +750,10 @@ function createBurst(
     particle.style.setProperty("--dx", `${dx}px`);
     particle.style.setProperty("--dy", `${dy}px`);
     particle.style.setProperty("--size", size);
-
     particle.style.setProperty(
       "--rotation",
       `${Math.random() * 360 - 180}deg`
     );
-
     particle.style.setProperty(
       "--duration",
       `${500 + Math.random() * 500}ms`
@@ -955,13 +988,15 @@ function triggerResultImpact(pattern = null, result = "0000000") {
    기록 및 통계
 ===================================== */
 
-function trackDrawStatistics(result) {
+function trackDrawStatistics(result, options = {}) {
+  const { render = true, persist = true } = options;
   const value = Number(result);
   const normalized = String(value);
   const digitLength = value === 0 ? 0 : normalized.length;
   const pattern = getRarePattern(normalized);
 
   drawStats.total++;
+  drawStats.sum += value;
 
   if (value % 2 === 0) {
     drawStats.even++;
@@ -976,6 +1011,7 @@ function trackDrawStatistics(result) {
   }
 
   drawStats.digits[String(digitLength)]++;
+  drawStats.lastDigits[normalized.slice(-1)]++;
 
   if (pattern) {
     drawStats.rarities[pattern.level]++;
@@ -983,7 +1019,13 @@ function trackDrawStatistics(result) {
     drawStats.rarities.common++;
   }
 
-  renderStatistics();
+  if (render) {
+    renderStatistics();
+  }
+
+  if (persist) {
+    saveProgress();
+  }
 }
 
 function percentage(part, total) {
@@ -1032,13 +1074,46 @@ function renderStatistics() {
   setText("even-count", drawStats.even.toLocaleString("en-US"));
   setText("odd-ratio", percentage(drawStats.odd, drawStats.total));
   setText("even-ratio", percentage(drawStats.even, drawStats.total));
+
   setText("prime-count", drawStats.prime.toLocaleString("en-US"));
   setText("composite-count", drawStats.composite.toLocaleString("en-US"));
   setText("prime-ratio", percentage(drawStats.prime, drawStats.total));
   setText("composite-ratio", percentage(drawStats.composite, drawStats.total));
+
+  setText(
+    "overall-average",
+    drawStats.total
+      ? Math.round(drawStats.sum / drawStats.total).toLocaleString("en-US")
+      : "—"
+  );
+
+  setText(
+    "statistics-max",
+    highestNumber === null ? "—" : highestNumber.toLocaleString("en-US")
+  );
+
+  setText(
+    "statistics-min",
+    lowestNumber === null ? "—" : lowestNumber.toLocaleString("en-US")
+  );
+
+  const lastDigitEntries = Object.entries(drawStats.lastDigits)
+    .sort((a, b) => b[1] - a[1]);
+
+  const mostCommon = drawStats.total ? lastDigitEntries[0] : null;
+
+  setText("most-common-last-digit", mostCommon ? mostCommon[0] : "—");
+
+  setText(
+    "most-common-last-digit-count",
+    mostCommon
+      ? `${mostCommon[1].toLocaleString("en-US")}회 · ${percentage(mostCommon[1], drawStats.total)}`
+      : "아직 기록 없음"
+  );
+
   setText(
     "statistics-total",
-    `현재 세션의 전체 추첨 ${drawStats.total.toLocaleString("en-US")}회 기준`
+    `누적 ${drawStats.total.toLocaleString("en-US")}회 추첨 기준 · 기록은 자동 저장돼.`
   );
 
   const digitNames = {
@@ -1056,6 +1131,14 @@ function renderStatistics() {
     $("digit-statistics"),
     Object.entries(drawStats.digits).map(
       ([digits, count]) => [digitNames[digits], count, ""]
+    ),
+    drawStats.total
+  );
+
+  renderStatBar(
+    $("last-digit-statistics"),
+    Object.entries(drawStats.lastDigits).map(
+      ([digit, count]) => [`끝자리 ${digit}`, count, ""]
     ),
     drawStats.total
   );
@@ -1103,15 +1186,9 @@ statisticsOverlay.addEventListener("click", event => {
   }
 });
 
-document.querySelectorAll('input[name="auto-limit-mode"]').forEach(input => {
-  input.addEventListener("change", () => {
-    if (!input.checked) return;
-
-    const countMode = input.value === "count";
-    autoDurationSetting.hidden = countMode;
-    autoCountSetting.hidden = !countMode;
-  });
-});
+/* =====================================
+   자동 뽑기 결과 요약
+===================================== */
 
 function showAutoSummary(reason) {
   if (autoCompletedCount <= 0) return;
@@ -1125,11 +1202,13 @@ function showAutoSummary(reason) {
     Math.round(sum / autoResults.length).toLocaleString("en-US");
 
   $("summary-max").textContent =
-    autoResults.reduce((best, value) => Math.max(best, value), -Infinity)
+    autoResults
+      .reduce((best, value) => Math.max(best, value), -Infinity)
       .toLocaleString("en-US");
 
   $("summary-min").textContent =
-    autoResults.reduce((best, value) => Math.min(best, value), Infinity)
+    autoResults
+      .reduce((best, value) => Math.min(best, value), Infinity)
       .toLocaleString("en-US");
 
   const list = $("summary-rare-list");
@@ -1175,6 +1254,10 @@ autoSummaryOverlay.addEventListener("click", event => {
   }
 });
 
+/* =====================================
+   기록 목록
+===================================== */
+
 function addToHistory(result) {
   const value = Number(result);
   const pattern = getRarePattern(String(value));
@@ -1188,7 +1271,7 @@ function addToHistory(result) {
     renderRareHistory();
   }
 
-  totalDraws += 1;
+  totalDraws++;
 
   if (highestNumber === null || value > highestNumber) {
     highestNumber = value;
@@ -1350,6 +1433,7 @@ function finishDraw(result) {
 
   const value = Number(result);
   const pattern = getRarePattern(result);
+  lastResult = result;
 
   digitCountLabel.textContent = getDigitCountLabel(result);
 
@@ -1388,6 +1472,7 @@ function finishDraw(result) {
 }
 
 /* 즉각 뽑기 */
+
 function drawInstantly() {
   if (isDrawing) return;
 
@@ -1403,7 +1488,7 @@ function drawInstantly() {
 }
 
 /* =====================================
-   느리고 부드러운 숫자 롤링
+   숫자 롤링 애니메이션
 ===================================== */
 
 function drawWithAnimation() {
@@ -1656,12 +1741,14 @@ autoOverlay.addEventListener("click", event => {
   }
 });
 
-document.addEventListener("keydown", event => {
-  if (event.key !== "Escape") return;
+document.querySelectorAll('input[name="auto-limit-mode"]').forEach(input => {
+  input.addEventListener("change", () => {
+    if (!input.checked) return;
 
-  if (!autoOverlay.hidden) closeAutoSettings();
-  if (!statisticsOverlay.hidden) closeStatistics();
-  if (!autoSummaryOverlay.hidden) closeAutoSummary();
+    const countMode = input.value === "count";
+    autoDurationSetting.hidden = countMode;
+    autoCountSetting.hidden = !countMode;
+  });
 });
 
 /* =====================================
@@ -1690,13 +1777,376 @@ rarityOverlay.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !rarityOverlay.hidden) {
-    closeRarity();
+  if (event.key !== "Escape") return;
+
+  if (!autoOverlay.hidden) closeAutoSettings();
+  if (!statisticsOverlay.hidden) closeStatistics();
+  if (!autoSummaryOverlay.hidden) closeAutoSummary();
+  if (!rarityOverlay.hidden) closeRarity();
+});
+
+/* =====================================
+   기록 저장 및 복원
+===================================== */
+
+function saveProgress() {
+  const snapshot = {
+    history,
+    rareHistory,
+    totalDraws,
+    highestNumber,
+    lowestNumber,
+    lastResult,
+    drawStats
+  };
+
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot));
+  } catch (error) {
+    console.warn("Violet Random 기록 저장 실패:", error);
+  }
+}
+
+function restoreProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return;
+
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== "object") return;
+
+    history = Array.isArray(saved.history)
+      ? saved.history.filter(Number.isFinite).slice(0, HISTORY_LIMIT)
+      : [];
+
+    rareHistory = Array.isArray(saved.rareHistory)
+      ? saved.rareHistory
+          .filter(item =>
+            item &&
+            Number.isFinite(item.value) &&
+            item.pattern &&
+            item.pattern.level
+          )
+          .slice(0, HISTORY_LIMIT)
+      : [];
+
+    totalDraws = Number.isFinite(saved.totalDraws)
+      ? Math.max(0, saved.totalDraws)
+      : 0;
+
+    highestNumber = Number.isFinite(saved.highestNumber)
+      ? saved.highestNumber
+      : null;
+
+    lowestNumber = Number.isFinite(saved.lowestNumber)
+      ? saved.lowestNumber
+      : null;
+
+    lastResult =
+      typeof saved.lastResult === "string" &&
+      /^\d{7}$/.test(saved.lastResult)
+        ? saved.lastResult
+        : "0000000";
+
+    if (saved.drawStats && typeof saved.drawStats === "object") {
+      ["odd", "even", "prime", "composite", "total", "sum"].forEach(key => {
+        if (Number.isFinite(saved.drawStats[key])) {
+          drawStats[key] = saved.drawStats[key];
+        }
+      });
+
+      ["digits", "lastDigits", "rarities"].forEach(group => {
+        if (
+          saved.drawStats[group] &&
+          typeof saved.drawStats[group] === "object"
+        ) {
+          Object.keys(drawStats[group]).forEach(key => {
+            const value = saved.drawStats[group][key];
+
+            if (Number.isFinite(value)) {
+              drawStats[group][key] = value;
+            }
+          });
+        }
+      });
+    }
+  } catch (error) {
+    console.warn("Violet Random 기록 복원 실패:", error);
+  }
+}
+
+/* =====================================
+   비밀번호 보호 기능
+===================================== */
+
+function requestProtectedAccess(action) {
+  pendingProtectedAction = action;
+  passwordInput.value = "";
+  passwordMessage.textContent = "비밀번호를 입력해 줘.";
+  passwordOverlay.hidden = false;
+  passwordInput.focus();
+}
+
+function closePassword() {
+  passwordOverlay.hidden = true;
+  pendingProtectedAction = null;
+  passwordInput.value = "";
+}
+
+function submitPassword() {
+  if (passwordInput.value !== FEATURE_PASSWORD) {
+    passwordMessage.textContent =
+      "비밀번호가 틀렸어. 사용할 수 없어.";
+
+    passwordInput.value = "";
+    passwordInput.focus();
+    return;
+  }
+
+  const action = pendingProtectedAction;
+  closePassword();
+
+  if (action === "cheat") {
+    openCheatPanel();
+  }
+
+  if (action === "turbo") {
+    turboOverlay.hidden = false;
+    turboButton.setAttribute("aria-expanded", "true");
+    turboMessage.textContent = "실행하면 결과 요약이 표시돼.";
+    closeTurboButton.focus();
+  }
+}
+
+submitPasswordButton.addEventListener("click", submitPassword);
+
+passwordInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    submitPassword();
   }
 });
 
+closePasswordButton.addEventListener("click", closePassword);
+cancelPasswordButton.addEventListener("click", closePassword);
+
+passwordOverlay.addEventListener("click", event => {
+  if (event.target === passwordOverlay) {
+    closePassword();
+  }
+});
+
+/* =====================================
+   희귀 연출 미리 보기
+===================================== */
+
+const previewSamples = {
+  uncommon: "123456",
+  rare: "12345",
+  glorious: "42",
+  legendary: "7",
+  ultimate: "0",
+  jackpot: "777",
+  special: "708",
+  "reverse-special": "7654321"
+};
+
+function openReplay() {
+  replayOverlay.hidden = false;
+  replayButton.setAttribute("aria-expanded", "true");
+  replayMessage.textContent = "보고 싶은 연출을 선택해 줘.";
+  closeReplayButton.focus();
+}
+
+function closeReplay() {
+  replayOverlay.hidden = true;
+  replayButton.setAttribute("aria-expanded", "false");
+  replayButton.focus();
+}
+
+replayButton.addEventListener("click", openReplay);
+closeReplayButton.addEventListener("click", closeReplay);
+
+replayOverlay.addEventListener("click", event => {
+  if (event.target === replayOverlay) {
+    closeReplay();
+  }
+});
+
+document.querySelectorAll("[data-preview-rarity]").forEach(button => {
+  button.addEventListener("click", () => {
+    const level = button.dataset.previewRarity;
+    const sample = previewSamples[level];
+
+    if (!sample) return;
+
+    resetNumberEffects();
+    setDisplayedNumber(sample.padStart(DIGITS, "0"), true);
+
+    digitCountLabel.textContent =
+      `미리 보기 · ${button.querySelector(".rarity-badge").textContent}`;
+
+    updateNumberInfo(sample.padStart(DIGITS, "0"));
+
+    const pattern = {
+      title: button.querySelector(".rarity-badge").textContent,
+      level,
+      detail: button.querySelector(".rarity-badge").textContent
+    };
+
+    const previousSettings = settings;
+
+    settings = {
+      ...settings,
+      rareEffects: true,
+      effect: Math.max(2, settings.effect)
+    };
+
+    triggerResultImpact(pattern, sample.padStart(DIGITS, "0"));
+
+    settings = previousSettings;
+
+    replayMessage.textContent =
+      `${pattern.detail} 연출을 미리 보고 있어. 기록이나 통계는 변경되지 않아.`;
+  });
+});
+
+/* =====================================
+   초고속 추첨
+===================================== */
+
+turboButton.addEventListener("click", () => {
+  requestProtectedAccess("turbo");
+});
+
+function closeTurbo() {
+  turboOverlay.hidden = true;
+  turboButton.setAttribute("aria-expanded", "false");
+  turboButton.focus();
+}
+
+closeTurboButton.addEventListener("click", closeTurbo);
+cancelTurboButton.addEventListener("click", closeTurbo);
+
+turboOverlay.addEventListener("click", event => {
+  if (event.target === turboOverlay) {
+    closeTurbo();
+  }
+});
+
+function runTurboDraw() {
+  if (isDrawing || autoRunning) {
+    turboMessage.textContent =
+      "일반 추첨이나 자동 뽑기가 실행 중일 때는 사용할 수 없어.";
+    return;
+  }
+
+  const count = Number(turboCountInput.value);
+
+  if (!Number.isInteger(count) || count < 1 || count > 10000) {
+    turboMessage.textContent =
+      "추첨 횟수는 1회부터 10,000회 사이의 정수로 입력해 줘.";
+    return;
+  }
+
+  const results = [];
+  const rareResults = [];
+
+  let localMax = -Infinity;
+  let localMin = Infinity;
+  let sum = 0;
+
+  startTurboButton.disabled = true;
+  turboMessage.textContent =
+    `${count.toLocaleString("en-US")}회 추첨 중...`;
+
+  for (let i = 0; i < count; i++) {
+    const result = secureRandomNumber();
+    const value = Number(result);
+    const pattern = getRarePattern(result);
+
+    results.push(value);
+    sum += value;
+    localMax = Math.max(localMax, value);
+    localMin = Math.min(localMin, value);
+
+    history.unshift(value);
+    history = history.slice(0, HISTORY_LIMIT);
+
+    if (pattern) {
+      rareHistory.unshift({ value, pattern });
+      rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
+      rareResults.push({ value, pattern });
+    }
+
+    totalDraws++;
+
+    if (highestNumber === null || value > highestNumber) {
+      highestNumber = value;
+    }
+
+    if (lowestNumber === null || value < lowestNumber) {
+      lowestNumber = value;
+    }
+
+    trackDrawStatistics(result, {
+      render: false,
+      persist: false
+    });
+  }
+
+  const finalResult = String(results[results.length - 1])
+    .padStart(DIGITS, "0");
+
+  lastResult = finalResult;
+
+  setDisplayedNumber(finalResult, true);
+  digitCountLabel.textContent = getDigitCountLabel(finalResult);
+  updateNumberInfo(finalResult);
+
+  const finalPattern = getRarePattern(finalResult);
+  triggerResultImpact(finalPattern, finalResult);
+
+  renderHistory();
+  renderRareHistory();
+  updateAverage();
+  updateStatistics();
+  renderStatistics();
+  saveProgress();
+
+  autoCompletedCount = count;
+  autoResults = results;
+  autoRareResults = rareResults;
+
+  statusElement.textContent =
+    `초고속 추첨 완료 · ${count.toLocaleString("en-US")}회`;
+
+  turboMessage.textContent =
+    `완료! 평균 ${Math.round(sum / count).toLocaleString("en-US")} · 최댓값 ${localMax.toLocaleString("en-US")} · 최솟값 ${localMin.toLocaleString("en-US")}`;
+
+  startTurboButton.disabled = false;
+  closeTurbo();
+
+  showAutoSummary(
+    `초고속 추첨 ${count.toLocaleString("en-US")}회 완료!`
+  );
+}
+
+startTurboButton.addEventListener("click", runTurboDraw);
+
+/* =====================================
+   버튼 및 키보드 이벤트
+===================================== */
+
 drawButton.addEventListener("click", drawWithAnimation);
 instantButton.addEventListener("click", drawInstantly);
+
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape") return;
+
+  if (!passwordOverlay.hidden) closePassword();
+  if (!replayOverlay.hidden) closeReplay();
+  if (!turboOverlay.hidden) closeTurbo();
+});
 
 /* =====================================
    배경 파티클
@@ -1781,12 +2231,22 @@ window.addEventListener("resize", resizeCanvas);
    초기화
 ===================================== */
 
+restoreProgress();
 populateSettingsControls();
 applySettings();
+
+setDisplayedNumber(lastResult, true);
+
+if (totalDraws > 0) {
+  digitCountLabel.textContent = getDigitCountLabel(lastResult);
+  updateNumberInfo(lastResult);
+  statusElement.textContent = "이전 기록을 불러왔어. 계속 추첨해 봐!";
+}
 
 renderHistory();
 renderRareHistory();
 updateAverage();
 updateStatistics();
+renderStatistics();
 
 animateParticles();
