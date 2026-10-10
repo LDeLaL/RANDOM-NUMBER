@@ -29,14 +29,17 @@
 
       <div class="stats-panel">
         <h3>NUMBER STATISTICS</h3>
+
         <div class="stat-row">
           <span>최댓값</span>
           <strong id="max-number">—</strong>
         </div>
+
         <div class="stat-row">
           <span>최솟값</span>
           <strong id="min-number">—</strong>
         </div>
+
         <div class="stat-row">
           <span>전체 추첨 횟수</span>
           <strong id="total-draws">0</strong>
@@ -46,16 +49,51 @@
 
     <main class="container">
       <div class="top-actions">
-        <button id="settings-button" class="settings-button" type="button"
-          aria-expanded="false" aria-controls="settings-overlay">⚙ 설정</button>
-        <button id="cheat-button" class="settings-button cheat-open-button" type="button"
-          aria-expanded="false" aria-controls="cheat-overlay">✧ 치트</button>
-        <button id="rarity-button" class="settings-button rarity-open-button" type="button"
-          aria-expanded="false" aria-controls="rarity-overlay">✦ 희귀도</button>
-        <button id="statistics-button" class="settings-button statistics-open-button" type="button"
-          aria-expanded="false" aria-controls="statistics-overlay">▤ 통계</button>
-        <button id="replay-button" class="settings-button replay-open-button" type="button"
-          aria-expanded="false" aria-controls="replay-overlay">▶ 연출 다시 보기</button>
+        <button
+          id="settings-button"
+          class="settings-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="settings-overlay"
+        >
+          ⚙ 설정
+        </button>
+        <button
+          id="cheat-button"
+          class="settings-button cheat-open-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="cheat-overlay"
+        >
+          ✧ 치트
+        </button>
+        <button
+          id="rarity-button"
+          class="settings-button rarity-open-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="rarity-overlay"
+        >
+          ✦ 희귀도
+        </button>
+        <button
+          id="statistics-button"
+          class="settings-button statistics-open-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="statistics-overlay"
+        >
+          ▤ 통계
+        </button>
+        <button
+          id="replay-button"
+          class="settings-button replay-open-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="replay-overlay"
+        >
+          ▶ 연출 다시 보기
+        </button>
       </div>
 
       <div class="eyebrow">✦ RANDOM NUMBER GENERATOR ✦</div>
@@ -90,15 +128,25 @@
             <span class="button-icon">⚡</span>
             즉각 뽑기
           </button>
-          <button id="auto-button" class="draw-button auto-button" type="button"
-            aria-expanded="false" aria-controls="auto-overlay">
+          <button
+            id="auto-button"
+            class="draw-button auto-button"
+            type="button"
+            aria-expanded="false"
+            aria-controls="auto-overlay"
+          >
             <span class="button-icon">⟳</span>
             자동 뽑기
           </button>
         </div>
 
-        <button id="turbo-button" class="small-mode-button" type="button"
-          aria-expanded="false" aria-controls="turbo-overlay">
+        <button
+          id="turbo-button"
+          class="small-mode-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="turbo-overlay"
+        >
           ⚡ 초고속 추첨 모드
         </button>
       </div>
@@ -174,21 +222,19 @@
         <div class="setting-heading"><span>어떤 등급에서 멈출까?</span></div>
         <p class="auto-help">선택한 등급이 나오면 현재 결과를 기록한 뒤 자동 추첨을 멈춰. 아무것도 선택하지 않으면 시간 종료까지 계속해.</p>
         <div class="auto-rarity-grid">
-          <label><input type="checkbox" name="auto-stop-rarity" value="uncommon"><span class="rarity-badge uncommon">Uncommon</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="rare"><span class="rarity-badge rare">Rare</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="glorious"><span class="rarity-badge glorious">Glorious</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="ultimate"><span class="rarity-badge ultimate">Ultimate</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="reverse-special"><span class="rarity-badge reverse-special">Reverse Special</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="special"><span class="rarity-badge special">Special</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="jackpot"><span class="rarity-badge jackpot">Jackpot</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="eclipse"><span class="rarity-badge eclipse">Eclipse</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="legendary"><span class="rarity-badge legendary">Legendary</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="mythic"><span class="rarity-badge mythic">Mythic</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="eclipse"><span class="rarity-badge eclipse">Eclipse</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="ultimate"><span class="rarity-badge ultimate">Ultimate</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="jackpot"><span class="rarity-badge jackpot">Jackpot</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="special"><span class="rarity-badge special">Special</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="reverse-special"><span class="rarity-badge reverse-special">Reverse Special</span></label>
-
-          <!-- 추가된 희귀도 -->
-          <label><input type="checkbox" name="auto-stop-rarity" value="phantom"><span class="rarity-badge phantom">Phantom</span></label>
-          <label><input type="checkbox" name="auto-stop-rarity" value="aurora"><span class="rarity-badge aurora">Aurora</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="seraph"><span class="rarity-badge seraph">Seraph</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="aurora"><span class="rarity-badge aurora">Aurora</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="phantom"><span class="rarity-badge phantom">Phantom</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="glorious"><span class="rarity-badge glorious">Glorious</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="rare"><span class="rarity-badge rare">Rare</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="uncommon"><span class="rarity-badge uncommon">Uncommon</span></label>
         </div>
       </div>
 
@@ -201,13 +247,20 @@
   </div>
 
   <div id="settings-overlay" class="settings-overlay" hidden>
-    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <section
+      class="settings-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+    >
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
           <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">✕</button>
+        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">
+          ✕
+        </button>
       </div>
 
       <div class="setting-item">
@@ -257,16 +310,27 @@
       </label>
 
       <div class="settings-actions">
-        <button id="reset-settings" class="secondary-button" type="button">기본값</button>
-        <button id="save-settings" class="primary-button" type="button">설정 저장</button>
+        <button id="reset-settings" class="secondary-button" type="button">
+          기본값
+        </button>
+        <button id="save-settings" class="primary-button" type="button">
+          설정 저장
+        </button>
       </div>
 
-      <p id="settings-message" class="settings-message" aria-live="polite">설정은 이 브라우저에 저장돼.</p>
+      <p id="settings-message" class="settings-message" aria-live="polite">
+        설정은 이 브라우저에 저장돼.
+      </p>
     </section>
   </div>
 
   <div id="cheat-overlay" class="settings-overlay" hidden>
-    <section class="settings-panel cheat-panel" role="dialog" aria-modal="true" aria-labelledby="cheat-title">
+    <section
+      class="settings-panel cheat-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cheat-title"
+    >
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CHOOSE YOUR NUMBER</p>
@@ -298,26 +362,24 @@
         <table class="rarity-table">
           <thead><tr><th>순서 / 조건</th><th>희귀도</th><th>설명</th></tr></thead>
           <tbody>
-            <tr><td><span class="rarity-order">01</span> 7자리 일반 숫자</td><td><span class="rarity-badge common">Common</span></td><td>별도 희귀 패턴이 없는 일반 결과</td></tr>
-            <tr><td><span class="rarity-order">02</span> 6자리 수</td><td><span class="rarity-badge uncommon">Uncommon</span></td><td>반복 패턴이 없는 6자리 결과</td></tr>
-            <tr><td><span class="rarity-order">03</span> 3~5자리 수 · 3~5회 연속 반복 · 숫자 집합 2회 반복</td><td><span class="rarity-badge rare">Rare</span></td><td>여러 숫자 길이와 반복 패턴</td></tr>
-            <tr><td><span class="rarity-order">04</span> 2자리 수 · 숫자 집합 3회 반복 · 6회 연속 반복</td><td><span class="rarity-badge glorious">Glorious</span></td><td>짧은 숫자 또는 뚜렷한 반복 패턴</td></tr>
-            <tr><td><span class="rarity-order">05</span> 1~9 · 7회 연속 반복</td><td><span class="rarity-badge legendary">Legendary</span></td><td>한 자리 숫자 또는 같은 숫자 반복</td></tr>
-            <tr><td><span class="rarity-order">06</span> 좌우가 같은 7자리 수 (예: 1234321)</td><td><span class="rarity-badge mythic">Mythic</span></td><td>7자리 좌우 대칭 숫자</td></tr>
-            <tr><td><span class="rarity-order">07</span> 1111111 · 2222222 · … · 9999999 (7777777 제외)</td><td><span class="rarity-badge eclipse">Eclipse</span></td><td>7자리가 모두 같은 숫자</td></tr>
-            <tr><td><span class="rarity-order">08</span> 0</td><td><span class="rarity-badge ultimate">Ultimate</span></td><td>숫자 0</td></tr>
-            <tr><td><span class="rarity-order">09</span> 777 · 7777 · 77777 · 777777 · 7777777</td><td><span class="rarity-badge jackpot">Jackpot</span></td><td>지정된 7 반복 숫자</td></tr>
-            <tr><td><span class="rarity-order">10</span> 708 · 1234567</td><td><span class="rarity-badge special">Special</span></td><td>지정된 특별 숫자</td></tr>
-            <tr><td><span class="rarity-order">11</span> 7654321</td><td><span class="rarity-badge reverse-special">Reverse Special</span></td><td>역순으로 이어지는 숫자</td></tr>
-
-            <!-- 추가된 희귀도 -->
-            <tr><td><span class="rarity-order">12</span> ABABABA 형태의 7자리 수 (예: 1212121)</td><td><span class="rarity-badge phantom">Phantom</span></td><td>두 숫자가 번갈아 반복되는 패턴</td></tr>
-            <tr><td><span class="rarity-order">13</span> 7자리 연속 증가·감소 패턴 (예: 2345678)</td><td><span class="rarity-badge aurora">Aurora</span></td><td>숫자가 한 칸씩 이어지는 패턴</td></tr>
-            <tr><td><span class="rarity-order">14</span> 7자리이며 모든 숫자가 서로 다르고 합이 35 또는 42</td><td><span class="rarity-badge seraph">Seraph</span></td><td>중복 없이 균형 잡힌 숫자 조합</td></tr>
+            <tr><td><span class="rarity-order">01</span> 0</td><td><span class="rarity-badge ultimate">Ultimate</span></td><td>숫자 0</td></tr>
+            <tr><td><span class="rarity-order">02</span> 7654321</td><td><span class="rarity-badge reverse-special">Reverse Special</span></td><td>역순으로 이어지는 숫자</td></tr>
+            <tr><td><span class="rarity-order">03</span> 708 · 1234567</td><td><span class="rarity-badge special">Special</span></td><td>지정된 특별 숫자</td></tr>
+            <tr><td><span class="rarity-order">04</span> 777 · 7777 · 77777 · 777777 · 7777777</td><td><span class="rarity-badge jackpot">Jackpot</span></td><td>지정된 7 반복 숫자</td></tr>
+            <tr><td><span class="rarity-order">05</span> 1111111 · 2222222 · … · 9999999 (7777777 제외)</td><td><span class="rarity-badge eclipse">Eclipse</span></td><td>7자리가 모두 같은 숫자</td></tr>
+            <tr><td><span class="rarity-order">06</span> 1~9 · 7회 연속 반복</td><td><span class="rarity-badge legendary">Legendary</span></td><td>한 자리 숫자 또는 같은 숫자 반복</td></tr>
+            <tr><td><span class="rarity-order">07</span> 좌우가 같은 7자리 수 (예: 1234321)</td><td><span class="rarity-badge mythic">Mythic</span></td><td>7자리 좌우 대칭 숫자</td></tr>
+            <tr><td><span class="rarity-order">08</span> 7자리이며 모든 숫자가 서로 다르고 합이 35 또는 42</td><td><span class="rarity-badge seraph">Seraph</span></td><td>중복 없이 균형 잡힌 숫자 조합</td></tr>
+            <tr><td><span class="rarity-order">09</span> 7자리 연속 증가·감소 패턴 (예: 2345678)</td><td><span class="rarity-badge aurora">Aurora</span></td><td>숫자가 한 칸씩 이어지는 패턴</td></tr>
+            <tr><td><span class="rarity-order">10</span> ABABABA 형태의 7자리 수 (예: 1212121)</td><td><span class="rarity-badge phantom">Phantom</span></td><td>두 숫자가 번갈아 반복되는 패턴</td></tr>
+            <tr><td><span class="rarity-order">11</span> 2자리 수 · 숫자 집합 3회 반복 · 6회 연속 반복</td><td><span class="rarity-badge glorious">Glorious</span></td><td>짧은 숫자 또는 뚜렷한 반복 패턴</td></tr>
+            <tr><td><span class="rarity-order">12</span> 3~5자리 수 · 3~5회 연속 반복 · 숫자 집합 2회 반복</td><td><span class="rarity-badge rare">Rare</span></td><td>여러 숫자 길이와 반복 패턴</td></tr>
+            <tr><td><span class="rarity-order">13</span> 6자리 수</td><td><span class="rarity-badge uncommon">Uncommon</span></td><td>반복 패턴이 없는 6자리 결과</td></tr>
+            <tr><td><span class="rarity-order">14</span> 7자리 일반 숫자</td><td><span class="rarity-badge common">Common</span></td><td>별도 희귀 패턴이 없는 일반 결과</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="settings-message">위쪽은 상대적으로 흔한 조건, 아래쪽은 특별 지정 숫자야. 조건이 겹치면 실제 판별 우선순위에 따라 한 등급만 표시돼.</p>
+      <p class="settings-message">위쪽은 상대적으로 희귀한 등급, 아래쪽은 상대적으로 흔한 등급이야. 조건이 겹치면 실제 판별 우선순위에 따라 한 등급만 표시돼.</p>
     </section>
   </div>
 
@@ -346,10 +408,7 @@
 
   <div id="auto-summary-overlay" class="settings-overlay" hidden>
     <section class="settings-panel statistics-panel" role="dialog" aria-modal="true" aria-labelledby="auto-summary-title">
-      <div class="settings-header">
-        <div><p class="settings-eyebrow">AUTOMATIC DRAW COMPLETE</p><h2 id="auto-summary-title">자동 뽑기 결과 요약</h2></div>
-        <button id="close-auto-summary" class="close-settings" type="button" aria-label="결과 요약 닫기">✕</button>
-      </div>
+      <div class="settings-header"><div><p class="settings-eyebrow">AUTOMATIC DRAW COMPLETE</p><h2 id="auto-summary-title">자동 뽑기 결과 요약</h2></div><button id="close-auto-summary" class="close-settings" type="button" aria-label="결과 요약 닫기">✕</button></div>
       <div class="statistics-grid">
         <article class="statistics-card"><span>총 추첨 횟수</span><strong id="summary-draw-count">0</strong></article>
         <article class="statistics-card"><span>평균</span><strong id="summary-average">—</strong></article>
@@ -364,44 +423,33 @@
 
   <div id="password-overlay" class="settings-overlay" hidden>
     <section class="settings-panel password-panel" role="dialog" aria-modal="true" aria-labelledby="password-title">
-      <div class="settings-header">
-        <div><p class="settings-eyebrow">RESTRICTED ACCESS</p><h2 id="password-title">비밀번호 입력</h2></div>
-        <button id="close-password" class="close-settings" type="button" aria-label="비밀번호 창 닫기">✕</button>
-      </div>
+      <div class="settings-header"><div><p class="settings-eyebrow">RESTRICTED ACCESS</p><h2 id="password-title">비밀번호 입력</h2></div><button id="close-password" class="close-settings" type="button" aria-label="비밀번호 창 닫기">✕</button></div>
       <p class="cheat-description">이 기능을 사용하려면 비밀번호를 입력해야 해.</p>
       <label class="cheat-input-label" for="password-input">비밀번호</label>
       <input id="password-input" class="cheat-number-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="4자리 비밀번호">
       <p id="password-message" class="settings-message" aria-live="polite">비밀번호를 입력해 줘.</p>
-      <div class="settings-actions">
-        <button id="cancel-password" class="secondary-button" type="button">취소</button>
-        <button id="submit-password" class="primary-button" type="button">확인</button>
-      </div>
+      <div class="settings-actions"><button id="cancel-password" class="secondary-button" type="button">취소</button><button id="submit-password" class="primary-button" type="button">확인</button></div>
     </section>
   </div>
 
   <div id="replay-overlay" class="settings-overlay" hidden>
     <section class="settings-panel replay-panel" role="dialog" aria-modal="true" aria-labelledby="replay-title">
-      <div class="settings-header">
-        <div><p class="settings-eyebrow">RARITY EFFECT PREVIEW</p><h2 id="replay-title">희귀 연출 다시 보기</h2></div>
-        <button id="close-replay" class="close-settings" type="button" aria-label="연출 다시 보기 닫기">✕</button>
-      </div>
+      <div class="settings-header"><div><p class="settings-eyebrow">RARITY EFFECT PREVIEW</p><h2 id="replay-title">희귀 연출 다시 보기</h2></div><button id="close-replay" class="close-settings" type="button" aria-label="연출 다시 보기 닫기">✕</button></div>
       <p class="cheat-description">원하는 등급을 선택해 둔 뒤 창을 닫고 숫자를 뽑아 봐. 다음 추첨 결과에 선택한 연출이 한 번 적용돼. 숫자와 통계는 실제 추첨 결과 그대로 기록돼.</p>
       <div class="replay-grid">
-        <button type="button" class="replay-rarity-button" data-preview-rarity="uncommon"><span class="rarity-badge uncommon">Uncommon</span><small>은은한 보라빛</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="rare"><span class="rarity-badge rare">Rare</span><small>파티클 버스트</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="glorious"><span class="rarity-badge glorious">Glorious</span><small>청록색 플래시</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="ultimate"><span class="rarity-badge ultimate">Ultimate</span><small>전체 화면 보라색</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="reverse-special"><span class="rarity-badge reverse-special">Reverse Special</span><small>강렬한 붉은빛</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="special"><span class="rarity-badge special">Special</span><small>붉은빛 글로우</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="jackpot"><span class="rarity-badge jackpot">Jackpot</span><small>동전 바운스</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="eclipse"><span class="rarity-badge eclipse">Eclipse</span><small>암흑빛 폭발</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="legendary"><span class="rarity-badge legendary">Legendary</span><small>황금빛 스윕</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="mythic"><span class="rarity-badge mythic">Mythic</span><small>푸른 보랏빛 오라</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="eclipse"><span class="rarity-badge eclipse">Eclipse</span><small>암흑빛 폭발</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="ultimate"><span class="rarity-badge ultimate">Ultimate</span><small>전체 화면 보라색</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="jackpot"><span class="rarity-badge jackpot">Jackpot</span><small>동전 바운스</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="special"><span class="rarity-badge special">Special</span><small>붉은빛 글로우</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="reverse-special"><span class="rarity-badge reverse-special">Reverse Special</span><small>강렬한 붉은빛</small></button>
-
-        <!-- 추가된 희귀도 -->
-        <button type="button" class="replay-rarity-button" data-preview-rarity="phantom"><span class="rarity-badge phantom">Phantom</span><small>잔상처럼 퍼지는 울림</small></button>
-        <button type="button" class="replay-rarity-button" data-preview-rarity="aurora"><span class="rarity-badge aurora">Aurora</span><small>빛이 번지는 파동</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="seraph"><span class="rarity-badge seraph">Seraph</span><small>맑은 종소리와 광휘</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="aurora"><span class="rarity-badge aurora">Aurora</span><small>빛이 번지는 파동</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="phantom"><span class="rarity-badge phantom">Phantom</span><small>잔상처럼 퍼지는 울림</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="glorious"><span class="rarity-badge glorious">Glorious</span><small>청록색 플래시</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="rare"><span class="rarity-badge rare">Rare</span><small>파티클 버스트</small></button>
+        <button type="button" class="replay-rarity-button" data-preview-rarity="uncommon"><span class="rarity-badge uncommon">Uncommon</span><small>은은한 보라빛</small></button>
       </div>
       <p id="replay-message" class="settings-message" aria-live="polite">원하는 연출을 선택한 다음 숫자를 뽑아 봐.</p>
     </section>
@@ -409,21 +457,11 @@
 
   <div id="turbo-overlay" class="settings-overlay" hidden>
     <section class="settings-panel turbo-panel" role="dialog" aria-modal="true" aria-labelledby="turbo-title">
-      <div class="settings-header">
-        <div><p class="settings-eyebrow">HIGH-SPEED NUMBER DRAW</p><h2 id="turbo-title">초고속 추첨</h2></div>
-        <button id="close-turbo" class="close-settings" type="button" aria-label="초고속 추첨 닫기">✕</button>
-      </div>
+      <div class="settings-header"><div><p class="settings-eyebrow">HIGH-SPEED NUMBER DRAW</p><h2 id="turbo-title">초고속 추첨</h2></div><button id="close-turbo" class="close-settings" type="button" aria-label="초고속 추첨 닫기">✕</button></div>
       <p class="cheat-description">애니메이션을 생략하고 여러 숫자를 한 번에 추첨해. 추첨 결과와 통계는 정상적으로 기록돼.</p>
-      <div class="setting-item">
-        <div class="setting-heading"><label for="turbo-count">추첨 횟수</label><strong>회</strong></div>
-        <input id="turbo-count" class="auto-duration-input" type="number" min="1" max="10000" step="1" value="1000" inputmode="numeric">
-        <p class="auto-help">1회부터 10,000회까지 설정할 수 있어.</p>
-      </div>
+      <div class="setting-item"><div class="setting-heading"><label for="turbo-count">추첨 횟수</label><strong>회</strong></div><input id="turbo-count" class="auto-duration-input" type="number" min="1" max="10000" step="1" value="1000" inputmode="numeric"><p class="auto-help">1회부터 10,000회까지 설정할 수 있어.</p></div>
       <p id="turbo-message" class="settings-message" aria-live="polite">실행하면 결과 요약이 표시돼.</p>
-      <div class="settings-actions">
-        <button id="cancel-turbo" class="secondary-button" type="button">취소</button>
-        <button id="start-turbo" class="primary-button" type="button">초고속 추첨 시작</button>
-      </div>
+      <div class="settings-actions"><button id="cancel-turbo" class="secondary-button" type="button">취소</button><button id="start-turbo" class="primary-button" type="button">초고속 추첨 시작</button></div>
     </section>
   </div>
 
