@@ -29,14 +29,17 @@
 
       <div class="stats-panel">
         <h3>NUMBER STATISTICS</h3>
+
         <div class="stat-row">
           <span>최댓값</span>
           <strong id="max-number">—</strong>
         </div>
+
         <div class="stat-row">
           <span>최솟값</span>
           <strong id="min-number">—</strong>
         </div>
+
         <div class="stat-row">
           <span>전체 추첨 횟수</span>
           <strong id="total-draws">0</strong>
@@ -46,13 +49,31 @@
 
     <main class="container">
       <div class="top-actions">
-        <button id="settings-button" class="settings-button" type="button" aria-expanded="false" aria-controls="settings-overlay">
+        <button
+          id="settings-button"
+          class="settings-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="settings-overlay"
+        >
           ⚙ 설정
         </button>
-        <button id="cheat-button" class="settings-button cheat-open-button" type="button" aria-expanded="false" aria-controls="cheat-overlay">
+        <button
+          id="cheat-button"
+          class="settings-button cheat-open-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="cheat-overlay"
+        >
           ✧ 치트
         </button>
-        <button id="rarity-button" class="settings-button rarity-open-button" type="button" aria-expanded="false" aria-controls="rarity-overlay">
+        <button
+          id="rarity-button"
+          class="settings-button rarity-open-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="rarity-overlay"
+        >
           ✦ 희귀도
         </button>
       </div>
@@ -83,24 +104,103 @@
           <span class="button-icon">✦</span>
           숫자 뽑기
         </button>
-        <button id="instant-button" class="draw-button instant-button" type="button">
-          <span class="button-icon">⚡</span>
-          즉각 뽑기
-        </button>
+
+        <div class="utility-button-row">
+          <button id="instant-button" class="draw-button instant-button" type="button">
+            <span class="button-icon">⚡</span>
+            즉각 뽑기
+          </button>
+          <button id="auto-button" class="draw-button auto-button" type="button" aria-expanded="false" aria-controls="auto-overlay">
+            <span class="button-icon">⟳</span>
+            자동 뽑기
+          </button>
+        </div>
       </div>
 
-      <p class="footer">0 — 9,999,999 <span>•</span> SECURE RANDOM</p>
+      <p class="footer">
+        0 — 9,999,999 <span>•</span> SECURE RANDOM
+      </p>
     </main>
+
+    <aside class="rare-history-panel">
+      <h2>RARE HISTORY</h2>
+      <p class="panel-subtitle">최근 희귀 숫자 10개</p>
+      <ol id="rare-history-list">
+        <li class="empty-history">아직 희귀 숫자가 없어!</li>
+      </ol>
+      <div class="rare-history-note">희귀도 조건에 해당하는 결과만 기록돼.</div>
+    </aside>
+  </div>
+
+  <div id="auto-overlay" class="settings-overlay" hidden>
+    <section class="settings-panel auto-panel" role="dialog" aria-modal="true" aria-labelledby="auto-title">
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">AUTOMATIC NUMBER DRAW</p>
+          <h2 id="auto-title">자동 뽑기 설정</h2>
+        </div>
+        <button id="close-auto" class="close-settings" type="button" aria-label="자동 뽑기 설정 닫기">✕</button>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-heading">
+          <label for="auto-duration">지속시간</label>
+          <strong>초</strong>
+        </div>
+        <input id="auto-duration" class="auto-duration-input" type="number" min="1" max="3600" step="1" value="60" inputmode="numeric">
+        <p class="auto-help">1초부터 3600초(1시간)까지 설정할 수 있어. 진행 중인 추첨은 끝난 뒤 멈춰.</p>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-heading"><span>자동 추첨 방식</span></div>
+        <label class="auto-mode-option">
+          <input type="radio" name="auto-mode" value="animated" checked>
+          <span><strong>일반 모드로 자동</strong><small>숫자가 하나씩 굴러가는 애니메이션 사용</small></span>
+        </label>
+        <label class="auto-mode-option">
+          <input type="radio" name="auto-mode" value="instant">
+          <span><strong>즉각 뽑기로 자동</strong><small>애니메이션 없이 빠르게 추첨</small></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-heading"><span>어떤 등급에서 멈출까?</span></div>
+        <p class="auto-help">선택한 등급이 나오면 현재 결과를 기록한 뒤 자동 추첨을 멈춰. 아무것도 선택하지 않으면 시간 종료까지 계속해.</p>
+        <div class="auto-rarity-grid">
+          <label><input type="checkbox" name="auto-stop-rarity" value="uncommon"><span class="rarity-badge uncommon">Uncommon</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="rare"><span class="rarity-badge rare">Rare</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="glorious"><span class="rarity-badge glorious">Glorious</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="legendary"><span class="rarity-badge legendary">Legendary</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="ultimate"><span class="rarity-badge ultimate">Ultimate</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="jackpot"><span class="rarity-badge jackpot">Jackpot</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="special"><span class="rarity-badge special">Special</span></label>
+          <label><input type="checkbox" name="auto-stop-rarity" value="reverse-special"><span class="rarity-badge reverse-special">Reverse Special</span></label>
+        </div>
+      </div>
+
+      <p id="auto-message" class="settings-message" aria-live="polite">설정을 정한 다음 자동 뽑기를 시작해 봐.</p>
+      <div class="settings-actions">
+        <button id="cancel-auto" class="secondary-button" type="button">취소</button>
+        <button id="start-auto" class="primary-button" type="button">자동 뽑기 시작</button>
+      </div>
+    </section>
   </div>
 
   <div id="settings-overlay" class="settings-overlay" hidden>
-    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <section
+      class="settings-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+    >
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
           <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">✕</button>
+        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">
+          ✕
+        </button>
       </div>
 
       <div class="setting-item">
@@ -150,15 +250,27 @@
       </label>
 
       <div class="settings-actions">
-        <button id="reset-settings" class="secondary-button" type="button">기본값</button>
-        <button id="save-settings" class="primary-button" type="button">설정 저장</button>
+        <button id="reset-settings" class="secondary-button" type="button">
+          기본값
+        </button>
+        <button id="save-settings" class="primary-button" type="button">
+          설정 저장
+        </button>
       </div>
-      <p id="settings-message" class="settings-message" aria-live="polite">설정은 이 브라우저에 저장돼.</p>
+
+      <p id="settings-message" class="settings-message" aria-live="polite">
+        설정은 이 브라우저에 저장돼.
+      </p>
     </section>
   </div>
 
   <div id="cheat-overlay" class="settings-overlay" hidden>
-    <section class="settings-panel cheat-panel" role="dialog" aria-modal="true" aria-labelledby="cheat-title">
+    <section
+      class="settings-panel cheat-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cheat-title"
+    >
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CHOOSE YOUR NUMBER</p>
