@@ -1,3 +1,4 @@
+
 "use strict";
 
 const DIGITS = 7;
@@ -24,6 +25,7 @@ const averageElement = $("average");
 const averageStatus = $("average-status");
 
 const rareLabel = $("rare-label");
+const digitCountLabel = $("digit-count-label");
 const primeStatus = $("prime-status");
 const divisorStatus = $("divisor-status");
 
@@ -57,6 +59,10 @@ const cheatNumberInput = $("cheat-number-input");
 const applyCheatButton = $("apply-cheat");
 const clearCheatButton = $("clear-cheat");
 const cheatMessage = $("cheat-message");
+
+const rarityButton = $("rarity-button");
+const rarityOverlay = $("rarity-overlay");
+const closeRarityButton = $("close-rarity");
 
 const digitElements = Array.from(
   numberElement.querySelectorAll("span")
@@ -173,7 +179,10 @@ function saveSettings() {
 
 function applySettings() {
   updateSettingLabels();
-  document.body.classList.toggle("light-mode", settings.theme === "light");
+  document.body.classList.toggle(
+    "light-mode",
+    settings.theme === "light"
+  );
   resizeCanvas();
 }
 
@@ -250,7 +259,7 @@ function openCheat() {
 
   cheatMessage.textContent = queuedCheatNumber === null
     ? "치트를 설정하면 다음 추첨에 한 번 적용돼."
-    : `다음 추첨 예약 숫자: ${Number(queuedCheatNumber).toLocaleString("en-US")}`;
+    : `다음 추첨 예약 숫자: ${queuedCheatNumber}`;
 
   closeCheatButton.focus();
 }
@@ -286,7 +295,8 @@ applyCheatButton.addEventListener("click", () => {
     value < 0 ||
     value > 9999999
   ) {
-    cheatMessage.textContent = "0부터 9,999,999 사이의 정수를 입력해 줘.";
+    cheatMessage.textContent =
+      "0부터 9,999,999 사이의 정수를 입력해 줘.";
     return;
   }
 
@@ -299,7 +309,8 @@ applyCheatButton.addEventListener("click", () => {
 clearCheatButton.addEventListener("click", () => {
   queuedCheatNumber = null;
   cheatNumberInput.value = "";
-  cheatMessage.textContent = "치트를 해제했어. 이제 무작위 숫자가 나와.";
+  cheatMessage.textContent =
+    "치트를 해제했어. 이제 무작위 숫자가 나와.";
 });
 
 function getNextResult() {
@@ -324,6 +335,8 @@ function secureRandomNumber() {
   const LIMIT = Math.floor(MAX / RANGE) * RANGE;
   const buffer = new Uint32Array(1);
 
+  // 편향을 제거해 0~9,999,999의 모든 결과가
+  // 정확히 같은 확률로 나오도록 한다.
   do {
     crypto.getRandomValues(buffer);
   } while (buffer[0] >= LIMIT);
@@ -361,6 +374,12 @@ function resetNumberEffects() {
     "impact",
     "rare",
     "rare-legendary",
+    "rare-glorious",
+    "rare-uncommon",
+    "rare-ultimate",
+    "rare-jackpot",
+    "rare-special",
+    "rare-reverse-special",
     "magnitude-6",
     "magnitude-5",
     "magnitude-4",
@@ -384,7 +403,10 @@ function setDisplayedNumber(value, hideLeadingZeros = false) {
     const isLeadingZero =
       hideLeadingZeros &&
       index < DIGITS - 1 &&
-      value.slice(0, index + 1).split("").every(char => char === "0");
+      value
+        .slice(0, index + 1)
+        .split("")
+        .every(char => char === "0");
 
     digit.style.display = isLeadingZero ? "none" : "inline-block";
     digit.classList.remove("rolling");
@@ -396,87 +418,149 @@ function setDisplayedNumber(value, hideLeadingZeros = false) {
 ===================================== */
 
 function getRarePattern(value) {
-  const digits = value.split("").map(Number);
+  // 앞자리 0은 실제 자릿수에 포함하지 않는다.
+  const normalized = String(Number(value));
+  const digits = normalized.split("");
+  const length = normalized === "0" ? 0 : normalized.length;
 
-  if (digits.every(digit => digit === digits[0])) {
-    return {
-      title: "✦ 전설적인 반복 숫자 ✦",
-      level: "legendary"
-    };
-  }
-
-  const ascending = digits.every(
-    (digit, index) =>
-      index === 0 || digit === digits[index - 1] + 1
-  );
-
-  const descending = digits.every(
-    (digit, index) =>
-      index === 0 || digit === digits[index - 1] - 1
-  );
-
-  if (ascending || descending) {
-    return {
-      title: "✦ 완벽한 연속 숫자 ✦",
-      level: "legendary"
-    };
-  }
-
-  const palindrome = digits.every(
-    (digit, index) => digit === digits[DIGITS - 1 - index]
-  );
-
-  if (palindrome) {
-    return {
-      title: "✧ 대칭 숫자 발견 ✧",
-      level: "rare"
-    };
-  }
-
-  const counts = {};
-
-  digits.forEach(digit => {
-    counts[digit] = (counts[digit] || 0) + 1;
+  const result = (title, level, detail = title) => ({
+    title,
+    level,
+    detail
   });
 
-  if (Math.max(...Object.values(counts)) >= 5) {
-    return {
-      title: "✦ 반복 숫자 발견 ✦",
-      level: "rare"
-    };
+  // 특별 지정 숫자는 다른 조건보다 우선한다.
+  if (
+    ["7777777", "777777", "77777", "7777", "777"].includes(normalized)
+  ) {
+    return result("✦ JACKPOT ✦", "jackpot", "Jackpot");
   }
 
-  // 3개 이상의 같은 숫자가 연속으로 붙어 있는 패턴
-  if (/(\d)\1{2,}/.test(value)) {
-    return {
-      title: "✦ 연속 반복 숫자 발견 ✦",
-      level: "rare"
-    };
+  if (normalized === "708" || normalized === "1234567") {
+    return result("✧ SPECIAL ✧", "special", "Special");
   }
 
-  if (/0{3,}$/.test(value)) {
-    return {
-      title: "✧ 라운드 숫자 발견 ✧",
-      level: "rare"
-    };
+  if (normalized === "7654321") {
+    return result(
+      "✧ REVERSE SPECIAL ✧",
+      "reverse-special",
+      "Reverse Special"
+    );
   }
 
-  // 같은 2자리 또는 3자리 묶음이 연속해서 반복되는 패턴
+  // 동일한 숫자가 연속해서 반복되는 길이를 확인한다.
+  let longestRun = 1;
+  let currentRun = 1;
+
+  for (let i = 1; i < digits.length; i++) {
+    if (digits[i] === digits[i - 1]) {
+      currentRun++;
+      longestRun = Math.max(longestRun, currentRun);
+    } else {
+      currentRun = 1;
+    }
+  }
+
+  if (longestRun >= 7) {
+    return result(
+      "✦ LEGENDARY · 7연속 반복 ✦",
+      "legendary",
+      "Legendary"
+    );
+  }
+
+  if (longestRun === 6) {
+    return result(
+      "✦ GLORIOUS · 6연속 반복 ✦",
+      "glorious",
+      "Glorious"
+    );
+  }
+
+  if (longestRun >= 3 && longestRun <= 5) {
+    return result(
+      "✧ RARE · 연속 반복 ✧",
+      "rare",
+      "Rare"
+    );
+  }
+
+  // 2~3자리 숫자 집합이 연속해서 3회 반복되는지 먼저 확인한다.
   for (let size = 2; size <= 3; size++) {
-    for (let start = 0; start + size * 2 <= DIGITS; start++) {
-      const first = value.slice(start, start + size);
-      const second = value.slice(start + size, start + size * 2);
+    for (
+      let start = 0;
+      start + size * 3 <= normalized.length;
+      start++
+    ) {
+      const block = normalized.slice(start, start + size);
 
-      if (first === second) {
-        return {
-          title: "✧ 반복 패턴 발견 ✧",
-          level: "rare"
-        };
+      if (
+        normalized.slice(start + size, start + size * 2) === block &&
+        normalized.slice(start + size * 2, start + size * 3) === block
+      ) {
+        return result(
+          "✦ GLORIOUS · 숫자 집합 3회 반복 ✦",
+          "glorious",
+          "Glorious"
+        );
       }
     }
   }
 
+  // 2~3자리 숫자 집합이 연속해서 2회 반복되는 경우.
+  for (let size = 2; size <= 3; size++) {
+    for (
+      let start = 0;
+      start + size * 2 <= normalized.length;
+      start++
+    ) {
+      const block = normalized.slice(start, start + size);
+
+      if (
+        normalized.slice(start + size, start + size * 2) === block
+      ) {
+        return result(
+          "✧ RARE · 숫자 집합 반복 ✧",
+          "rare",
+          "Rare"
+        );
+      }
+    }
+  }
+
+  // 기본 자릿수 등급
+  if (length === 0) {
+    return result("✦ ULTIMATE ✦", "ultimate", "Ultimate");
+  }
+
+  if (length === 1) {
+    return result("✦ LEGENDARY ✦", "legendary", "Legendary");
+  }
+
+  if (length === 2) {
+    return result("✦ GLORIOUS ✦", "glorious", "Glorious");
+  }
+
+  if (length >= 3 && length <= 5) {
+    return result("✧ RARE ✧", "rare", "Rare");
+  }
+
+  if (length === 6) {
+    return result("✧ UNCOMMON ✧", "uncommon", "Uncommon");
+  }
+
   return null;
+}
+
+function getDigitCountLabel(value) {
+  const normalized = String(Number(value));
+  const length = normalized === "0" ? 0 : normalized.length;
+  const pattern = getRarePattern(normalized);
+  const countText = length === 0 ? "0자리 수" : `${length}자리 수`;
+
+  return pattern
+    ? `${countText} · ${pattern.detail}`
+    : countText;
 }
 
 /* =====================================
@@ -530,7 +614,13 @@ function updateNumberInfo(value) {
    파티클 및 임팩트
 ===================================== */
 
-function createBurst(x, y, count = 30, distance = 150, kind = "normal") {
+function createBurst(
+  x,
+  y,
+  count = 30,
+  distance = 150,
+  kind = "normal"
+) {
   if (settings.effect === 0) return;
 
   const multiplier = settings.effect / 2;
@@ -572,10 +662,12 @@ function createBurst(x, y, count = 30, distance = 150, kind = "normal") {
     particle.style.setProperty("--dx", `${dx}px`);
     particle.style.setProperty("--dy", `${dy}px`);
     particle.style.setProperty("--size", size);
+
     particle.style.setProperty(
       "--rotation",
       `${Math.random() * 360 - 180}deg`
     );
+
     particle.style.setProperty(
       "--duration",
       `${500 + Math.random() * 500}ms`
@@ -621,6 +713,12 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     "impact",
     "rare",
     "rare-legendary",
+    "rare-glorious",
+    "rare-uncommon",
+    "rare-ultimate",
+    "rare-jackpot",
+    "rare-special",
+    "rare-reverse-special",
     "magnitude-6",
     "magnitude-5",
     "magnitude-4",
@@ -634,20 +732,44 @@ function triggerResultImpact(pattern = null, result = "0000000") {
 
   const rect = numberBox.getBoundingClientRect();
   const rareActive = Boolean(pattern && settings.rareEffects);
-  const visibleDigits = String(Number(result)).length;
+  const normalized = String(Number(result));
+  const visibleDigits = normalized === "0" ? 0 : normalized.length;
+
   const magnitudeClass =
-    visibleDigits <= 6 ? `magnitude-${visibleDigits}` : "";
+    visibleDigits >= 1 && visibleDigits <= 6
+      ? `magnitude-${visibleDigits}`
+      : "";
 
   if (magnitudeClass && settings.effect > 0) {
     numberBox.classList.add(magnitudeClass);
   }
 
-  // 자릿수가 적을수록 이펙트 규모가 커진다.
+  if (pattern && settings.rareEffects) {
+    const className = `rare-${pattern.level}`;
+    numberBox.classList.add(className);
+  }
+
+  // 자릿수가 낮거나 등급이 높을수록 파티클과 연출을 강화한다.
   const magnitudeScale =
-    visibleDigits >= 7 ? 1 : 1 + (7 - visibleDigits) * 0.42;
+    visibleDigits === 0
+      ? 3.2
+      : visibleDigits >= 7
+        ? 1
+        : 1 + (7 - visibleDigits) * 0.42;
+
+  const levelScales = {
+    uncommon: 1.15,
+    rare: 1.3,
+    glorious: 1.65,
+    legendary: 2,
+    ultimate: 3,
+    jackpot: 2.8,
+    special: 2.1,
+    "reverse-special": 2.4
+  };
 
   const rareScale = rareActive
-    ? pattern.level === "legendary" ? 1.7 : 1.3
+    ? (levelScales[pattern.level] || 1.3)
     : 1;
 
   const totalScale = magnitudeScale * rareScale;
@@ -657,16 +779,29 @@ function triggerResultImpact(pattern = null, result = "0000000") {
   }
 
   if (rareActive) {
-    numberBox.classList.add(
-      pattern.level === "legendary" ? "rare-legendary" : "rare"
-    );
+    if (
+      pattern.level === "legendary" ||
+      pattern.level === "ultimate" ||
+      pattern.level === "jackpot"
+    ) {
+      numberBox.classList.add("rare-legendary");
+    } else {
+      numberBox.classList.add("rare");
+    }
 
     rareLabel.textContent = pattern.title;
 
     const flash = document.createElement("div");
     flash.className = "rare-flash";
 
-    if (pattern.level === "legendary") {
+    if (
+      [
+        "legendary",
+        "ultimate",
+        "jackpot",
+        "reverse-special"
+      ].includes(pattern.level)
+    ) {
       flash.classList.add("legendary");
     }
 
@@ -680,22 +815,33 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     rect.left + rect.width / 2,
     rect.top + rect.height / 2,
     Math.round(
-      (rareActive
-        ? pattern.level === "legendary" ? 100 : 65
-        : 30) * totalScale
+      (
+        rareActive
+          ? (
+              pattern.level === "ultimate" ? 150
+              : pattern.level === "jackpot" ? 135
+              : pattern.level === "legendary" ? 100
+              : 65
+            )
+          : 30
+      ) * totalScale
     ),
     Math.min(rect.width * (0.4 + (totalScale - 1) * 0.13), 320),
     rareActive ? pattern.level : "normal"
   );
 
   if (settings.effect > 0 && visibleDigits <= 6) {
+    numberBox.classList.add("impact");
+
     createBurst(
       rect.left + rect.width / 2,
       rect.top + rect.height / 2,
       Math.round(
-        (visibleDigits === 6
-          ? 12
-          : 18 + (6 - visibleDigits) * 12) * (settings.effect / 2)
+        (
+          visibleDigits === 6
+            ? 12
+            : 18 + (6 - visibleDigits) * 12
+        ) * (settings.effect / 2)
       ),
       Math.min(100 + (6 - visibleDigits) * 45, 300),
       visibleDigits <= 3 ? "legendary" : "rare"
@@ -754,24 +900,30 @@ function renderHistory() {
     number.className = "history-number";
     number.textContent = value.toLocaleString("en-US");
 
-    const pattern = getRarePattern(
-      String(value).padStart(DIGITS, "0")
-    );
+    const pattern = getRarePattern(String(value));
 
     if (pattern) {
       item.classList.add(
         "rare-history-item",
-        pattern.level === "legendary"
-          ? "rare-history-legendary"
-          : "rare-history-rare"
+        `rare-history-${pattern.level}`
       );
+
+      if (
+        [
+          "legendary",
+          "ultimate",
+          "jackpot",
+          "reverse-special"
+        ].includes(pattern.level)
+      ) {
+        item.classList.add("rare-history-legendary");
+      }
 
       number.title = pattern.title;
 
       const mark = document.createElement("span");
       mark.className = "history-rare-mark";
-      mark.textContent =
-        pattern.level === "legendary" ? "✦ LEGENDARY" : "✧ RARE";
+      mark.textContent = pattern.detail.toUpperCase();
 
       item.append(rank, mark, number);
     } else {
@@ -819,12 +971,15 @@ function updateStatistics() {
 ===================================== */
 
 function finishDraw(result) {
+  // 롤링만 정리한다. 결과 효과에 필요한 타이머는 건드리지 않는다.
   clearRollTimers();
 
   setDisplayedNumber(result, true);
 
   const value = Number(result);
   const pattern = getRarePattern(result);
+
+  digitCountLabel.textContent = getDigitCountLabel(result);
 
   addToHistory(result);
   updateNumberInfo(result);
@@ -846,7 +1001,6 @@ function finishDraw(result) {
 }
 
 /* 즉각 뽑기 */
-
 function drawInstantly() {
   if (isDrawing) return;
 
@@ -883,6 +1037,7 @@ function drawWithAnimation() {
 
   const result = getNextResult();
 
+  // 1이 가장 느리고, 5가 가장 빠르다.
   const speedSettings = {
     1: { start: 1900, interval: 850, spin: 100 },
     2: { start: 1500, interval: 650, spin: 85 },
@@ -894,6 +1049,7 @@ function drawWithAnimation() {
   const timing = speedSettings[settings.speed];
 
   digitElements.forEach((digit, index) => {
+    // 각 자리의 롤링은 추첨 연출용이다.
     const intervalId = setInterval(() => {
       digit.textContent = String(Math.floor(Math.random() * 10));
     }, timing.spin);
@@ -906,6 +1062,7 @@ function drawWithAnimation() {
       digit.classList.remove("rolling");
       digit.textContent = result[index];
 
+      // 브라우저가 Web Animations API를 지원할 때만 사용
       if (typeof digit.animate === "function") {
         digit.animate(
           [
@@ -930,6 +1087,37 @@ function drawWithAnimation() {
     rollTimeouts.push(stopId);
   });
 }
+
+/* =====================================
+   희귀도 표
+===================================== */
+
+function openRarity() {
+  rarityOverlay.hidden = false;
+  rarityButton.setAttribute("aria-expanded", "true");
+  closeRarityButton.focus();
+}
+
+function closeRarity() {
+  rarityOverlay.hidden = true;
+  rarityButton.setAttribute("aria-expanded", "false");
+  rarityButton.focus();
+}
+
+rarityButton.addEventListener("click", openRarity);
+closeRarityButton.addEventListener("click", closeRarity);
+
+rarityOverlay.addEventListener("click", event => {
+  if (event.target === rarityOverlay) {
+    closeRarity();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !rarityOverlay.hidden) {
+    closeRarity();
+  }
+});
 
 drawButton.addEventListener("click", drawWithAnimation);
 instantButton.addEventListener("click", drawInstantly);
@@ -982,8 +1170,13 @@ function animateParticles() {
       particle.x = Math.random() * width;
     }
 
-    if (particle.x < -5) particle.x = width + 5;
-    if (particle.x > width + 5) particle.x = -5;
+    if (particle.x < -5) {
+      particle.x = width + 5;
+    }
+
+    if (particle.x > width + 5) {
+      particle.x = -5;
+    }
 
     ctx.beginPath();
     ctx.arc(
