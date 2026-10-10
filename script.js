@@ -19,6 +19,14 @@ const numberElement = $("number");
 const numberBox = $("number-box");
 const drawButton = $("draw-button");
 const instantButton = $("instant-button");
+const autoButton = $("auto-button");
+const autoOverlay = $("auto-overlay");
+const closeAutoButton = $("close-auto");
+const cancelAutoButton = $("cancel-auto");
+const startAutoButton = $("start-auto");
+const autoDurationInput = $("auto-duration");
+const autoMessage = $("auto-message");
+const rareHistoryList = $("rare-history-list");
 const statusElement = $("status");
 const historyList = $("history-list");
 const averageElement = $("average");
@@ -71,12 +79,19 @@ const digitElements = Array.from(
 let settings = loadSettings();
 
 let history = [];
+let rareHistory = [];
 let totalDraws = 0;
 let highestNumber = null;
 let lowestNumber = null;
 let isDrawing = false;
 let queuedCheatNumber = null;
 let lastDrawWasCheat = false;
+
+let autoRunning = false;
+let autoEndsAt = 0;
+let autoMode = "animated";
+let autoNextTimeout = null;
+let autoStopRarities = [];
 
 let rollTimeouts = [];
 let rollIntervals = [];
@@ -363,8 +378,8 @@ function scheduleRollTimeout(callback, delay) {
 }
 
 function setButtonsDisabled(disabled) {
-  drawButton.disabled = disabled;
-  instantButton.disabled = disabled;
+  drawButton.disabled = disabled || autoRunning;
+  instantButton.disabled = disabled || autoRunning;
 }
 
 function resetNumberEffects() {
@@ -745,8 +760,7 @@ function triggerResultImpact(pattern = null, result = "0000000") {
   }
 
   if (pattern && settings.rareEffects) {
-    const className = `rare-${pattern.level}`;
-    numberBox.classList.add(className);
+    numberBox.classList.add(`rare-${pattern.level}`);
   }
 
   // 자릿수가 낮거나 등급이 높을수록 파티클과 연출을 강화한다.
@@ -859,9 +873,16 @@ function triggerResultImpact(pattern = null, result = "0000000") {
 
 function addToHistory(result) {
   const value = Number(result);
+  const pattern = getRarePattern(String(value));
 
   history.unshift(value);
   history = history.slice(0, HISTORY_LIMIT);
+
+  if (pattern) {
+    rareHistory.unshift({ value, pattern });
+    rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
+    renderRareHistory();
+  }
 
   totalDraws += 1;
 
@@ -934,6 +955,54 @@ function renderHistory() {
   });
 }
 
+function renderRareHistory() {
+  rareHistoryList.replaceChildren();
+
+  if (rareHistory.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "empty-history";
+    empty.textContent = "아직 희귀 숫자가 없어!";
+    rareHistoryList.appendChild(empty);
+    return;
+  }
+
+  rareHistory.forEach((entry, index) => {
+    const item = document.createElement("li");
+
+    item.classList.add(
+      "rare-history-item",
+      `rare-history-${entry.pattern.level}`
+    );
+
+    if (
+      [
+        "legendary",
+        "ultimate",
+        "jackpot",
+        "reverse-special"
+      ].includes(entry.pattern.level)
+    ) {
+      item.classList.add("rare-history-legendary");
+    }
+
+    const rank = document.createElement("span");
+    rank.className = "history-index";
+    rank.textContent = `#${index + 1}`;
+
+    const mark = document.createElement("span");
+    mark.className = "history-rare-mark";
+    mark.textContent = entry.pattern.detail.toUpperCase();
+
+    const number = document.createElement("span");
+    number.className = "history-number";
+    number.textContent = entry.value.toLocaleString("en-US");
+    number.title = entry.pattern.title;
+
+    item.append(rank, mark, number);
+    rareHistoryList.appendChild(item);
+  });
+}
+
 function updateAverage() {
   if (history.length < HISTORY_LIMIT) {
     averageElement.textContent = "—";
@@ -998,6 +1067,10 @@ function finishDraw(result) {
 
   isDrawing = false;
   setButtonsDisabled(false);
+
+  if (autoRunning) {
+    handleAutoAfterDraw(pattern);
+  }
 }
 
 /* 즉각 뽑기 */
@@ -1087,6 +1160,152 @@ function drawWithAnimation() {
     rollTimeouts.push(stopId);
   });
 }
+
+/* =====================================
+   자동 뽑기
+===================================== */
+
+function openAutoSettings() {
+  if (autoRunning) {
+    stopAutoDraw("자동 뽑기를 중지했어.");
+    return;
+  }
+
+  autoOverlay.hidden = false;
+  autoButton.setAttribute("aria-expanded", "true");
+  autoMessage.textContent = "설정을 정한 다음 자동 뽑기를 시작해 봐.";
+  closeAutoButton.focus();
+}
+
+function closeAutoSettings() {
+  autoOverlay.hidden = true;
+  autoButton.setAttribute("aria-expanded", "false");
+  autoButton.focus();
+}
+
+function getSelectedAutoRarities() {
+  return Array.from(
+    document.querySelectorAll('input[name="auto-stop-rarity"]:checked')
+  ).map(input => input.value);
+}
+
+function startAutoDraw() {
+  const duration = Number(autoDurationInput.value);
+
+  if (
+    !Number.isInteger(duration) ||
+    duration < 1 ||
+    duration > 3600
+  ) {
+    autoMessage.textContent =
+      "지속시간은 1초부터 3600초 사이의 정수로 입력해 줘.";
+    return;
+  }
+
+  autoMode =
+    document.querySelector('input[name="auto-mode"]:checked')?.value ||
+    "animated";
+
+  autoStopRarities = getSelectedAutoRarities();
+  autoRunning = true;
+  autoEndsAt = Date.now() + duration * 1000;
+
+  if (autoNextTimeout !== null) {
+    clearTimeout(autoNextTimeout);
+    autoNextTimeout = null;
+  }
+
+  autoButton.innerHTML =
+    '<span class="button-icon">■</span> 자동 뽑기 중지';
+
+  autoButton.classList.add("auto-running");
+
+  closeAutoSettings();
+
+  statusElement.textContent =
+    `자동 뽑기 시작 · ${duration}초 동안 실행`;
+
+  setButtonsDisabled(true);
+  runNextAutoDraw();
+}
+
+function stopAutoDraw(message = "자동 뽑기가 멈췄어.") {
+  if (!autoRunning) return;
+
+  autoRunning = false;
+
+  if (autoNextTimeout !== null) {
+    clearTimeout(autoNextTimeout);
+    autoNextTimeout = null;
+  }
+
+  autoButton.innerHTML =
+    '<span class="button-icon">⟳</span> 자동 뽑기';
+
+  autoButton.classList.remove("auto-running");
+
+  setButtonsDisabled(isDrawing);
+  statusElement.textContent = message;
+}
+
+function runNextAutoDraw() {
+  if (!autoRunning) return;
+
+  if (Date.now() >= autoEndsAt) {
+    stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
+    return;
+  }
+
+  if (isDrawing) {
+    autoNextTimeout = setTimeout(runNextAutoDraw, 100);
+    return;
+  }
+
+  if (autoMode === "instant") {
+    drawInstantly();
+  } else {
+    drawWithAnimation();
+  }
+}
+
+function handleAutoAfterDraw(pattern) {
+  if (!autoRunning) return;
+
+  if (pattern && autoStopRarities.includes(pattern.level)) {
+    stopAutoDraw(
+      `${pattern.detail} 등급이 나와 자동 뽑기를 멈췄어!`
+    );
+    return;
+  }
+
+  if (Date.now() >= autoEndsAt) {
+    stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
+    return;
+  }
+
+  // 즉각 모드에서도 잠깐 간격을 둬 브라우저가 멈추지 않도록 한다.
+  autoNextTimeout = setTimeout(
+    runNextAutoDraw,
+    autoMode === "instant" ? 120 : 100
+  );
+}
+
+autoButton.addEventListener("click", openAutoSettings);
+closeAutoButton.addEventListener("click", closeAutoSettings);
+cancelAutoButton.addEventListener("click", closeAutoSettings);
+startAutoButton.addEventListener("click", startAutoDraw);
+
+autoOverlay.addEventListener("click", event => {
+  if (event.target === autoOverlay) {
+    closeAutoSettings();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !autoOverlay.hidden) {
+    closeAutoSettings();
+  }
+});
 
 /* =====================================
    희귀도 표
@@ -1209,6 +1428,7 @@ populateSettingsControls();
 applySettings();
 
 renderHistory();
+renderRareHistory();
 updateAverage();
 updateStatistics();
 
