@@ -1,4 +1,3 @@
-
 "use strict";
 
 const DIGITS = 7;
@@ -26,6 +25,15 @@ const cancelAutoButton = $("cancel-auto");
 const startAutoButton = $("start-auto");
 const autoDurationInput = $("auto-duration");
 const autoMessage = $("auto-message");
+const autoCountInput = $("auto-count");
+const autoDurationSetting = $("auto-duration-setting");
+const autoCountSetting = $("auto-count-setting");
+const statisticsButton = $("statistics-button");
+const statisticsOverlay = $("statistics-overlay");
+const closeStatisticsButton = $("close-statistics");
+const autoSummaryOverlay = $("auto-summary-overlay");
+const closeAutoSummaryButton = $("close-auto-summary");
+const closeSummaryDoneButton = $("close-summary-done");
 const rareHistoryList = $("rare-history-list");
 const statusElement = $("status");
 const historyList = $("history-list");
@@ -92,6 +100,34 @@ let autoEndsAt = 0;
 let autoMode = "animated";
 let autoNextTimeout = null;
 let autoStopRarities = [];
+let autoLimitMode = "duration";
+let autoTargetCount = 100;
+let autoCompletedCount = 0;
+let autoResults = [];
+let autoRareResults = [];
+let autoStopReason = "";
+
+const drawStats = {
+  odd: 0,
+  even: 0,
+  prime: 0,
+  composite: 0,
+  total: 0,
+  digits: Object.fromEntries(
+    Array.from({ length: 8 }, (_, i) => [String(i), 0])
+  ),
+  rarities: {
+    uncommon: 0,
+    rare: 0,
+    glorious: 0,
+    legendary: 0,
+    ultimate: 0,
+    jackpot: 0,
+    special: 0,
+    "reverse-special": 0,
+    common: 0
+  }
+};
 
 let rollTimeouts = [];
 let rollIntervals = [];
@@ -194,10 +230,12 @@ function saveSettings() {
 
 function applySettings() {
   updateSettingLabels();
+
   document.body.classList.toggle(
     "light-mode",
     settings.theme === "light"
   );
+
   resizeCanvas();
 }
 
@@ -350,8 +388,6 @@ function secureRandomNumber() {
   const LIMIT = Math.floor(MAX / RANGE) * RANGE;
   const buffer = new Uint32Array(1);
 
-  // 편향을 제거해 0~9,999,999의 모든 결과가
-  // 정확히 같은 확률로 나오도록 한다.
   do {
     crypto.getRandomValues(buffer);
   } while (buffer[0] >= LIMIT);
@@ -395,6 +431,14 @@ function resetNumberEffects() {
     "rare-jackpot",
     "rare-special",
     "rare-reverse-special",
+    "rarity-uncommon-impact",
+    "rarity-rare-impact",
+    "rarity-glorious-impact",
+    "rarity-legendary-impact",
+    "rarity-ultimate-impact",
+    "rarity-jackpot-impact",
+    "rarity-special-impact",
+    "rarity-reverse-special-impact",
     "magnitude-6",
     "magnitude-5",
     "magnitude-4",
@@ -433,7 +477,6 @@ function setDisplayedNumber(value, hideLeadingZeros = false) {
 ===================================== */
 
 function getRarePattern(value) {
-  // 앞자리 0은 실제 자릿수에 포함하지 않는다.
   const normalized = String(Number(value));
   const digits = normalized.split("");
   const length = normalized === "0" ? 0 : normalized.length;
@@ -444,7 +487,6 @@ function getRarePattern(value) {
     detail
   });
 
-  // 특별 지정 숫자는 다른 조건보다 우선한다.
   if (
     ["7777777", "777777", "77777", "7777", "777"].includes(normalized)
   ) {
@@ -463,7 +505,6 @@ function getRarePattern(value) {
     );
   }
 
-  // 동일한 숫자가 연속해서 반복되는 길이를 확인한다.
   let longestRun = 1;
   let currentRun = 1;
 
@@ -500,7 +541,6 @@ function getRarePattern(value) {
     );
   }
 
-  // 2~3자리 숫자 집합이 연속해서 3회 반복되는지 먼저 확인한다.
   for (let size = 2; size <= 3; size++) {
     for (
       let start = 0;
@@ -522,7 +562,6 @@ function getRarePattern(value) {
     }
   }
 
-  // 2~3자리 숫자 집합이 연속해서 2회 반복되는 경우.
   for (let size = 2; size <= 3; size++) {
     for (
       let start = 0;
@@ -543,7 +582,6 @@ function getRarePattern(value) {
     }
   }
 
-  // 기본 자릿수 등급
   if (length === 0) {
     return result("✦ ULTIMATE ✦", "ultimate", "Ultimate");
   }
@@ -721,6 +759,32 @@ function triggerButtonImpact(button) {
   );
 }
 
+function createCoinBurst(x, y) {
+  if (settings.effect === 0) return;
+
+  const count = Math.round(12 * (settings.effect / 2));
+
+  for (let i = 0; i < count; i++) {
+    const coin = document.createElement("span");
+    coin.className = "jackpot-coin";
+    coin.textContent = "＄";
+    coin.style.left = `${x + (Math.random() - 0.5) * 90}px`;
+    coin.style.top = `${y + (Math.random() - 0.5) * 25}px`;
+    coin.style.setProperty("--coin-x", `${(Math.random() - 0.5) * 300}px`);
+    coin.style.setProperty("--coin-y", `${-80 - Math.random() * 180}px`);
+    coin.style.setProperty("--coin-spin", `${360 + Math.random() * 720}deg`);
+    coin.style.setProperty("--coin-delay", `${Math.random() * 180}ms`);
+
+    coin.addEventListener(
+      "animationend",
+      () => coin.remove(),
+      { once: true }
+    );
+
+    effectsLayer.appendChild(coin);
+  }
+}
+
 function triggerResultImpact(pattern = null, result = "0000000") {
   numberElement.classList.remove("finished");
 
@@ -734,6 +798,14 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     "rare-jackpot",
     "rare-special",
     "rare-reverse-special",
+    "rarity-uncommon-impact",
+    "rarity-rare-impact",
+    "rarity-glorious-impact",
+    "rarity-legendary-impact",
+    "rarity-ultimate-impact",
+    "rarity-jackpot-impact",
+    "rarity-special-impact",
+    "rarity-reverse-special-impact",
     "magnitude-6",
     "magnitude-5",
     "magnitude-4",
@@ -761,9 +833,16 @@ function triggerResultImpact(pattern = null, result = "0000000") {
 
   if (pattern && settings.rareEffects) {
     numberBox.classList.add(`rare-${pattern.level}`);
+    numberBox.classList.add(`rarity-${pattern.level}-impact`);
+
+    if (pattern.level === "jackpot") {
+      createCoinBurst(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2
+      );
+    }
   }
 
-  // 자릿수가 낮거나 등급이 높을수록 파티클과 연출을 강화한다.
   const magnitudeScale =
     visibleDigits === 0
       ? 3.2
@@ -793,12 +872,20 @@ function triggerResultImpact(pattern = null, result = "0000000") {
   }
 
   if (rareActive) {
-    if (
-      pattern.level === "legendary" ||
-      pattern.level === "ultimate" ||
-      pattern.level === "jackpot"
-    ) {
+    if (pattern.level === "legendary") {
       numberBox.classList.add("rare-legendary");
+    } else if (pattern.level === "ultimate") {
+      numberBox.classList.add("rare-ultimate");
+    } else if (pattern.level === "jackpot") {
+      numberBox.classList.add("rare-jackpot");
+    } else if (pattern.level === "glorious") {
+      numberBox.classList.add("rare-glorious");
+    } else if (pattern.level === "uncommon") {
+      numberBox.classList.add("rare-uncommon");
+    } else if (pattern.level === "special") {
+      numberBox.classList.add("rare-special");
+    } else if (pattern.level === "reverse-special") {
+      numberBox.classList.add("rare-reverse-special");
     } else {
       numberBox.classList.add("rare");
     }
@@ -806,15 +893,12 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     rareLabel.textContent = pattern.title;
 
     const flash = document.createElement("div");
-    flash.className = "rare-flash";
+    flash.className = `rare-flash ${pattern.level}`;
 
     if (
-      [
-        "legendary",
-        "ultimate",
-        "jackpot",
-        "reverse-special"
-      ].includes(pattern.level)
+      ["legendary", "ultimate", "jackpot", "reverse-special"].includes(
+        pattern.level
+      )
     ) {
       flash.classList.add("legendary");
     }
@@ -870,6 +954,226 @@ function triggerResultImpact(pattern = null, result = "0000000") {
 /* =====================================
    기록 및 통계
 ===================================== */
+
+function trackDrawStatistics(result) {
+  const value = Number(result);
+  const normalized = String(value);
+  const digitLength = value === 0 ? 0 : normalized.length;
+  const pattern = getRarePattern(normalized);
+
+  drawStats.total++;
+
+  if (value % 2 === 0) {
+    drawStats.even++;
+  } else {
+    drawStats.odd++;
+  }
+
+  if (isPrime(value)) {
+    drawStats.prime++;
+  } else if (value > 1) {
+    drawStats.composite++;
+  }
+
+  drawStats.digits[String(digitLength)]++;
+
+  if (pattern) {
+    drawStats.rarities[pattern.level]++;
+  } else {
+    drawStats.rarities.common++;
+  }
+
+  renderStatistics();
+}
+
+function percentage(part, total) {
+  return total ? `${(part / total * 100).toFixed(1)}%` : "0%";
+}
+
+function renderStatBar(container, entries, total) {
+  container.replaceChildren();
+
+  entries.forEach(([label, count, colorClass]) => {
+    const row = document.createElement("div");
+    row.className = "statistics-bar-row";
+
+    const heading = document.createElement("div");
+    heading.className = "statistics-bar-heading";
+
+    const name = document.createElement("span");
+    name.textContent = label;
+
+    const amount = document.createElement("strong");
+    amount.textContent =
+      `${count.toLocaleString("en-US")} · ${percentage(count, total)}`;
+
+    heading.append(name, amount);
+
+    const track = document.createElement("div");
+    track.className = "statistics-bar-track";
+
+    const fill = document.createElement("div");
+    fill.className = `statistics-bar-fill ${colorClass || ""}`;
+    fill.style.width = percentage(count, total);
+
+    track.appendChild(fill);
+    row.append(heading, track);
+    container.appendChild(row);
+  });
+}
+
+function renderStatistics() {
+  const setText = (id, value) => {
+    const element = $(id);
+    if (element) element.textContent = value;
+  };
+
+  setText("odd-count", drawStats.odd.toLocaleString("en-US"));
+  setText("even-count", drawStats.even.toLocaleString("en-US"));
+  setText("odd-ratio", percentage(drawStats.odd, drawStats.total));
+  setText("even-ratio", percentage(drawStats.even, drawStats.total));
+  setText("prime-count", drawStats.prime.toLocaleString("en-US"));
+  setText("composite-count", drawStats.composite.toLocaleString("en-US"));
+  setText("prime-ratio", percentage(drawStats.prime, drawStats.total));
+  setText("composite-ratio", percentage(drawStats.composite, drawStats.total));
+  setText(
+    "statistics-total",
+    `현재 세션의 전체 추첨 ${drawStats.total.toLocaleString("en-US")}회 기준`
+  );
+
+  const digitNames = {
+    0: "0 (숫자 0)",
+    1: "1자리",
+    2: "2자리",
+    3: "3자리",
+    4: "4자리",
+    5: "5자리",
+    6: "6자리",
+    7: "7자리"
+  };
+
+  renderStatBar(
+    $("digit-statistics"),
+    Object.entries(drawStats.digits).map(
+      ([digits, count]) => [digitNames[digits], count, ""]
+    ),
+    drawStats.total
+  );
+
+  const rarityNames = [
+    ["uncommon", "Uncommon"],
+    ["rare", "Rare"],
+    ["glorious", "Glorious"],
+    ["legendary", "Legendary"],
+    ["ultimate", "Ultimate"],
+    ["jackpot", "Jackpot"],
+    ["special", "Special"],
+    ["reverse-special", "Reverse Special"],
+    ["common", "일반 숫자"]
+  ];
+
+  renderStatBar(
+    $("rarity-statistics"),
+    rarityNames.map(
+      ([key, label]) => [label, drawStats.rarities[key], `bar-${key}`]
+    ),
+    drawStats.total
+  );
+}
+
+function openStatistics() {
+  renderStatistics();
+  statisticsOverlay.hidden = false;
+  statisticsButton.setAttribute("aria-expanded", "true");
+  closeStatisticsButton.focus();
+}
+
+function closeStatistics() {
+  statisticsOverlay.hidden = true;
+  statisticsButton.setAttribute("aria-expanded", "false");
+  statisticsButton.focus();
+}
+
+statisticsButton.addEventListener("click", openStatistics);
+closeStatisticsButton.addEventListener("click", closeStatistics);
+
+statisticsOverlay.addEventListener("click", event => {
+  if (event.target === statisticsOverlay) {
+    closeStatistics();
+  }
+});
+
+document.querySelectorAll('input[name="auto-limit-mode"]').forEach(input => {
+  input.addEventListener("change", () => {
+    if (!input.checked) return;
+
+    const countMode = input.value === "count";
+    autoDurationSetting.hidden = countMode;
+    autoCountSetting.hidden = !countMode;
+  });
+});
+
+function showAutoSummary(reason) {
+  if (autoCompletedCount <= 0) return;
+
+  $("summary-draw-count").textContent =
+    autoCompletedCount.toLocaleString("en-US");
+
+  const sum = autoResults.reduce((total, value) => total + value, 0);
+
+  $("summary-average").textContent =
+    Math.round(sum / autoResults.length).toLocaleString("en-US");
+
+  $("summary-max").textContent =
+    autoResults.reduce((best, value) => Math.max(best, value), -Infinity)
+      .toLocaleString("en-US");
+
+  $("summary-min").textContent =
+    autoResults.reduce((best, value) => Math.min(best, value), Infinity)
+      .toLocaleString("en-US");
+
+  const list = $("summary-rare-list");
+  list.replaceChildren();
+
+  if (!autoRareResults.length) {
+    const item = document.createElement("li");
+    item.textContent = "이번 자동 뽑기에서 희귀 숫자가 나오지 않았어.";
+    list.appendChild(item);
+  } else {
+    autoRareResults.slice(0, 20).forEach(entry => {
+      const item = document.createElement("li");
+
+      item.textContent =
+        `${entry.pattern.detail} · ${entry.value.toLocaleString("en-US")}`;
+
+      item.className = `summary-${entry.pattern.level}`;
+      list.appendChild(item);
+    });
+
+    if (autoRareResults.length > 20) {
+      const more = document.createElement("li");
+      more.textContent = `외 ${autoRareResults.length - 20}개 희귀 결과`;
+      list.appendChild(more);
+    }
+  }
+
+  $("summary-reason").textContent = reason || "자동 뽑기가 종료됐어.";
+  autoSummaryOverlay.hidden = false;
+  closeAutoSummaryButton.focus();
+}
+
+function closeAutoSummary() {
+  autoSummaryOverlay.hidden = true;
+}
+
+closeAutoSummaryButton.addEventListener("click", closeAutoSummary);
+closeSummaryDoneButton.addEventListener("click", closeAutoSummary);
+
+autoSummaryOverlay.addEventListener("click", event => {
+  if (event.target === autoSummaryOverlay) {
+    closeAutoSummary();
+  }
+});
 
 function addToHistory(result) {
   const value = Number(result);
@@ -1040,7 +1344,6 @@ function updateStatistics() {
 ===================================== */
 
 function finishDraw(result) {
-  // 롤링만 정리한다. 결과 효과에 필요한 타이머는 건드리지 않는다.
   clearRollTimers();
 
   setDisplayedNumber(result, true);
@@ -1051,6 +1354,17 @@ function finishDraw(result) {
   digitCountLabel.textContent = getDigitCountLabel(result);
 
   addToHistory(result);
+  trackDrawStatistics(result);
+
+  if (autoRunning) {
+    autoCompletedCount++;
+    autoResults.push(Number(result));
+
+    if (pattern) {
+      autoRareResults.push({ value: Number(result), pattern });
+    }
+  }
+
   updateNumberInfo(result);
   triggerResultImpact(pattern, result);
 
@@ -1110,7 +1424,6 @@ function drawWithAnimation() {
 
   const result = getNextResult();
 
-  // 1이 가장 느리고, 5가 가장 빠르다.
   const speedSettings = {
     1: { start: 1900, interval: 850, spin: 100 },
     2: { start: 1500, interval: 650, spin: 85 },
@@ -1122,7 +1435,6 @@ function drawWithAnimation() {
   const timing = speedSettings[settings.speed];
 
   digitElements.forEach((digit, index) => {
-    // 각 자리의 롤링은 추첨 연출용이다.
     const intervalId = setInterval(() => {
       digit.textContent = String(Math.floor(Math.random() * 10));
     }, timing.spin);
@@ -1135,7 +1447,6 @@ function drawWithAnimation() {
       digit.classList.remove("rolling");
       digit.textContent = result[index];
 
-      // 브라우저가 Web Animations API를 지원할 때만 사용
       if (typeof digit.animate === "function") {
         digit.animate(
           [
@@ -1190,15 +1501,28 @@ function getSelectedAutoRarities() {
 }
 
 function startAutoDraw() {
+  autoLimitMode =
+    document.querySelector('input[name="auto-limit-mode"]:checked')?.value ||
+    "duration";
+
   const duration = Number(autoDurationInput.value);
+  const count = Number(autoCountInput.value);
 
   if (
-    !Number.isInteger(duration) ||
-    duration < 1 ||
-    duration > 3600
+    autoLimitMode === "duration" &&
+    (!Number.isInteger(duration) || duration < 1 || duration > 3600)
   ) {
     autoMessage.textContent =
       "지속시간은 1초부터 3600초 사이의 정수로 입력해 줘.";
+    return;
+  }
+
+  if (
+    autoLimitMode === "count" &&
+    (!Number.isInteger(count) || count < 1 || count > 100000)
+  ) {
+    autoMessage.textContent =
+      "추첨 횟수는 1회부터 100,000회 사이의 정수로 입력해 줘.";
     return;
   }
 
@@ -1208,7 +1532,16 @@ function startAutoDraw() {
 
   autoStopRarities = getSelectedAutoRarities();
   autoRunning = true;
-  autoEndsAt = Date.now() + duration * 1000;
+  autoTargetCount = count;
+  autoCompletedCount = 0;
+  autoResults = [];
+  autoRareResults = [];
+  autoStopReason = "";
+
+  autoEndsAt =
+    autoLimitMode === "duration"
+      ? Date.now() + duration * 1000
+      : Infinity;
 
   if (autoNextTimeout !== null) {
     clearTimeout(autoNextTimeout);
@@ -1222,8 +1555,9 @@ function startAutoDraw() {
 
   closeAutoSettings();
 
-  statusElement.textContent =
-    `자동 뽑기 시작 · ${duration}초 동안 실행`;
+  statusElement.textContent = autoLimitMode === "count"
+    ? `자동 뽑기 시작 · ${count.toLocaleString("en-US")}회 추첨`
+    : `자동 뽑기 시작 · ${duration}초 동안 실행`;
 
   setButtonsDisabled(true);
   runNextAutoDraw();
@@ -1233,6 +1567,7 @@ function stopAutoDraw(message = "자동 뽑기가 멈췄어.") {
   if (!autoRunning) return;
 
   autoRunning = false;
+  autoStopReason = message;
 
   if (autoNextTimeout !== null) {
     clearTimeout(autoNextTimeout);
@@ -1246,13 +1581,24 @@ function stopAutoDraw(message = "자동 뽑기가 멈췄어.") {
 
   setButtonsDisabled(isDrawing);
   statusElement.textContent = message;
+  showAutoSummary(message);
 }
 
 function runNextAutoDraw() {
   if (!autoRunning) return;
 
-  if (Date.now() >= autoEndsAt) {
+  if (autoLimitMode === "duration" && Date.now() >= autoEndsAt) {
     stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
+    return;
+  }
+
+  if (
+    autoLimitMode === "count" &&
+    autoCompletedCount >= autoTargetCount
+  ) {
+    stopAutoDraw(
+      `설정한 ${autoTargetCount.toLocaleString("en-US")}회 추첨을 완료했어!`
+    );
     return;
   }
 
@@ -1278,12 +1624,21 @@ function handleAutoAfterDraw(pattern) {
     return;
   }
 
-  if (Date.now() >= autoEndsAt) {
+  if (autoLimitMode === "duration" && Date.now() >= autoEndsAt) {
     stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
     return;
   }
 
-  // 즉각 모드에서도 잠깐 간격을 둬 브라우저가 멈추지 않도록 한다.
+  if (
+    autoLimitMode === "count" &&
+    autoCompletedCount >= autoTargetCount
+  ) {
+    stopAutoDraw(
+      `설정한 ${autoTargetCount.toLocaleString("en-US")}회 추첨을 완료했어!`
+    );
+    return;
+  }
+
   autoNextTimeout = setTimeout(
     runNextAutoDraw,
     autoMode === "instant" ? 120 : 100
@@ -1302,9 +1657,11 @@ autoOverlay.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !autoOverlay.hidden) {
-    closeAutoSettings();
-  }
+  if (event.key !== "Escape") return;
+
+  if (!autoOverlay.hidden) closeAutoSettings();
+  if (!statisticsOverlay.hidden) closeStatistics();
+  if (!autoSummaryOverlay.hidden) closeAutoSummary();
 });
 
 /* =====================================
