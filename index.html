@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -29,17 +28,14 @@
 
       <div class="stats-panel">
         <h3>NUMBER STATISTICS</h3>
-
         <div class="stat-row">
           <span>최댓값</span>
           <strong id="max-number">—</strong>
         </div>
-
         <div class="stat-row">
           <span>최솟값</span>
           <strong id="min-number">—</strong>
         </div>
-
         <div class="stat-row">
           <span>전체 추첨 횟수</span>
           <strong id="total-draws">0</strong>
@@ -49,32 +45,17 @@
 
     <main class="container">
       <div class="top-actions">
-        <button
-          id="settings-button"
-          class="settings-button"
-          type="button"
-          aria-expanded="false"
-          aria-controls="settings-overlay"
-        >
+        <button id="settings-button" class="settings-button" type="button" aria-expanded="false" aria-controls="settings-overlay">
           ⚙ 설정
         </button>
-        <button
-          id="cheat-button"
-          class="settings-button cheat-open-button"
-          type="button"
-          aria-expanded="false"
-          aria-controls="cheat-overlay"
-        >
+        <button id="cheat-button" class="settings-button cheat-open-button" type="button" aria-expanded="false" aria-controls="cheat-overlay">
           ✧ 치트
         </button>
-        <button
-          id="rarity-button"
-          class="settings-button rarity-open-button"
-          type="button"
-          aria-expanded="false"
-          aria-controls="rarity-overlay"
-        >
+        <button id="rarity-button" class="settings-button rarity-open-button" type="button" aria-expanded="false" aria-controls="rarity-overlay">
           ✦ 희귀도
+        </button>
+        <button id="statistics-button" class="settings-button statistics-open-button" type="button" aria-expanded="false" aria-controls="statistics-overlay">
+          ▤ 통계
         </button>
       </div>
 
@@ -143,12 +124,33 @@
       </div>
 
       <div class="setting-item">
+        <div class="setting-heading"><span>자동 종료 기준</span></div>
+        <label class="auto-mode-option">
+          <input type="radio" name="auto-limit-mode" value="duration" checked>
+          <span><strong>시간 기준</strong><small>설정한 시간 동안 자동 추첨</small></span>
+        </label>
+        <label class="auto-mode-option">
+          <input type="radio" name="auto-limit-mode" value="count">
+          <span><strong>횟수 기준</strong><small>설정한 횟수만큼 추첨한 뒤 종료</small></span>
+        </label>
+      </div>
+
+      <div class="setting-item" id="auto-duration-setting">
         <div class="setting-heading">
           <label for="auto-duration">지속시간</label>
           <strong>초</strong>
         </div>
         <input id="auto-duration" class="auto-duration-input" type="number" min="1" max="3600" step="1" value="60" inputmode="numeric">
-        <p class="auto-help">1초부터 3600초(1시간)까지 설정할 수 있어. 진행 중인 추첨은 끝난 뒤 멈춰.</p>
+        <p class="auto-help">1초부터 3600초(1시간)까지 설정할 수 있어.</p>
+      </div>
+
+      <div class="setting-item" id="auto-count-setting" hidden>
+        <div class="setting-heading">
+          <label for="auto-count">추첨 횟수</label>
+          <strong>회</strong>
+        </div>
+        <input id="auto-count" class="auto-duration-input" type="number" min="1" max="100000" step="1" value="100" inputmode="numeric">
+        <p class="auto-help">1회부터 100,000회까지 설정할 수 있어. 애니메이션 모드는 시간이 더 걸릴 수 있어.</p>
       </div>
 
       <div class="setting-item">
@@ -187,20 +189,13 @@
   </div>
 
   <div id="settings-overlay" class="settings-overlay" hidden>
-    <section
-      class="settings-panel"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-    >
+    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
           <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">
-          ✕
-        </button>
+        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">✕</button>
       </div>
 
       <div class="setting-item">
@@ -250,27 +245,16 @@
       </label>
 
       <div class="settings-actions">
-        <button id="reset-settings" class="secondary-button" type="button">
-          기본값
-        </button>
-        <button id="save-settings" class="primary-button" type="button">
-          설정 저장
-        </button>
+        <button id="reset-settings" class="secondary-button" type="button">기본값</button>
+        <button id="save-settings" class="primary-button" type="button">설정 저장</button>
       </div>
 
-      <p id="settings-message" class="settings-message" aria-live="polite">
-        설정은 이 브라우저에 저장돼.
-      </p>
+      <p id="settings-message" class="settings-message" aria-live="polite">설정은 이 브라우저에 저장돼.</p>
     </section>
   </div>
 
   <div id="cheat-overlay" class="settings-overlay" hidden>
-    <section
-      class="settings-panel cheat-panel"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="cheat-title"
-    >
+    <section class="settings-panel cheat-panel" role="dialog" aria-modal="true" aria-labelledby="cheat-title">
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CHOOSE YOUR NUMBER</p>
@@ -319,6 +303,61 @@
         </table>
       </div>
       <p class="settings-message">특별 지정 숫자(Jackpot / Special / Reverse Special)는 일반 자릿수 등급보다 우선 적용돼.</p>
+    </section>
+  </div>
+
+  <div id="statistics-overlay" class="settings-overlay" hidden>
+    <section class="settings-panel statistics-panel" role="dialog" aria-modal="true" aria-labelledby="statistics-title">
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">YOUR DRAW DATA</p>
+          <h2 id="statistics-title">추첨 통계</h2>
+        </div>
+        <button id="close-statistics" class="close-settings" type="button" aria-label="통계 닫기">✕</button>
+      </div>
+      <div class="statistics-grid">
+        <article class="statistics-card"><span>홀수</span><strong id="odd-count">0</strong><small id="odd-ratio">0%</small></article>
+        <article class="statistics-card"><span>짝수</span><strong id="even-count">0</strong><small id="even-ratio">0%</small></article>
+        <article class="statistics-card"><span>소수</span><strong id="prime-count">0</strong><small id="prime-ratio">0%</small></article>
+        <article class="statistics-card"><span>합성수</span><strong id="composite-count">0</strong><small id="composite-ratio">0%</small></article>
+      </div>
+      <div class="statistics-section">
+        <h3>자릿수별 출현 비율</h3>
+        <div id="digit-statistics" class="statistics-bars"></div>
+      </div>
+      <div class="statistics-section">
+        <h3>희귀도별 출현 비율</h3>
+        <div id="rarity-statistics" class="statistics-bars"></div>
+      </div>
+      <p id="statistics-total" class="settings-message">아직 추첨 기록이 없어.</p>
+    </section>
+  </div>
+
+  <div id="auto-summary-overlay" class="settings-overlay" hidden>
+    <section class="settings-panel statistics-panel" role="dialog" aria-modal="true" aria-labelledby="auto-summary-title">
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">AUTOMATIC DRAW COMPLETE</p>
+          <h2 id="auto-summary-title">자동 뽑기 결과 요약</h2>
+        </div>
+        <button id="close-auto-summary" class="close-settings" type="button" aria-label="결과 요약 닫기">✕</button>
+      </div>
+      <div class="statistics-grid">
+        <article class="statistics-card"><span>총 추첨 횟수</span><strong id="summary-draw-count">0</strong></article>
+        <article class="statistics-card"><span>평균</span><strong id="summary-average">—</strong></article>
+        <article class="statistics-card"><span>최댓값</span><strong id="summary-max">—</strong></article>
+        <article class="statistics-card"><span>최솟값</span><strong id="summary-min">—</strong></article>
+      </div>
+      <div class="statistics-section">
+        <h3>이번 자동 뽑기의 희귀 결과</h3>
+        <ol id="summary-rare-list" class="summary-rare-list">
+          <li>희귀 결과가 아직 없어.</li>
+        </ol>
+      </div>
+      <p id="summary-reason" class="settings-message"></p>
+      <div class="settings-actions">
+        <button id="close-summary-done" class="primary-button" type="button">확인</button>
+      </div>
     </section>
   </div>
 
