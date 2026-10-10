@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -28,17 +29,14 @@
 
       <div class="stats-panel">
         <h3>NUMBER STATISTICS</h3>
-
         <div class="stat-row">
           <span>최댓값</span>
           <strong id="max-number">—</strong>
         </div>
-
         <div class="stat-row">
           <span>최솟값</span>
           <strong id="min-number">—</strong>
         </div>
-
         <div class="stat-row">
           <span>전체 추첨 횟수</span>
           <strong id="total-draws">0</strong>
@@ -48,14 +46,14 @@
 
     <main class="container">
       <div class="top-actions">
-        <button id="settings-button" class="settings-button" type="button"
-          aria-expanded="false" aria-controls="settings-overlay">
+        <button id="settings-button" class="settings-button" type="button" aria-expanded="false" aria-controls="settings-overlay">
           ⚙ 설정
         </button>
-
-        <button id="cheat-button" class="settings-button cheat-open-button"
-          type="button" aria-expanded="false" aria-controls="cheat-overlay">
+        <button id="cheat-button" class="settings-button cheat-open-button" type="button" aria-expanded="false" aria-controls="cheat-overlay">
           ✧ 치트
+        </button>
+        <button id="rarity-button" class="settings-button rarity-open-button" type="button" aria-expanded="false" aria-controls="rarity-overlay">
+          ✦ 희귀도
         </button>
       </div>
 
@@ -71,6 +69,8 @@
         <div id="rare-label" class="rare-label" aria-live="polite"></div>
       </div>
 
+      <p id="digit-count-label" class="digit-count-label" aria-live="polite"></p>
+
       <div class="number-info">
         <span id="prime-status">아직 추첨 결과가 없어</span>
         <span id="divisor-status">숫자를 뽑아 봐!</span>
@@ -83,29 +83,24 @@
           <span class="button-icon">✦</span>
           숫자 뽑기
         </button>
-
         <button id="instant-button" class="draw-button instant-button" type="button">
           <span class="button-icon">⚡</span>
           즉각 뽑기
         </button>
       </div>
 
-      <p class="footer">
-        0 — 9,999,999 <span>•</span> SECURE RANDOM
-      </p>
+      <p class="footer">0 — 9,999,999 <span>•</span> SECURE RANDOM</p>
     </main>
   </div>
 
   <div id="settings-overlay" class="settings-overlay" hidden>
-    <section class="settings-panel" role="dialog" aria-modal="true"
-      aria-labelledby="settings-title">
+    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
           <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" type="button"
-          aria-label="설정 닫기">✕</button>
+        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">✕</button>
       </div>
 
       <div class="setting-item">
@@ -158,43 +153,60 @@
         <button id="reset-settings" class="secondary-button" type="button">기본값</button>
         <button id="save-settings" class="primary-button" type="button">설정 저장</button>
       </div>
-
-      <p id="settings-message" class="settings-message" aria-live="polite">
-        설정은 이 브라우저에 저장돼.
-      </p>
+      <p id="settings-message" class="settings-message" aria-live="polite">설정은 이 브라우저에 저장돼.</p>
     </section>
   </div>
 
   <div id="cheat-overlay" class="settings-overlay" hidden>
-    <section class="settings-panel cheat-panel" role="dialog" aria-modal="true"
-      aria-labelledby="cheat-title">
+    <section class="settings-panel cheat-panel" role="dialog" aria-modal="true" aria-labelledby="cheat-title">
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CHOOSE YOUR NUMBER</p>
           <h2 id="cheat-title">치트 설정</h2>
         </div>
-        <button id="close-cheat" class="close-settings" type="button"
-          aria-label="치트 닫기">✕</button>
+        <button id="close-cheat" class="close-settings" type="button" aria-label="치트 닫기">✕</button>
       </div>
-
-      <p class="cheat-description">
-        원하는 숫자를 입력하면 다음 추첨에서 해당 숫자가 나와.
-        0부터 9,999,999까지 입력할 수 있어.
-      </p>
-
+      <p class="cheat-description">원하는 숫자를 입력하면 다음 추첨에서 해당 숫자가 나와. 0부터 9,999,999까지 입력할 수 있어.</p>
       <label class="cheat-input-label" for="cheat-number-input">원하는 숫자</label>
-      <input id="cheat-number-input" class="cheat-number-input" type="number"
-        min="0" max="9999999" step="1" inputmode="numeric"
-        placeholder="예: 1234567">
-
-      <p id="cheat-message" class="settings-message" aria-live="polite">
-        치트를 설정하면 다음 추첨에 한 번 적용돼.
-      </p>
-
+      <input id="cheat-number-input" class="cheat-number-input" type="number" min="0" max="9999999" step="1" inputmode="numeric" placeholder="예: 1234567">
+      <p id="cheat-message" class="settings-message" aria-live="polite">치트를 설정하면 다음 추첨에 한 번 적용돼.</p>
       <div class="settings-actions">
         <button id="clear-cheat" class="secondary-button" type="button">치트 해제</button>
         <button id="apply-cheat" class="primary-button" type="button">숫자 설정</button>
       </div>
+    </section>
+  </div>
+
+  <div id="rarity-overlay" class="settings-overlay" hidden>
+    <section class="settings-panel rarity-panel" role="dialog" aria-modal="true" aria-labelledby="rarity-title">
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">NUMBER RARITY GUIDE</p>
+          <h2 id="rarity-title">희귀도 표</h2>
+        </div>
+        <button id="close-rarity" class="close-settings" type="button" aria-label="희귀도 표 닫기">✕</button>
+      </div>
+      <div class="rarity-table-wrap">
+        <table class="rarity-table">
+          <thead><tr><th>조건</th><th>등급</th></tr></thead>
+          <tbody>
+            <tr><td>6자리 수</td><td><span class="rarity-badge uncommon">Uncommon</span></td></tr>
+            <tr><td>5자리 ~ 3자리 수</td><td><span class="rarity-badge rare">Rare</span></td></tr>
+            <tr><td>2자리 수</td><td><span class="rarity-badge glorious">Glorious</span></td></tr>
+            <tr><td>1자리 수</td><td><span class="rarity-badge legendary">Legendary</span></td></tr>
+            <tr><td>0</td><td><span class="rarity-badge ultimate">Ultimate</span></td></tr>
+            <tr><td>같은 숫자 3개 ~ 5개 연속 반복</td><td><span class="rarity-badge rare">Rare</span></td></tr>
+            <tr><td>같은 숫자 6개 연속 반복</td><td><span class="rarity-badge glorious">Glorious</span></td></tr>
+            <tr><td>같은 숫자 7개 연속 반복</td><td><span class="rarity-badge legendary">Legendary</span></td></tr>
+            <tr><td>같은 숫자 집합 2회 반복</td><td><span class="rarity-badge rare">Rare</span></td></tr>
+            <tr><td>같은 숫자 집합 3회 반복</td><td><span class="rarity-badge glorious">Glorious</span></td></tr>
+            <tr><td>7777777 · 777777 · 77777 · 7777 · 777</td><td><span class="rarity-badge jackpot">Jackpot</span></td></tr>
+            <tr><td>708 · 1234567</td><td><span class="rarity-badge special">Special</span></td></tr>
+            <tr><td>7654321</td><td><span class="rarity-badge reverse-special">Reverse Special</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="settings-message">특별 지정 숫자(Jackpot / Special / Reverse Special)는 일반 자릿수 등급보다 우선 적용돼.</p>
     </section>
   </div>
 
