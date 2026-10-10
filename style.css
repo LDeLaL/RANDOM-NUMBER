@@ -1,3 +1,4 @@
+
 :root{--purple:#9855f5;--purple-bright:#b47aff;--purple-light:#d0aaff;--text:#f4edff;--muted:#a99abf;--panel:rgba(22,14,34,0.9);}
 *{box-sizing:border-box;}
 [hidden]{display:none !important;}
@@ -277,6 +278,7 @@ body.light-mode .auto-mode-option,body.light-mode .auto-rarity-grid label{border
 .history-panel{order:1;position:static;transform:none;}
 .rare-history-panel{order:2;position:static;transform:none;}
 }
+
 /* 추가 기능: 통계와 자동 추첨 요약. 기존 Violet Random 테마는 유지한다. */
 .statistics-panel{width:min(100%,560px);}
 .statistics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 20px;}
@@ -339,64 +341,56 @@ body.light-mode .summary-rare-list{color:#63477f;}
 .rare-flash.special{background:radial-gradient(circle at 50% 45%,rgba(255,62,74,.34),rgba(170,22,45,.13) 40%,transparent 72%);}
 .rare-flash.reverse-special{background:radial-gradient(circle at 50% 45%,rgba(255,24,53,.56),rgba(150,0,27,.23) 43%,transparent 76%);}
 
-/* 요청한 기능 추가: 기존 테마와 기존 스타일은 변경하지 않는다. */
-.rarity-panel{width:min(96vw,900px);}
-.rarity-table{table-layout:fixed;}
-.rarity-table th:nth-child(1),.rarity-table td:nth-child(1){width:48%;}
-.rarity-table th:nth-child(2),.rarity-table td:nth-child(2){width:20%;}
-.rarity-table th:nth-child(3),.rarity-table td:nth-child(3){width:32%;}
-.rarity-table td{vertical-align:middle;line-height:1.6;overflow-wrap:anywhere;}
-.rarity-order{display:inline-grid;place-items:center;width:25px;height:25px;margin-right:7px;border-radius:7px;background:rgba(155,93,229,.14);color:var(--purple-light);font-size:10px;font-weight:800;}
-body.light-mode .rarity-order{color:#785496;background:rgba(155,93,229,.1);}
-.replay-panel{width:min(100%,650px);}
-.replay-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
-.replay-rarity-button{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:76px;padding:13px;border:1px solid rgba(181,135,241,.17);border-radius:11px;background:rgba(155,93,229,.07);color:var(--text);cursor:pointer;text-align:left;transition:transform 120ms ease,border-color 120ms ease,background 120ms ease;}
-.replay-rarity-button:hover{transform:translateY(-2px);border-color:rgba(190,133,255,.55);background:rgba(155,93,229,.14);}
-.replay-rarity-button:active{transform:translateY(1px) scale(.99);}
-.replay-rarity-button small{color:var(--muted);font-size:10px;}
-.small-mode-button{align-self:center;min-height:30px;margin-top:0;padding:6px 13px;border:1px solid rgba(183,127,255,.22);border-radius:9px;background:rgba(83,47,119,.16);color:#bfa0e6;font-size:10px;cursor:pointer;transition:background 120ms ease,border-color 120ms ease;}
-.small-mode-button:hover{background:rgba(124,69,185,.24);border-color:rgba(183,127,255,.48);}
-.password-panel{width:min(100%,400px);}
-.turbo-panel{width:min(100%,460px);}
-body.light-mode .replay-rarity-button{border-color:rgba(139,82,203,.18);background:rgba(155,93,229,.05);color:#38204e;}
-body.light-mode .replay-rarity-button small{color:#806d94;}
-body.light-mode .small-mode-button{color:#693b96;background:rgba(155,93,229,.07);border-color:rgba(139,82,203,.22);}
-@media(max-width:540px){.rarity-panel{width:100%;padding:14px;}.rarity-table{font-size:10px;}.rarity-table th,.rarity-table td{padding:8px 6px;}.rarity-table th:nth-child(1),.rarity-table td:nth-child(1){width:48%;}.rarity-table th:nth-child(2),.rarity-table td:nth-child(2){width:24%;}.rarity-table th:nth-child(3),.rarity-table td:nth-child(3){width:28%;}.rarity-order{width:20px;height:20px;margin-right:3px;font-size:9px;}.replay-grid{grid-template-columns:1fr 1fr;}.replay-rarity-button{padding:10px;min-height:70px;}.replay-rarity-button .rarity-badge{font-size:9px;}}
-
-.rarity-badge.common{color:#c8c0d4;background:rgba(160,150,175,.12);}
-body.light-mode .rarity-badge.common{color:#695a7d;background:rgba(130,110,150,.1);}
-@media(max-width:640px){.top-actions{flex-wrap:wrap;justify-content:center;gap:6px}.top-actions .settings-button{padding:7px 9px;font-size:10px}}
-
-
-/* 추가 희귀 등급 효과와 기록 패널 가독성 조정: 기존 Violet 테마 유지 */
-.rarity-badge.mythic{color:#b9d9ff;background:linear-gradient(110deg,rgba(82,91,194,.25),rgba(165,108,255,.2));border:1px solid rgba(147,174,255,.22);}
-.rarity-badge.eclipse{color:#f1d6ff;background:linear-gradient(110deg,rgba(28,20,46,.8),rgba(113,64,157,.35));border:1px solid rgba(205,151,255,.35);box-shadow:0 0 12px rgba(148,79,218,.12);}
-body.light-mode .rarity-badge.mythic{color:#465eaa;background:rgba(105,130,235,.12);}
-body.light-mode .rarity-badge.eclipse{color:#63348b;background:rgba(116,69,156,.1);}
-.number-box.rarity-mythic-impact{animation:mythic-orbit 1150ms ease-out;}
-.number-box.rarity-eclipse-impact{animation:eclipse-collapse 1350ms ease-out;}
-.number-box.rare-mythic{border-color:rgba(153,184,255,.8);box-shadow:0 0 52px rgba(91,115,255,.3),inset 0 0 42px rgba(139,114,255,.16);}
-.number-box.rare-eclipse{border-color:rgba(210,151,255,.9);box-shadow:0 0 70px rgba(135,55,210,.42),inset 0 0 48px rgba(31,14,49,.75);}
-.number-box.rare-mythic .number{color:#d9e8ff;text-shadow:0 0 12px #a9c4ff,0 0 32px #837bff,0 0 55px #a96dff;}
+/* 추가 등급의 배지와 전용 효과. 기존 Violet Random 테마는 유지한다. */
+.rarity-badge.mythic{color:#d4d9ff;background:linear-gradient(110deg,rgba(87,100,201,.24),rgba(158,108,255,.2));border:1px solid rgba(150,166,255,.25);}
+.rarity-badge.aurora{color:#b8fff1;background:linear-gradient(110deg,rgba(31,143,151,.24),rgba(121,232,219,.12));border:1px solid rgba(118,232,220,.3);}
+.rarity-badge.phantom{color:#e0c8ff;background:linear-gradient(110deg,rgba(82,50,126,.3),rgba(170,121,255,.18));border:1px solid rgba(194,151,255,.3);}
+.rarity-badge.seraph{color:#fff0c7;background:linear-gradient(110deg,rgba(163,123,45,.23),rgba(255,226,155,.14));border:1px solid rgba(255,222,144,.3);}
+.rarity-badge.eclipse{color:#f1d6ff;background:linear-gradient(110deg,rgba(20,12,31,.9),rgba(111,52,156,.35));border:1px solid rgba(205,151,255,.45);box-shadow:0 0 13px rgba(148,79,218,.18);}
+.number-box.rare-mythic{border-color:rgba(153,174,255,.75);box-shadow:0 0 42px rgba(91,115,255,.24),inset 0 0 35px rgba(139,114,255,.13);}
+.number-box.rare-mythic .number{color:#dce6ff;text-shadow:0 0 12px #a9c4ff,0 0 30px #837bff;}
+.number-box.rare-aurora{border-color:rgba(120,244,223,.8);box-shadow:0 0 48px rgba(74,226,208,.3),inset 0 0 35px rgba(74,226,208,.14);}
+.number-box.rare-aurora .number,.number-box.rare-aurora .rare-label{color:#c9fff5;text-shadow:0 0 12px #8dfff0,0 0 30px #31bcae;}
+.number-box.rare-phantom{border-color:rgba(198,151,255,.85);box-shadow:0 0 54px rgba(130,70,205,.36),inset 0 0 42px rgba(130,70,205,.2);}
+.number-box.rare-phantom .number{color:#f0dcff;text-shadow:0 0 13px #d5a6ff,0 0 35px #9656d8;}
+.number-box.rare-seraph{border-color:rgba(255,226,154,.9);box-shadow:0 0 55px rgba(255,211,119,.28),inset 0 0 38px rgba(255,211,119,.12);}
+.number-box.rare-seraph .number,.number-box.rare-seraph .rare-label{color:#fff0c9;text-shadow:0 0 12px #fff1c8,0 0 32px #e3b75b;}
+.number-box.rare-eclipse{border-color:rgba(210,151,255,.95);box-shadow:0 0 70px rgba(135,55,210,.42),inset 0 0 48px rgba(31,14,49,.75);}
 .number-box.rare-eclipse .number{color:#f7e8ff;text-shadow:0 0 10px #fff,0 0 25px #c17bff,0 0 55px #6e28a5;}
-.rare-flash.mythic{background:radial-gradient(circle at 50% 45%,rgba(99,130,255,.42),rgba(156,90,255,.18) 40%,transparent 74%);}
-.rare-flash.eclipse{background:radial-gradient(circle at 50% 45%,rgba(26,12,40,.78),rgba(129,51,191,.52) 42%,rgba(213,148,255,.2) 65%,transparent 80%);}
-@keyframes mythic-orbit{0%{filter:brightness(1);transform:scale(1)}22%{filter:brightness(1.9);transform:scale(1.035);box-shadow:0 0 80px 16px rgba(102,130,255,.45),inset 0 0 45px rgba(143,114,255,.3);border-color:#b9ceff}55%{filter:brightness(1.25);transform:scale(.99)}100%{filter:brightness(1);transform:scale(1)}}
+.number-box.rarity-mythic-impact{animation:mythic-orbit 950ms ease-out;}
+.number-box.rarity-aurora-impact{animation:aurora-wave 1050ms ease-out;}
+.number-box.rarity-phantom-impact{animation:phantom-phase 1150ms ease-out;}
+.number-box.rarity-seraph-impact{animation:seraph-rise 1200ms ease-out;}
+.number-box.rarity-eclipse-impact{animation:eclipse-collapse 1350ms ease-out;}
+@keyframes mythic-orbit{0%{transform:scale(1);filter:brightness(1)}24%{transform:scale(1.035);filter:brightness(1.8);box-shadow:0 0 70px 12px rgba(102,130,255,.42)}55%{transform:scale(.99)}100%{transform:scale(1);filter:brightness(1)}}
+@keyframes aurora-wave{0%{filter:brightness(1);transform:scale(1)}22%{filter:brightness(1.8);transform:scale(1.035);box-shadow:0 0 70px 12px rgba(74,226,208,.45)}48%{filter:brightness(1.3);transform:scale(.99)}100%{filter:brightness(1);transform:scale(1)}}
+@keyframes phantom-phase{0%{filter:brightness(1);transform:translateX(0)}18%{filter:brightness(1.8);transform:translateX(-5px);box-shadow:0 0 65px 10px rgba(164,95,255,.45)}36%{transform:translateX(5px)}54%{transform:translateX(-2px)}100%{filter:brightness(1);transform:translateX(0)}}
+@keyframes seraph-rise{0%{filter:brightness(1);transform:translateY(0)}25%{filter:brightness(1.9);transform:translateY(-6px);box-shadow:0 0 75px 15px rgba(255,220,138,.42)}55%{transform:translateY(2px)}100%{filter:brightness(1);transform:translateY(0)}}
 @keyframes eclipse-collapse{0%{filter:brightness(1);transform:scale(1)}18%{filter:brightness(.55);box-shadow:0 0 0 100vmax rgba(16,8,26,.62),0 0 55px 12px rgba(133,62,188,.5)}42%{filter:brightness(2);transform:scale(1.055);box-shadow:0 0 0 100vmax rgba(105,37,153,.28),0 0 100px 25px rgba(179,104,255,.65)}100%{filter:brightness(1);transform:scale(1)}}
-.replay-rarity-button.selected{border-color:rgba(210,171,255,.85);background:rgba(155,93,229,.2);box-shadow:0 0 18px rgba(155,93,229,.16);}
-.history-panel{width:255px;}
-#history-list li{padding:11px 9px;font-size:12px;}
-#history-list .history-index{font-size:12px;}
-#history-list .history-number{font-size:13px;}
-.rare-history-panel{width:250px;}
-#rare-history-list li{padding:11px 9px;font-size:12px;gap:7px;}
-#rare-history-list .history-number{font-size:13px;}
-#rare-history-list .history-index{font-size:11px;}
-#rare-history-list .history-rare-mark{font-size:9px;}
-#history-list li.rare-history-mythic,#rare-history-list li.rare-history-mythic{border-color:rgba(147,174,255,.7);background:rgba(91,115,255,.11);}
-#history-list li.rare-history-eclipse,#rare-history-list li.rare-history-eclipse{border-color:rgba(205,151,255,.8);background:linear-gradient(100deg,rgba(57,24,83,.28),rgba(155,93,229,.1));box-shadow:0 0 16px rgba(148,79,218,.16);}
-.summary-rare-list .summary-eclipse,.summary-rare-list .summary-mythic{color:#d6c5ff;border-color:rgba(169,137,255,.4);}
-.statistics-bar-fill.bar-mythic{background:linear-gradient(90deg,#455bd0,#b7c8ff);}
-.statistics-bar-fill.bar-eclipse{background:linear-gradient(90deg,#3c2458,#d09aff);}
-@media(max-width:1199px){.history-panel,.rare-history-panel{width:min(100%,700px);}}
-@media(max-width:640px){#history-list li{font-size:11px;padding:10px 8px;}#history-list .history-number,#rare-history-list .history-number{font-size:12px;}}
+.rare-flash.mythic{background:radial-gradient(circle at 50% 45%,rgba(99,130,255,.35),rgba(156,90,255,.14) 40%,transparent 74%)}
+.rare-flash.aurora{background:radial-gradient(circle at 50% 45%,rgba(74,226,208,.4),rgba(43,167,170,.12) 42%,transparent 74%)}
+.rare-flash.phantom{background:radial-gradient(circle at 50% 45%,rgba(164,95,255,.4),rgba(67,29,109,.18) 42%,transparent 75%)}
+.rare-flash.seraph{background:radial-gradient(circle at 50% 45%,rgba(255,220,138,.4),rgba(190,133,49,.12) 42%,transparent 75%)}
+.rare-flash.eclipse{background:radial-gradient(circle at 50% 45%,rgba(26,12,40,.8),rgba(129,51,191,.5) 42%,rgba(213,148,255,.18) 65%,transparent 80%)}
+#history-list li.rare-history-mythic,#rare-history-list li.rare-history-mythic{border-color:rgba(150,166,255,.65);background:rgba(91,115,255,.1)}
+#history-list li.rare-history-aurora,#rare-history-list li.rare-history-aurora{border-color:rgba(118,232,220,.7);background:rgba(74,226,208,.1)}
+#history-list li.rare-history-phantom,#rare-history-list li.rare-history-phantom{border-color:rgba(194,151,255,.7);background:rgba(130,70,205,.14)}
+#history-list li.rare-history-seraph,#rare-history-list li.rare-history-seraph{border-color:rgba(255,222,144,.75);background:rgba(255,211,119,.1)}
+#history-list li.rare-history-eclipse,#rare-history-list li.rare-history-eclipse{border-color:rgba(205,151,255,.8);background:linear-gradient(100deg,rgba(57,24,83,.28),rgba(155,93,229,.1));box-shadow:0 0 16px rgba(148,79,218,.16)}
+.statistics-bar-fill.bar-mythic{background:linear-gradient(90deg,#455bd0,#b7c8ff)}
+.statistics-bar-fill.bar-aurora{background:linear-gradient(90deg,#258f87,#b8fff1)}
+.statistics-bar-fill.bar-phantom{background:linear-gradient(90deg,#633a9c,#e0c8ff)}
+.statistics-bar-fill.bar-seraph{background:linear-gradient(90deg,#a37b2d,#fff0c7)}
+.statistics-bar-fill.bar-eclipse{background:linear-gradient(90deg,#3c2458,#d09aff)}
+.summary-rare-list .summary-mythic{color:#d4d9ff;border-color:rgba(150,166,255,.4)}
+.summary-rare-list .summary-aurora{color:#b8fff1;border-color:rgba(118,232,220,.4)}
+.summary-rare-list .summary-phantom{color:#e0c8ff;border-color:rgba(194,151,255,.4)}
+.summary-rare-list .summary-seraph{color:#fff0c7;border-color:rgba(255,222,144,.4)}
+.summary-rare-list .summary-eclipse{color:#f1d6ff;border-color:rgba(205,151,255,.4)}
+.sound-toggle{white-space:nowrap;}
+body.light-mode .rarity-badge.mythic{color:#465eaa;background:rgba(105,130,235,.12)}
+body.light-mode .rarity-badge.aurora{color:#187c72;background:rgba(74,226,208,.12)}
+body.light-mode .rarity-badge.phantom{color:#63348b;background:rgba(116,69,156,.1)}
+body.light-mode .rarity-badge.seraph{color:#8d651b;background:rgba(255,211,119,.15)}
+body.light-mode .rarity-badge.eclipse{color:#63348b;background:rgba(116,69,156,.1)}
+@media(prefers-reduced-motion:reduce){.number-box.rarity-mythic-impact,.number-box.rarity-aurora-impact,.number-box.rarity-phantom-impact,.number-box.rarity-seraph-impact,.number-box.rarity-eclipse-impact{animation-duration:.01ms!important}}
