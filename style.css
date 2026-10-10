@@ -1,546 +1,2525 @@
-:root{--purple:#9855f5;--purple-bright:#b47aff;--purple-light:#d0aaff;--text:#f4edff;--muted:#a99abf;--panel:rgba(22,14,34,0.9);}
-*{box-sizing:border-box;}
-[hidden]{display:none !important;}
-body{margin:0;min-height:100vh;overflow-x:hidden;background:radial-gradient(ellipse at 65% 40%,#211333 0%,transparent 48%),radial-gradient(ellipse at 15% 90%,#180f28 0%,transparent 42%),#08070c;color:var(--text);font-family:"Segoe UI","Malgun Gothic",sans-serif;}
-button,input{font:inherit;}
-#particles{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
-#effects{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:10;}
-.app-layout{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:44px 30px;}
-.history-panel{width:240px;flex-shrink:0;padding:24px 20px;border:1px solid rgba(183,127,255,0.19);border-radius:18px;background:var(--panel);box-shadow:0 0 35px rgba(117,55,183,0.08);backdrop-filter:blur(12px);}
-.history-panel h2{margin:0;font-size:15px;letter-spacing:2px;color:var(--purple-light);}
-.panel-subtitle{margin:8px 0 20px;font-size:12px;color:var(--muted);}
-#history-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px;}
-#history-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;border-radius:9px;background:rgba(155,93,229,0.08);border:1px solid rgba(181,135,241,0.09);font-size:13px;}
-#history-list .history-index{color:#8e7da4;font-size:11px;}
-#history-list .history-number{color:#e8d7ff;font-weight:650;font-variant-numeric:tabular-nums;}
-#history-list .empty-history{justify-content:center;padding:20px 5px;color:var(--muted);font-size:12px;}
-.average-panel,.stats-panel{margin-top:18px;padding:16px 12px;border-radius:12px;background:rgba(133,69,207,0.12);border:1px solid rgba(181,135,241,0.13);}
-.average-panel{text-align:center;}
-.average-panel p{margin:0 0 10px;color:var(--muted);font-size:12px;}
-.average-panel strong{display:block;color:var(--purple-light);font-size:20px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
-.average-panel span{display:block;margin-top:8px;color:#8f7ca7;font-size:10px;}
-.stats-panel h3{margin:0 0 13px;color:var(--purple-light);font-size:10px;letter-spacing:1.1px;}
-.stat-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:11px;font-size:11px;}
-.stat-row span{color:var(--muted);}
-.stat-row strong{color:#eee0ff;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
-.container{width:min(790px,100%);text-align:center;}
-.top-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:5px;}
-.settings-button{display:flex;align-items:center;gap:7px;padding:8px 13px;color:#d7b9ff;border:1px solid rgba(183,127,255,0.24);border-radius:10px;background:rgba(83,47,119,0.24);cursor:pointer;font-size:12px;}
-.settings-button:hover{background:rgba(124,69,185,0.3);border-color:rgba(183,127,255,0.55);}
-.eyebrow{color:var(--purple-bright);font-size:11px;letter-spacing:4px;}
-h1{margin:15px 0 8px;font-size:clamp(36px,5vw,55px);font-weight:750;letter-spacing:-1.5px;background:linear-gradient(110deg,#f8edff,#c69aff 48%,#9250ed);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(163,95,255,0.18));}
-.subtitle{margin:0;color:#b5a5c9;font-size:14px;}
-.number-box{position:relative;display:flex;align-items:center;justify-content:center;min-height:190px;margin:35px 0 15px;padding:25px 12px;border:1px solid rgba(176,117,255,0.2);border-radius:23px;background:linear-gradient(145deg,rgba(32,20,47,0.83),rgba(12,9,19,0.91));box-shadow:0 0 45px rgba(122,57,199,0.11),inset 0 0 30px rgba(142,81,224,0.035);}
-.number-box::before{content:"";position:absolute;inset:-1px;border-radius:inherit;background:linear-gradient(120deg,transparent 20%,rgba(185,131,255,0.17),transparent 75%);opacity:0.5;pointer-events:none;}
-.number{position:relative;display:flex;align-items:center;justify-content:center;gap:clamp(1px,0.6vw,7px);width:100%;font-size:clamp(34px,6.7vw,76px);line-height:1.2;font-weight:800;letter-spacing:-2px;font-variant-numeric:tabular-nums;color:#f8f0ff;text-shadow:0 0 22px rgba(184,125,255,0.32);}
-.number span{display:inline-block;min-width:0.58em;}
-.number.finished{animation:result-pop 650ms cubic-bezier(.16,1.5,.35,1) both;color:white;text-shadow:0 0 4px rgba(255,255,255,0.8),0 0 13px rgba(189,138,255,0.72),0 0 25px rgba(154,78,255,0.42);}
-.number span.rolling{color:#d9baff;text-shadow:0 0 15px rgba(184,125,255,0.6);will-change:transform;}
-@keyframes result-pop{0%{transform:scale(0.83);filter:brightness(1.7);}
-45%{transform:scale(1.075);filter:brightness(1.4);}
-100%{transform:scale(1);filter:brightness(1);}
-}
-.number-box.impact{animation:box-impact 600ms ease-out;}
-@keyframes box-impact{0%{border-color:rgba(207,164,255,0.95);box-shadow:0 0 0 0 rgba(167,94,255,0.4);}
-50%{border-color:rgba(207,164,255,0.7);box-shadow:0 0 40px 8px rgba(167,94,255,0.17);}
-100%{border-color:rgba(176,117,255,0.2);box-shadow:0 0 45px rgba(122,57,199,0.11);}
-}
-.rare-label{position:absolute;left:0;right:0;bottom:9px;color:var(--purple-light);font-size:11px;font-weight:750;letter-spacing:2px;text-shadow:0 0 15px rgba(190,130,255,0.7);}
-.number-box.rare{border-color:rgba(204,151,255,0.7);box-shadow:0 0 30px rgba(168,91,255,0.25),inset 0 0 35px rgba(155,80,240,0.12);}
-.number-box.rare-legendary{border-color:rgba(255,216,157,0.9);background:linear-gradient(145deg,rgba(65,39,76,0.94),rgba(21,12,29,0.96));box-shadow:0 0 45px rgba(191,121,255,0.28),inset 0 0 35px rgba(255,199,120,0.09);}
-.number-box.rare-legendary .number{color:#fff1d6;text-shadow:0 0 10px white,0 0 30px #d8a3ff,0 0 60px #b477ff;}
-.number-box.rare-legendary .rare-label{color:#ffe0a9;}
-.number-info{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:12px 0;}
-.number-info span{padding:7px 11px;border-radius:8px;border:1px solid rgba(181,135,241,0.13);background:rgba(155,93,229,0.08);color:#c8b5e2;font-size:11px;}
-.number-info .prime{color:#c8ffdf;border-color:rgba(93,226,153,0.25);background:rgba(50,150,90,0.1);}
-.number-info .not-prime{color:#d1c1e5;}
-.status{min-height:20px;margin:18px 0;color:var(--muted);font-size:12px;}
-.button-area{display:flex;flex-direction:column;align-items:center;gap:15px;}
-.draw-button{display:flex;align-items:center;justify-content:center;gap:9px;width:min(100%,330px);min-height:56px;padding:14px 20px;border:1px solid rgba(222,194,255,0.5);border-radius:13px;background:linear-gradient(110deg,#7736c5,#a35af4 55%,#7838c7);color:white;font-size:15px;font-weight:750;cursor:pointer;box-shadow:0 5px 0 #482078,0 9px 25px rgba(130,60,210,0.22);transition:transform 120ms ease,box-shadow 120ms ease,filter 150ms ease;}
-.draw-button:hover{filter:brightness(1.15);box-shadow:0 5px 0 #482078,0 0 28px rgba(166,95,255,0.38);}
-.draw-button:active{transform:translateY(4px) scale(0.985);box-shadow:0 1px 0 #482078,0 0 25px rgba(166,95,255,0.35);}
-.draw-button:disabled{cursor:wait;opacity:0.65;}
-.button-icon{font-size:17px;}
-.instant-button{width:auto;min-height:38px;padding:8px 18px;gap:6px;border-color:rgba(218,186,255,0.55);border-radius:10px;background:linear-gradient(110deg,#3b2458,#7040a4,#3b2458);font-size:12px;box-shadow:0 3px 0 #261638,0 5px 16px rgba(130,60,210,0.12);}
-.instant-button .button-icon{font-size:13px;}
-.draw-button.button-impact{animation:button-impact 400ms ease-out;}
-@keyframes button-impact{0%{filter:brightness(1.8);}
-100%{filter:brightness(1);}
-}
-.footer{margin-top:35px;color:#7f708f;font-size:10px;letter-spacing:1.5px;}
-.footer span{margin:0 8px;color:var(--purple-bright);}
-.burst-particle{position:fixed;left:0;top:0;width:var(--size);height:var(--size);border-radius:50%;background:#d9b6ff;box-shadow:0 0 8px #b77aff,0 0 17px rgba(170,100,255,0.7);animation:burst var(--duration) cubic-bezier(.15,.65,.25,1) forwards;}
-.burst-particle.star{width:auto;height:auto;background:none;box-shadow:none;color:#f4e5ff;font-size:var(--size);line-height:1;text-shadow:0 0 8px #b77aff,0 0 16px #8f42e8;}
-.burst-particle.rare-star{color:#f7d7ff;text-shadow:0 0 10px white,0 0 20px #c37bff,0 0 35px #8d39e8;}
-.burst-particle.gold-star{color:#ffe5ac;text-shadow:0 0 10px white,0 0 22px #ffcc7a,0 0 40px #bd77ff;}
-@keyframes burst{0%{opacity:0;transform:translate(0,0) scale(0.3) rotate(0deg);}
-15%{opacity:1;}
-100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0.1) rotate(var(--rotation));}
-}
-.rare-flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(181,115,255,0.28),rgba(100,38,168,0.08) 38%,transparent 70%);animation:rare-flash 850ms ease-out forwards;}
-.rare-flash.legendary{background:radial-gradient(circle at 50% 45%,rgba(255,221,163,0.3),rgba(190,108,255,0.16) 35%,transparent 72%);}
-@keyframes rare-flash{0%{opacity:0;}
-25%{opacity:1;}
-100%{opacity:0;}
-}
-.settings-overlay{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(5,3,9,0.78);backdrop-filter:blur(10px);}
-.settings-panel{width:min(100%,430px);max-height:min(90vh,720px);overflow-y:auto;padding:25px;border:1px solid rgba(190,133,255,0.28);border-radius:20px;background:linear-gradient(145deg,#21152e,#100c17);box-shadow:0 0 60px rgba(128,59,199,0.2);animation:settings-open 220ms ease-out;}
-@keyframes settings-open{from{opacity:0;transform:translateY(10px) scale(0.98);}
-to{opacity:1;transform:translateY(0) scale(1);}
-}
-.settings-header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:25px;}
-.settings-eyebrow{margin:0 0 8px;color:var(--purple-bright);font-size:9px;letter-spacing:1.5px;}
-.settings-header h2{margin:0;color:#f4eaff;font-size:27px;}
-.close-settings{width:35px;height:35px;border:1px solid rgba(181,135,241,0.18);border-radius:10px;background:rgba(155,93,229,0.1);color:#e4d1ff;cursor:pointer;}
-.setting-item{padding:17px 0;border-top:1px solid rgba(181,135,241,0.12);}
-.setting-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;font-size:13px;}
-.setting-heading label{color:#e8ddf5;}
-.setting-heading strong{color:var(--purple-light);font-size:12px;}
-.setting-item input[type="range"]{display:block;width:100%;accent-color:var(--purple-bright);cursor:pointer;}
-.range-labels{display:flex;justify-content:space-between;margin-top:8px;color:#8f7ca7;font-size:10px;}
-.setting-toggle{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:17px 0;border-top:1px solid rgba(181,135,241,0.12);cursor:pointer;}
-.setting-toggle strong,.setting-toggle small{display:block;}
-.setting-toggle strong{color:#e8ddf5;font-size:13px;}
-.setting-toggle small{margin-top:6px;color:#9b8aaf;font-size:10px;line-height:1.5;}
-.setting-toggle input{width:18px;height:18px;accent-color:var(--purple-bright);flex-shrink:0;}
-.settings-actions{display:flex;gap:10px;margin-top:20px;}
-.settings-actions button{min-height:43px;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;}
-.secondary-button{flex:1;border:1px solid rgba(181,135,241,0.22);background:rgba(155,93,229,0.08);color:#d4c1ea;}
-.primary-button{flex:1.5;border:1px solid rgba(222,194,255,0.35);background:linear-gradient(110deg,#7736c5,#a35af4);color:white;}
-.settings-message{margin:15px 0 0;color:#a999bd;font-size:10px;text-align:center;}
-@media (min-width:901px){.history-panel{position:fixed;left:24px;top:50%;transform:translateY(-50%);}
-.container{width:min(790px,calc(100vw - 330px));margin-left:260px;}
-}
-@media (max-height:780px) and (min-width:901px){.history-panel{top:15px;bottom:15px;transform:none;overflow-y:auto;}
-}
-@media (max-width:900px){.app-layout{flex-direction:column-reverse;gap:25px;padding:30px 18px;}
-.container{width:min(100%,700px);margin-left:0;}
-.history-panel{position:static;transform:none;width:min(100%,700px);}
-#history-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
-.number-box{min-height:145px;margin-top:27px;}
-}
-@media (max-width:420px){.number{font-size:9vw;letter-spacing:-1px;}
-.number-box{min-height:125px;padding:18px 5px 32px;}
-#history-list{grid-template-columns:1fr;}
-.eyebrow{letter-spacing:2px;font-size:9px;}
-.settings-panel{padding:20px;}
-}
-@media (prefers-reduced-motion:reduce){.number.finished,.number-box.impact,.draw-button.button-impact,.burst-particle,.rare-flash,.settings-panel{animation-duration:0.01ms !important;}
-}
-#history-list li.rare-history-item{border-color:rgba(202,151,255,0.65);background:linear-gradient(100deg,rgba(135,67,207,0.22),rgba(155,93,229,0.08));box-shadow:0 0 12px rgba(155,83,255,0.12);}
-#history-list li.rare-history-legendary{border-color:rgba(255,214,151,0.8);background:linear-gradient(100deg,rgba(151,96,173,0.27),rgba(112,73,127,0.13));box-shadow:0 0 16px rgba(210,157,255,0.18);}
-.history-rare-mark{color:#d8b5ff;font-size:8px;font-weight:800;white-space:nowrap;letter-spacing:0.3px;}
-.rare-history-legendary .history-rare-mark{color:#ffe0a9;}
-.theme-select,.cheat-number-input{width:100%;min-height:43px;padding:10px 12px;border:1px solid rgba(181,135,241,0.25);border-radius:10px;outline:none;background:rgba(155,93,229,0.1);color:var(--text);}
-.theme-select:focus,.cheat-number-input:focus{border-color:var(--purple-bright);box-shadow:0 0 0 3px rgba(180,122,255,0.12);}
-.theme-select option{background:#21152e;color:#f4edff;}
-.cheat-panel{width:min(100%,430px);}
-.cheat-description{margin:-5px 0 20px;color:var(--muted);font-size:12px;line-height:1.7;}
-.cheat-input-label{display:block;margin-bottom:9px;color:var(--text);font-size:13px;font-weight:700;}
-.cheat-number-input{color-scheme:dark;}
-.number-box.magnitude-6{animation:magnitude-six 760ms ease-out;}
-.number-box.magnitude-5{animation:magnitude-five 850ms cubic-bezier(.16,1.25,.3,1);}
-.number-box.magnitude-4{animation:magnitude-four 950ms cubic-bezier(.16,1.3,.3,1);}
-.number-box.magnitude-3,.number-box.magnitude-2,.number-box.magnitude-1{animation:magnitude-legendary 1100ms cubic-bezier(.16,1.35,.3,1);}
-@keyframes magnitude-six{0%{box-shadow:0 0 0 rgba(155,83,255,0);}
-45%{box-shadow:0 0 24px 3px rgba(155,83,255,0.22);}
-100%{box-shadow:0 0 45px rgba(122,57,199,0.11);}
-}
-@keyframes magnitude-five{0%{transform:scale(1);filter:brightness(1);}
-35%{transform:scale(1.025);filter:brightness(1.2);box-shadow:0 0 34px 5px rgba(166,95,255,0.28);}
-100%{transform:scale(1);filter:brightness(1);}
-}
-@keyframes magnitude-four{0%{transform:scale(1);filter:brightness(1);}
-25%{transform:scale(1.04);filter:brightness(1.35);box-shadow:0 0 45px 8px rgba(166,95,255,0.35);}
-55%{transform:scale(0.99);}
-100%{transform:scale(1);filter:brightness(1);}
-}
-@keyframes magnitude-legendary{0%{transform:scale(1);filter:brightness(1);}
-20%{transform:scale(1.06);filter:brightness(1.6);box-shadow:0 0 60px 12px rgba(190,121,255,0.45);}
-45%{transform:scale(0.985);}
-70%{transform:scale(1.035);filter:brightness(1.25);}
-100%{transform:scale(1);filter:brightness(1);}
-}
-body.light-mode{--text:#28183a;--muted:#746184;--panel:rgba(255,250,255,0.92);background:radial-gradient(ellipse at 65% 40%,#f0e2ff 0%,transparent 48%),radial-gradient(ellipse at 15% 90%,#f4eaff 0%,transparent 42%),#faf7ff;color:var(--text);}
-body.light-mode .history-panel{border-color:rgba(139,82,203,0.24);box-shadow:0 0 35px rgba(117,55,183,0.07);}
-body.light-mode .panel-subtitle,body.light-mode .average-panel p,body.light-mode .average-panel span,body.light-mode .stat-row span,body.light-mode .status,body.light-mode .cheat-description{color:#78668c;}
-body.light-mode #history-list li{background:rgba(155,93,229,0.07);border-color:rgba(139,82,203,0.13);}
-body.light-mode #history-list .history-index{color:#87749b;}
-body.light-mode #history-list .history-number,body.light-mode .stat-row strong{color:#4d2c70;}
-body.light-mode .average-panel,body.light-mode .stats-panel{background:rgba(146,87,205,0.08);border-color:rgba(139,82,203,0.16);}
-body.light-mode .average-panel strong{color:#7740ad;}
-body.light-mode .subtitle{color:#77658b;}
-body.light-mode .number-box{border-color:rgba(139,82,203,0.24);background:linear-gradient(145deg,rgba(255,255,255,0.94),rgba(244,235,255,0.96));box-shadow:0 0 45px rgba(122,57,199,0.08),inset 0 0 30px rgba(142,81,224,0.025);}
-body.light-mode .number{color:#51267e;text-shadow:0 0 14px rgba(153,89,218,0.18);}
-body.light-mode .number.finished{color:#4b1f79;text-shadow:0 0 4px rgba(124,62,181,0.22),0 0 13px rgba(189,138,255,0.4);}
-body.light-mode .number-info span{background:rgba(155,93,229,0.06);color:#63477f;}
-body.light-mode .number-info .prime{color:#17663b;}
-body.light-mode .footer{color:#877794;}
-body.light-mode .settings-button{color:#693b96;background:rgba(155,93,229,0.08);border-color:rgba(139,82,203,0.25);}
-body.light-mode .settings-button:hover{background:rgba(155,93,229,0.14);}
-body.light-mode .settings-overlay{background:rgba(55,35,70,0.38);}
-body.light-mode .settings-panel{border-color:rgba(139,82,203,0.28);background:linear-gradient(145deg,#fffaff,#f5edff);box-shadow:0 0 60px rgba(128,59,199,0.15);}
-body.light-mode .settings-header h2,body.light-mode .setting-heading label,body.light-mode .setting-toggle strong,body.light-mode .cheat-input-label{color:#38204e;}
-body.light-mode .setting-heading strong{color:#8146b9;}
-body.light-mode .setting-item,body.light-mode .setting-toggle{border-color:rgba(139,82,203,0.15);}
-body.light-mode .range-labels,body.light-mode .setting-toggle small,body.light-mode .settings-message{color:#806d94;}
-body.light-mode .close-settings{background:rgba(155,93,229,0.08);color:#593778;}
-body.light-mode .theme-select,body.light-mode .cheat-number-input{background:rgba(155,93,229,0.07);border-color:rgba(139,82,203,0.24);color:#38204e;color-scheme:light;}
-body.light-mode .theme-select option{background:#fffaff;color:#38204e;}
-body.light-mode #history-list li.rare-history-item{background:linear-gradient(100deg,rgba(176,126,226,0.22),rgba(155,93,229,0.06));}
-body.light-mode #history-list li.rare-history-legendary{background:linear-gradient(100deg,rgba(255,222,164,0.35),rgba(176,126,226,0.12));}
-@media (prefers-reduced-motion:reduce){.number-box.magnitude-6,.number-box.magnitude-5,.number-box.magnitude-4,.number-box.magnitude-3,.number-box.magnitude-2,.number-box.magnitude-1{animation-duration:0.01ms !important;}
-}
-.digit-count-label{min-height:16px;margin:-5px 0 12px;color:#a991c5;font-size:10px;font-weight:750;letter-spacing:1.4px;text-align:center;text-transform:uppercase;}
-body.light-mode .digit-count-label{color:#785496;}
-.rarity-panel{width:min(100%,560px);}
-.rarity-table-wrap{overflow-x:auto;border:1px solid rgba(181,135,241,0.16);border-radius:12px;}
-.rarity-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left;}
-.rarity-table th,.rarity-table td{padding:11px 12px;border-bottom:1px solid rgba(181,135,241,0.12);}
-.rarity-table th{color:var(--purple-light);background:rgba(155,93,229,0.12);font-size:11px;}
-.rarity-table td:first-child{color:var(--text);}
-.rarity-table tr:last-child td{border-bottom:0;}
-.rarity-badge{display:inline-block;padding:4px 7px;border-radius:6px;font-size:10px;font-weight:800;white-space:nowrap;}
-.rarity-badge.uncommon{color:#c5b4e4;background:rgba(148,126,180,0.16);}
-.rarity-badge.rare{color:#d9b2ff;background:rgba(155,83,255,0.17);}
-.rarity-badge.glorious{color:#9fe7ff;background:rgba(65,176,220,0.17);}
-.rarity-badge.legendary{color:#ffe0a9;background:rgba(255,190,90,0.16);}
-.rarity-badge.ultimate{color:#fff;background:linear-gradient(100deg,#7f45c6,#c07aff);}
-.rarity-badge.jackpot{color:#ffe5a7;background:linear-gradient(100deg,rgba(168,103,29,0.3),rgba(255,214,120,0.12));}
-.rarity-badge.special{color:#b9ffd9;background:rgba(63,192,126,0.14);}
-.rarity-badge.reverse-special{color:#ffb9e5;background:rgba(222,80,165,0.15);}
-.number-box.rare-glorious{border-color:rgba(117,211,255,0.75);box-shadow:0 0 34px rgba(73,185,255,0.22),inset 0 0 28px rgba(73,185,255,0.09);}
-.number-box.rare-glorious .number,.number-box.rare-glorious .rare-label{color:#c4f1ff;text-shadow:0 0 12px rgba(88,205,255,0.5);}
-.number-box.rare-uncommon{border-color:rgba(183,164,218,0.45);}
-.number-box.rare-ultimate{border-color:rgba(255,255,255,0.95);box-shadow:0 0 65px 15px rgba(194,134,255,0.48),inset 0 0 45px rgba(255,255,255,0.12);}
-.number-box.rare-ultimate .number{color:white;text-shadow:0 0 12px white,0 0 35px #b77aff,0 0 65px #8f42e8;}
-.number-box.rare-jackpot{border-color:rgba(255,213,116,0.95);box-shadow:0 0 52px rgba(255,187,65,0.35),inset 0 0 35px rgba(255,196,90,0.13);}
-.number-box.rare-jackpot .number,.number-box.rare-jackpot .rare-label{color:#ffe7a8;text-shadow:0 0 12px rgba(255,225,155,0.7),0 0 30px rgba(255,174,64,0.45);}
-.number-box.rare-special{border-color:rgba(119,255,187,0.75);box-shadow:0 0 35px rgba(75,225,147,0.22);}
-.number-box.rare-special .rare-label{color:#a9ffd0;}
-.number-box.rare-reverse-special{border-color:rgba(255,130,211,0.8);box-shadow:0 0 42px rgba(255,89,192,0.25);}
-.number-box.rare-reverse-special .rare-label{color:#ffc5ea;}
-#history-list li.rare-history-glorious{border-color:rgba(117,211,255,0.68);background:rgba(73,185,255,0.1);}
-#history-list li.rare-history-ultimate{border-color:rgba(255,255,255,0.85);background:rgba(177,116,255,0.2);}
-#history-list li.rare-history-jackpot{border-color:rgba(255,213,116,0.9);background:rgba(255,187,65,0.13);}
-#history-list li.rare-history-special{border-color:rgba(119,255,187,0.7);background:rgba(75,225,147,0.1);}
-#history-list li.rare-history-reverse-special{border-color:rgba(255,130,211,0.8);background:rgba(255,89,192,0.12);}
-body.light-mode .rarity-table-wrap{border-color:rgba(139,82,203,0.2);}
-body.light-mode .rarity-table th,body.light-mode .rarity-table td{border-color:rgba(139,82,203,0.14);}
-body.light-mode .rarity-table th{background:rgba(155,93,229,0.08);}
-body.light-mode .rarity-table td:first-child{color:#38204e;}
-body.light-mode .number-box.rare-glorious .number,body.light-mode .number-box.rare-glorious .rare-label{color:#19789c;}
-.rare-history-panel{width:230px;flex-shrink:0;padding:24px 18px;border:1px solid rgba(183,127,255,0.19);border-radius:18px;background:var(--panel);box-shadow:0 0 35px rgba(117,55,183,0.08);backdrop-filter:blur(12px);}
-.rare-history-panel h2{margin:0;font-size:14px;letter-spacing:1.5px;color:var(--purple-light);}
-#rare-history-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px;}
-#rare-history-list li{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 8px;border-radius:9px;background:rgba(155,93,229,0.08);border:1px solid rgba(181,135,241,0.09);font-size:11px;}
-#rare-history-list .history-number{color:#e8d7ff;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
-#rare-history-list .history-index{color:#8e7da4;font-size:10px;}
-#rare-history-list .empty-history{justify-content:center;padding:18px 7px;color:var(--muted);font-size:11px;text-align:center;}
-.rare-history-note{margin-top:14px;color:#8f7ca7;font-size:10px;line-height:1.6;}
-body.light-mode .rare-history-panel{border-color:rgba(139,82,203,0.24);box-shadow:0 0 35px rgba(117,55,183,0.07);}
-body.light-mode #rare-history-list li{background:rgba(155,93,229,0.07);border-color:rgba(139,82,203,0.13);}
-body.light-mode #rare-history-list .history-number{color:#4d2c70;}
-body.light-mode .rare-history-note{color:#806d94;}
-.utility-button-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;}
-.auto-button{width:auto;min-height:38px;padding:8px 18px;border-color:rgba(218,186,255,0.55);border-radius:10px;background:linear-gradient(110deg,#38244f,#65408d,#38244f);font-size:12px;box-shadow:0 3px 0 #241632,0 5px 16px rgba(130,60,210,0.12);}
-.auto-button .button-icon{font-size:14px;}
-.auto-button.auto-running{border-color:rgba(255,161,193,0.65);background:linear-gradient(110deg,#602849,#9c4278,#602849);box-shadow:0 3px 0 #3d1b30,0 5px 16px rgba(210,70,145,0.16);}
-.auto-panel{width:min(100%,510px);}
-.auto-duration-input{width:100%;min-height:43px;padding:10px 12px;border:1px solid rgba(181,135,241,0.25);border-radius:10px;outline:none;background:rgba(155,93,229,0.1);color:var(--text);color-scheme:dark;}
-.auto-duration-input:focus{border-color:var(--purple-bright);box-shadow:0 0 0 3px rgba(180,122,255,0.12);}
-.auto-help{margin:8px 0 0;color:#9b8aaf;font-size:10px;line-height:1.6;}
-.auto-mode-option{display:flex;align-items:flex-start;gap:10px;padding:12px;margin-top:9px;border:1px solid rgba(181,135,241,0.14);border-radius:10px;background:rgba(155,93,229,0.06);cursor:pointer;}
-.auto-mode-option input,.auto-rarity-grid input{accent-color:var(--purple-bright);flex-shrink:0;margin-top:3px;}
-.auto-mode-option strong,.auto-mode-option small{display:block;}
-.auto-mode-option strong{color:#e8ddf5;font-size:12px;}
-.auto-mode-option small{margin-top:5px;color:#9b8aaf;font-size:10px;line-height:1.5;}
-.auto-rarity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:13px;}
-.auto-rarity-grid label{display:flex;align-items:center;gap:7px;padding:9px;border:1px solid rgba(181,135,241,0.12);border-radius:9px;background:rgba(155,93,229,0.055);cursor:pointer;}
-body.light-mode .auto-duration-input{background:rgba(155,93,229,0.07);border-color:rgba(139,82,203,0.24);color:#38204e;color-scheme:light;}
-body.light-mode .auto-help,body.light-mode .auto-mode-option small{color:#806d94;}
-body.light-mode .auto-mode-option strong{color:#38204e;}
-body.light-mode .auto-mode-option,body.light-mode .auto-rarity-grid label{border-color:rgba(139,82,203,0.16);background:rgba(155,93,229,0.05);}
-@media (min-width:1200px){.history-panel{position:fixed;left:24px;top:50%;transform:translateY(-50%);}
-.rare-history-panel{position:fixed;right:24px;top:50%;transform:translateY(-50%);max-height:calc(100vh - 30px);overflow-y:auto;}
-.container{width:min(790px,calc(100vw - 560px));margin-left:0;margin-right:0;}
-}
-@media (max-width:1199px){.rare-history-panel{width:min(100%,700px);}
-#rare-history-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
-}
-@media (max-width:420px){.utility-button-row{gap:8px;}
-.utility-button-row .instant-button,.utility-button-row .auto-button{padding:8px 12px;}
-.auto-rarity-grid{grid-template-columns:1fr;}
-}
-@media (max-width:1199px){.app-layout{flex-direction:column;}
-.container{order:0;width:min(100%,790px);margin:0;}
-.history-panel{order:1;position:static;transform:none;}
-.rare-history-panel{order:2;position:static;transform:none;}
-}
-/* 추가 기능: 통계와 자동 추첨 요약. 기존 Violet Random 테마는 유지한다. */
-.statistics-panel{width:min(100%,560px);}
-.statistics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 20px;}
-.statistics-card{display:flex;flex-direction:column;gap:7px;padding:15px 13px;border:1px solid rgba(181,135,241,0.17);border-radius:12px;background:rgba(155,93,229,0.08);}
-.statistics-card span{color:var(--muted);font-size:11px;}
-.statistics-card strong{color:var(--purple-light);font-size:22px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
-.statistics-card small{color:#9b8aaf;font-size:10px;}
-.statistics-section{margin-top:20px;padding-top:17px;border-top:1px solid rgba(181,135,241,0.13);}
-.statistics-section h3{margin:0 0 14px;color:var(--purple-light);font-size:13px;}
-.statistics-bars{display:flex;flex-direction:column;gap:12px;}
-.statistics-bar-row{min-width:0;}
-.statistics-bar-heading{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;color:#d9c9eb;font-size:10px;}
-.statistics-bar-heading strong{color:#bca1db;font-size:10px;text-align:right;}
-.statistics-bar-track{height:7px;overflow:hidden;border-radius:99px;background:rgba(155,93,229,0.12);}
-.statistics-bar-fill{height:100%;min-width:0;border-radius:99px;background:linear-gradient(90deg,#7840bc,#bd8aff);transition:width 250ms ease;}
-.statistics-bar-fill.bar-uncommon{background:linear-gradient(90deg,#82708f,#c4b3d8);}
-.statistics-bar-fill.bar-rare{background:linear-gradient(90deg,#783bc4,#c28bff);}
-.statistics-bar-fill.bar-glorious{background:linear-gradient(90deg,#288ba7,#9fe7ff);}
-.statistics-bar-fill.bar-legendary{background:linear-gradient(90deg,#b47722,#ffe0a9);}
-.statistics-bar-fill.bar-ultimate{background:linear-gradient(90deg,#7f45c6,#fff);}
-.statistics-bar-fill.bar-jackpot{background:linear-gradient(90deg,#9c6419,#ffe5a7);}
-.statistics-bar-fill.bar-special{background:linear-gradient(90deg,#b52d3c,#ff9a9a);}
-.statistics-bar-fill.bar-reverse-special{background:linear-gradient(90deg,#b51e59,#ff8acb);}
-.summary-rare-list{display:flex;flex-direction:column;gap:7px;padding-left:25px;color:#d8c3f2;font-size:12px;}
-.summary-rare-list li{padding:7px 9px;border:1px solid rgba(181,135,241,0.12);border-radius:8px;background:rgba(155,93,229,0.06);}
-.summary-rare-list .summary-legendary,.summary-rare-list .summary-ultimate,.summary-rare-list .summary-jackpot{color:#ffe0a9;border-color:rgba(255,214,151,0.35);}
-.summary-rare-list .summary-special,.summary-rare-list .summary-reverse-special{color:#ffb4b4;border-color:rgba(255,90,100,0.3);}
-body.light-mode .statistics-card{background:rgba(155,93,229,0.06);border-color:rgba(139,82,203,0.18);}
-body.light-mode .statistics-bar-heading{color:#63477f;}
-body.light-mode .statistics-bar-heading strong{color:#785496;}
-body.light-mode .summary-rare-list{color:#63477f;}
+"use strict";
 
-/* 희귀도별 결과 연출 */
-.number-box.rarity-uncommon-impact{animation:uncommon-glow 850ms ease-out;}
-.number-box.rarity-rare-impact{animation:rare-particle-pop 720ms cubic-bezier(.16,1.2,.3,1);}
-.number-box.rarity-glorious-impact{animation:glorious-teal-flare 900ms ease-out;}
-.number-box.rarity-legendary-impact{animation:legendary-gold-sweep 1050ms ease-out;}
-.number-box.rarity-ultimate-impact{animation:ultimate-purple-pulse 1250ms ease-out;}
-.number-box.rarity-jackpot-impact{animation:jackpot-bounce 900ms cubic-bezier(.2,1.5,.35,1);}
-.number-box.rarity-special-impact{animation:special-red-flare 850ms ease-out;}
-.number-box.rarity-reverse-special-impact{animation:reverse-special-red-flare 1100ms ease-out;}
-@keyframes uncommon-glow{0%,100%{box-shadow:0 0 45px rgba(122,57,199,.11),inset 0 0 30px rgba(142,81,224,.035)}50%{box-shadow:0 0 34px rgba(164,104,255,.27),inset 0 0 30px rgba(164,104,255,.12);border-color:rgba(190,145,255,.55)}}
-@keyframes rare-particle-pop{0%{transform:scale(1)}35%{transform:scale(1.045);box-shadow:0 0 48px rgba(177,105,255,.45)}65%{transform:scale(.99)}100%{transform:scale(1)}}
-@keyframes glorious-teal-flare{0%{filter:brightness(1)}25%{filter:brightness(1.65);border-color:#a9f5ff;box-shadow:0 0 65px 12px rgba(75,221,235,.45),inset 0 0 38px rgba(75,221,235,.25)}100%{filter:brightness(1)}}
-@keyframes legendary-gold-sweep{0%{filter:brightness(1)}22%{filter:brightness(1.9);border-color:#fff0b7;box-shadow:0 0 75px 14px rgba(255,193,79,.5),inset 0 0 45px rgba(255,206,112,.25)}100%{filter:brightness(1)}}
-@keyframes ultimate-purple-pulse{0%{filter:brightness(1)}18%{filter:brightness(2.2);box-shadow:0 0 0 100vmax rgba(127,47,215,.62),0 0 85px 20px rgba(194,134,255,.75)}45%{filter:brightness(1.45);box-shadow:0 0 0 100vmax rgba(127,47,215,.25),0 0 65px 15px rgba(194,134,255,.6)}100%{filter:brightness(1)}}
-@keyframes jackpot-bounce{0%{transform:translateY(0) scale(1)}20%{transform:translateY(-10px) scale(1.07);box-shadow:0 0 60px rgba(255,190,65,.5)}42%{transform:translateY(3px) scale(.99)}65%{transform:translateY(-3px) scale(1.02)}100%{transform:translateY(0) scale(1)}}
-@keyframes special-red-flare{0%{filter:brightness(1)}28%{filter:brightness(1.8);border-color:#ffb2b2;box-shadow:0 0 60px 10px rgba(255,53,70,.4),inset 0 0 35px rgba(255,53,70,.18)}100%{filter:brightness(1)}}
-@keyframes reverse-special-red-flare{0%{filter:brightness(1)}18%{filter:brightness(2.2);border-color:#ff777e;box-shadow:0 0 90px 20px rgba(255,25,54,.65),inset 0 0 55px rgba(255,25,54,.3)}50%{filter:brightness(1.35)}100%{filter:brightness(1)}}
-.jackpot-coin{position:fixed;z-index:12;display:grid;place-items:center;width:25px;height:25px;border:2px solid #ffe6a1;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff1b8,#d99524 68%,#8d5712);color:#75420c;font-size:14px;font-weight:900;text-shadow:none;box-shadow:0 0 14px rgba(255,199,77,.65);animation:coin-toss 1000ms cubic-bezier(.16,.7,.25,1) var(--coin-delay) forwards;}
-@keyframes coin-toss{0%{opacity:0;transform:translate(0,0) rotateY(0) scale(.4)}12%{opacity:1}100%{opacity:0;transform:translate(var(--coin-x),var(--coin-y)) rotateY(var(--coin-spin)) rotateZ(var(--coin-spin)) scale(.8)}}
-@media(max-width:420px){.statistics-grid{gap:8px}.statistics-card{padding:12px 10px}.statistics-card strong{font-size:19px}.statistics-bar-heading{font-size:9px}.statistics-bar-heading strong{font-size:9px}}
-@media(prefers-reduced-motion:reduce){.number-box.rarity-uncommon-impact,.number-box.rarity-rare-impact,.number-box.rarity-glorious-impact,.number-box.rarity-legendary-impact,.number-box.rarity-ultimate-impact,.number-box.rarity-jackpot-impact,.number-box.rarity-special-impact,.number-box.rarity-reverse-special-impact,.jackpot-coin{animation-duration:.01ms!important}}
-.rare-flash.uncommon{background:radial-gradient(circle at 50% 45%,rgba(165,105,255,.14),transparent 65%);}
-.rare-flash.rare{background:radial-gradient(circle at 50% 45%,rgba(181,115,255,.25),rgba(100,38,168,.07) 40%,transparent 72%);}
-.rare-flash.glorious{background:radial-gradient(circle at 50% 45%,rgba(74,226,239,.34),rgba(43,167,202,.1) 38%,transparent 72%);}
-.rare-flash.legendary{background:radial-gradient(circle at 50% 45%,rgba(255,221,163,.36),rgba(190,108,255,.16) 35%,transparent 72%);}
-.rare-flash.ultimate{background:radial-gradient(circle at 50% 45%,rgba(198,137,255,.75),rgba(117,39,202,.65) 42%,rgba(54,17,92,.42) 75%);}
-.rare-flash.jackpot{background:radial-gradient(circle at 50% 45%,rgba(255,205,93,.34),rgba(176,108,22,.12) 38%,transparent 72%);}
-.rare-flash.special{background:radial-gradient(circle at 50% 45%,rgba(255,62,74,.34),rgba(170,22,45,.13) 40%,transparent 72%);}
-.rare-flash.reverse-special{background:radial-gradient(circle at 50% 45%,rgba(255,24,53,.56),rgba(150,0,27,.23) 43%,transparent 76%);}
+const DIGITS = 7;
+const HISTORY_LIMIT = 10;
+const SETTINGS_KEY = "violetRandomSettings";
+const PROGRESS_KEY = "violetRandomProgress";
+const FEATURE_PASSWORD = "0708";
 
-/* 요청한 기능 추가: 기존 테마와 기존 스타일은 변경하지 않는다. */
-.rarity-panel{width:min(96vw,900px);}
-.rarity-table{table-layout:fixed;}
-.rarity-table th:nth-child(1),.rarity-table td:nth-child(1){width:48%;}
-.rarity-table th:nth-child(2),.rarity-table td:nth-child(2){width:20%;}
-.rarity-table th:nth-child(3),.rarity-table td:nth-child(3){width:32%;}
-.rarity-table td{vertical-align:middle;line-height:1.6;overflow-wrap:anywhere;}
-.rarity-order{display:inline-grid;place-items:center;width:25px;height:25px;margin-right:7px;border-radius:7px;background:rgba(155,93,229,.14);color:var(--purple-light);font-size:10px;font-weight:800;}
-body.light-mode .rarity-order{color:#785496;background:rgba(155,93,229,.1);}
-.replay-panel{width:min(100%,650px);}
-.replay-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
-.replay-rarity-button{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:76px;padding:13px;border:1px solid rgba(181,135,241,.17);border-radius:11px;background:rgba(155,93,229,.07);color:var(--text);cursor:pointer;text-align:left;transition:transform 120ms ease,border-color 120ms ease,background 120ms ease;}
-.replay-rarity-button:hover{transform:translateY(-2px);border-color:rgba(190,133,255,.55);background:rgba(155,93,229,.14);}
-.replay-rarity-button:active{transform:translateY(1px) scale(.99);}
-.replay-rarity-button small{color:var(--muted);font-size:10px;}
-.small-mode-button{align-self:center;min-height:30px;margin-top:0;padding:6px 13px;border:1px solid rgba(183,127,255,.22);border-radius:9px;background:rgba(83,47,119,.16);color:#bfa0e6;font-size:10px;cursor:pointer;transition:background 120ms ease,border-color 120ms ease;}
-.small-mode-button:hover{background:rgba(124,69,185,.24);border-color:rgba(183,127,255,.48);}
-.password-panel{width:min(100%,400px);}
-.turbo-panel{width:min(100%,460px);}
-body.light-mode .replay-rarity-button{border-color:rgba(139,82,203,.18);background:rgba(155,93,229,.05);color:#38204e;}
-body.light-mode .replay-rarity-button small{color:#806d94;}
-body.light-mode .small-mode-button{color:#693b96;background:rgba(155,93,229,.07);border-color:rgba(139,82,203,.22);}
-@media(max-width:540px){.rarity-panel{width:100%;padding:14px;}.rarity-table{font-size:10px;}.rarity-table th,.rarity-table td{padding:8px 6px;}.rarity-table th:nth-child(1),.rarity-table td:nth-child(1){width:48%;}.rarity-table th:nth-child(2),.rarity-table td:nth-child(2){width:24%;}.rarity-table th:nth-child(3),.rarity-table td:nth-child(3){width:28%;}.rarity-order{width:20px;height:20px;margin-right:3px;font-size:9px;}.replay-grid{grid-template-columns:1fr 1fr;}.replay-rarity-button{padding:10px;min-height:70px;}.replay-rarity-button .rarity-badge{font-size:9px;}}
+const DEFAULT_SETTINGS = {
+  particles: 65,
+  speed: 2,
+  effect: 2,
+  rareEffects: true,
+  theme: "dark"
+};
 
-.rarity-badge.common{color:#c8c0d4;background:rgba(160,150,175,.12);}
-body.light-mode .rarity-badge.common{color:#695a7d;background:rgba(130,110,150,.1);}
-@media(max-width:640px){.top-actions{flex-wrap:wrap;justify-content:center;gap:6px}.top-actions .settings-button{padding:7px 9px;font-size:10px}}
+const $ = id => document.getElementById(id);
 
-/* 추가 희귀 등급 효과와 기록 패널 가독성 조정: 기존 Violet 테마 유지 */
-.rarity-badge.mythic{color:#b9d9ff;background:linear-gradient(110deg,rgba(82,91,194,.25),rgba(165,108,255,.2));border:1px solid rgba(147,174,255,.22);}
-.rarity-badge.eclipse{color:#f1d6ff;background:linear-gradient(110deg,rgba(28,20,46,.8),rgba(113,64,157,.35));border:1px solid rgba(205,151,255,.35);box-shadow:0 0 12px rgba(148,79,218,.12);}
-body.light-mode .rarity-badge.mythic{color:#465eaa;background:rgba(105,130,235,.12);}
-body.light-mode .rarity-badge.eclipse{color:#63348b;background:rgba(116,69,156,.1);}
-.number-box.rarity-mythic-impact{animation:mythic-orbit 1150ms ease-out;}
-.number-box.rarity-eclipse-impact{animation:eclipse-collapse 1350ms ease-out;}
-.number-box.rare-mythic{border-color:rgba(153,184,255,.8);box-shadow:0 0 52px rgba(91,115,255,.3),inset 0 0 42px rgba(139,114,255,.16);}
-.number-box.rare-eclipse{border-color:rgba(210,151,255,.9);box-shadow:0 0 70px rgba(135,55,210,.42),inset 0 0 48px rgba(31,14,49,.75);}
-.number-box.rare-mythic .number{color:#d9e8ff;text-shadow:0 0 12px #a9c4ff,0 0 32px #837bff,0 0 55px #a96dff;}
-.number-box.rare-eclipse .number{color:#f7e8ff;text-shadow:0 0 10px #fff,0 0 25px #c17bff,0 0 55px #6e28a5;}
-.rare-flash.mythic{background:radial-gradient(circle at 50% 45%,rgba(99,130,255,.42),rgba(156,90,255,.18) 40%,transparent 74%);}
-.rare-flash.eclipse{background:radial-gradient(circle at 50% 45%,rgba(26,12,40,.78),rgba(129,51,191,.52) 42%,rgba(213,148,255,.2) 65%,transparent 80%);}
-@keyframes mythic-orbit{0%{filter:brightness(1);transform:scale(1)}22%{filter:brightness(1.9);transform:scale(1.035);box-shadow:0 0 80px 16px rgba(102,130,255,.45),inset 0 0 45px rgba(143,114,255,.3);border-color:#b9ceff}55%{filter:brightness(1.25);transform:scale(.99)}100%{filter:brightness(1);transform:scale(1)}}
-@keyframes eclipse-collapse{0%{filter:brightness(1);transform:scale(1)}18%{filter:brightness(.55);box-shadow:0 0 0 100vmax rgba(16,8,26,.62),0 0 55px 12px rgba(133,62,188,.5)}42%{filter:brightness(2);transform:scale(1.055);box-shadow:0 0 0 100vmax rgba(105,37,153,.28),0 0 100px 25px rgba(179,104,255,.65)}100%{filter:brightness(1);transform:scale(1)}}
-.replay-rarity-button.selected{border-color:rgba(210,171,255,.85);background:rgba(155,93,229,.2);box-shadow:0 0 18px rgba(155,93,229,.16);}
-.history-panel{width:255px;}
-#history-list li{padding:11px 9px;font-size:12px;}
-#history-list .history-index{font-size:12px;}
-#history-list .history-number{font-size:13px;}
-.rare-history-panel{width:250px;}
-#rare-history-list li{padding:11px 9px;font-size:12px;gap:7px;}
-#rare-history-list .history-number{font-size:13px;}
-#rare-history-list .history-index{font-size:11px;}
-#rare-history-list .history-rare-mark{font-size:9px;}
-#history-list li.rare-history-mythic,#rare-history-list li.rare-history-mythic{border-color:rgba(147,174,255,.7);background:rgba(91,115,255,.11);}
-#history-list li.rare-history-eclipse,#rare-history-list li.rare-history-eclipse{border-color:rgba(205,151,255,.8);background:linear-gradient(100deg,rgba(57,24,83,.28),rgba(155,93,229,.1));box-shadow:0 0 16px rgba(148,79,218,.16);}
-.summary-rare-list .summary-eclipse,.summary-rare-list .summary-mythic{color:#d6c5ff;border-color:rgba(169,137,255,.4);}
-.statistics-bar-fill.bar-mythic{background:linear-gradient(90deg,#455bd0,#b7c8ff);}
-.statistics-bar-fill.bar-eclipse{background:linear-gradient(90deg,#3c2458,#d09aff);}
-@media(max-width:1199px){.history-panel,.rare-history-panel{width:min(100%,700px);}}
-@media(max-width:640px){#history-list li{font-size:11px;padding:10px 8px;}#history-list .history-number,#rare-history-list .history-number{font-size:12px;}}
+const numberElement = $("number");
+const numberBox = $("number-box");
+const drawButton = $("draw-button");
+const instantButton = $("instant-button");
+const autoButton = $("auto-button");
+const autoOverlay = $("auto-overlay");
+const closeAutoButton = $("close-auto");
+const cancelAutoButton = $("cancel-auto");
+const startAutoButton = $("start-auto");
+const autoDurationInput = $("auto-duration");
+const autoMessage = $("auto-message");
+const autoCountInput = $("auto-count");
+const autoDurationSetting = $("auto-duration-setting");
+const autoCountSetting = $("auto-count-setting");
+const statisticsButton = $("statistics-button");
+const replayButton = $("replay-button");
+const replayOverlay = $("replay-overlay");
+const closeReplayButton = $("close-replay");
+const replayMessage = $("replay-message");
+const passwordOverlay = $("password-overlay");
+const passwordInput = $("password-input");
+const passwordMessage = $("password-message");
+const submitPasswordButton = $("submit-password");
+const closePasswordButton = $("close-password");
+const cancelPasswordButton = $("cancel-password");
+const turboButton = $("turbo-button");
+const turboOverlay = $("turbo-overlay");
+const closeTurboButton = $("close-turbo");
+const cancelTurboButton = $("cancel-turbo");
+const startTurboButton = $("start-turbo");
+const turboCountInput = $("turbo-count");
+const turboMessage = $("turbo-message");
+const statisticsOverlay = $("statistics-overlay");
+const closeStatisticsButton = $("close-statistics");
+const autoSummaryOverlay = $("auto-summary-overlay");
+const closeAutoSummaryButton = $("close-auto-summary");
+const closeSummaryDoneButton = $("close-summary-done");
+const rareHistoryList = $("rare-history-list");
+const statusElement = $("status");
+const historyList = $("history-list");
+const averageElement = $("average");
+const averageStatus = $("average-status");
 
-/* 추가 희귀도 전용 강조: 기존 테마와 레이아웃은 유지 */
-.rarity-badge.phantom{color:#b9c4ff;border-color:rgba(151,165,255,.65);background:rgba(99,113,230,.14);}
-.rarity-badge.aurora{color:#9fffe6;border-color:rgba(110,255,218,.65);background:rgba(65,200,177,.12);}
-.rarity-badge.seraph{color:#ffe7a8;border-color:rgba(255,222,151,.75);background:rgba(255,210,115,.13);}
-#history-list li.rare-history-phantom,#rare-history-list li.rare-history-phantom{border-color:rgba(151,165,255,.75);background:rgba(99,113,230,.13);}
-#history-list li.rare-history-aurora,#rare-history-list li.rare-history-aurora{border-color:rgba(110,255,218,.75);background:rgba(65,200,177,.12);}
-#history-list li.rare-history-seraph,#rare-history-list li.rare-history-seraph{border-color:rgba(255,222,151,.8);background:rgba(255,210,115,.14);}
-.number-box.rare-phantom{border-color:rgba(151,165,255,.8);box-shadow:0 0 38px rgba(99,113,230,.26),inset 0 0 30px rgba(99,113,230,.13);}
-.number-box.rare-aurora{border-color:rgba(110,255,218,.8);box-shadow:0 0 38px rgba(65,200,177,.23),inset 0 0 30px rgba(65,200,177,.12);}
-.number-box.rare-seraph{border-color:rgba(255,222,151,.9);box-shadow:0 0 45px rgba(255,210,115,.24),inset 0 0 30px rgba(255,210,115,.12);}
-.rare-flash.phantom{background:radial-gradient(circle at 50% 45%,rgba(151,165,255,.3),rgba(99,113,230,.1) 38%,transparent 70%);}
-.rare-flash.aurora{background:radial-gradient(circle at 50% 45%,rgba(110,255,218,.25),rgba(65,200,177,.1) 38%,transparent 70%);}
-.rare-flash.seraph{background:radial-gradient(circle at 50% 45%,rgba(255,222,151,.3),rgba(255,210,115,.1) 38%,transparent 70%);}
+const rareLabel = $("rare-label");
+const digitCountLabel = $("digit-count-label");
+const primeStatus = $("prime-status");
+const divisorStatus = $("divisor-status");
 
-/* Violet Random: 보라색 UI 보정 — 지정된 두 영역만 적용 */
-.small-mode-button{background:linear-gradient(110deg,rgba(68,39,99,.96),rgba(112,64,164,.96),rgba(68,39,99,.96))!important;color:#ead9ff!important;border-color:rgba(183,127,255,.48)!important;box-shadow:0 3px 12px rgba(130,60,210,.16);}
-.small-mode-button:hover{background:linear-gradient(110deg,rgba(88,48,130,.98),rgba(132,76,190,.98),rgba(88,48,130,.98))!important;border-color:rgba(200,157,255,.72)!important;}
-.replay-rarity-button{background:linear-gradient(135deg,rgba(83,47,119,.34),rgba(112,64,164,.25))!important;color:var(--text)!important;border-color:rgba(181,135,241,.3)!important;}
-.replay-rarity-button small{color:var(--muted)!important;}
-.replay-rarity-button:hover{background:linear-gradient(135deg,rgba(100,55,148,.46),rgba(132,76,190,.36))!important;border-color:rgba(200,157,255,.68)!important;}
-body.light-mode .replay-rarity-button{background:linear-gradient(135deg,rgba(155,93,229,.17),rgba(124,69,185,.12))!important;color:#38204e!important;border-color:rgba(139,82,203,.3)!important;}
-body.light-mode .replay-rarity-button small{color:#806d94!important;}
-body.light-mode .small-mode-button{background:linear-gradient(110deg,rgba(68,39,99,.96),rgba(112,64,164,.96),rgba(68,39,99,.96))!important;color:#ead9ff!important;border-color:rgba(183,127,255,.48)!important;}
+const maxNumberElement = $("max-number");
+const minNumberElement = $("min-number");
+const totalDrawsElement = $("total-draws");
 
-/* 새 희귀 등급 스타일 추가: 기존 테마 유지 */
-.rarity-badge.celestial{color:#d9e7ff;border:1px solid rgba(160,190,255,.55);background:linear-gradient(110deg,rgba(63,91,168,.3),rgba(146,119,255,.2));}
-.rarity-badge.infinity{color:#f0d9ff;border:1px solid rgba(202,151,255,.7);background:linear-gradient(110deg,rgba(80,35,130,.4),rgba(165,90,255,.28));box-shadow:0 0 12px rgba(155,93,229,.15);}
-.rarity-badge.paradox{color:#ffd6ec;border:1px solid rgba(255,135,205,.65);background:linear-gradient(110deg,rgba(105,38,94,.3),rgba(205,82,163,.2));}
-.rarity-badge.quantum{color:#b9fff6;border:1px solid rgba(110,255,218,.65);background:linear-gradient(110deg,rgba(26,100,105,.28),rgba(83,220,210,.15));}
-.rarity-badge.nebula{color:#e2d0ff;border:1px solid rgba(179,137,255,.65);background:linear-gradient(110deg,rgba(76,38,135,.38),rgba(112,71,190,.25));}
-.rarity-badge.nova{color:#fff0c4;border:1px solid rgba(255,222,151,.75);background:linear-gradient(110deg,rgba(153,91,31,.28),rgba(255,210,115,.16));}
-.rarity-badge.astral{color:#d4f1ff;border:1px solid rgba(140,220,255,.65);background:linear-gradient(110deg,rgba(38,91,145,.3),rgba(125,190,255,.18));}
-.rarity-badge.zenith{color:#ffe0fa;border:1px solid rgba(255,172,241,.7);background:linear-gradient(110deg,rgba(121,45,115,.3),rgba(222,119,214,.2));}
-.rarity-badge.ethereal{color:#f4eaff;border:1px solid rgba(226,203,255,.8);background:linear-gradient(110deg,rgba(107,81,145,.35),rgba(207,180,255,.22));}
-.rarity-badge.genesis{color:#fff;border:1px solid rgba(255,255,255,.9);background:linear-gradient(110deg,#7f45c6,#c07aff,#f0dcff);box-shadow:0 0 18px rgba(194,134,255,.3);}
+const effectsLayer = $("effects");
+const settingsButton = $("settings-button");
+const settingsOverlay = $("settings-overlay");
+const closeSettingsButton = $("close-settings");
+const saveSettingsButton = $("save-settings");
+const resetSettingsButton = $("reset-settings");
+const settingsMessage = $("settings-message");
 
-.number-box.rare-celestial{border-color:rgba(160,190,255,.85);box-shadow:0 0 45px rgba(104,143,255,.3),inset 0 0 35px rgba(140,170,255,.15);}
-.number-box.rare-infinity{border-color:rgba(202,151,255,.9);box-shadow:0 0 55px rgba(155,93,229,.4),inset 0 0 40px rgba(165,90,255,.2);}
-.number-box.rare-paradox{border-color:rgba(255,135,205,.9);box-shadow:0 0 55px rgba(205,82,163,.3),inset 0 0 40px rgba(205,82,163,.16);}
-.number-box.rare-quantum{border-color:rgba(110,255,218,.9);box-shadow:0 0 55px rgba(65,200,177,.3),inset 0 0 40px rgba(65,200,177,.16);}
-.number-box.rare-nebula{border-color:rgba(179,137,255,.9);box-shadow:0 0 60px rgba(112,71,190,.38),inset 0 0 40px rgba(112,71,190,.18);}
-.number-box.rare-nova{border-color:rgba(255,222,151,.95);box-shadow:0 0 60px rgba(255,190,65,.35),inset 0 0 40px rgba(255,210,115,.17);}
-.number-box.rare-astral{border-color:rgba(140,220,255,.9);box-shadow:0 0 55px rgba(85,170,255,.3),inset 0 0 40px rgba(125,190,255,.16);}
-.number-box.rare-zenith{border-color:rgba(255,172,241,.9);box-shadow:0 0 60px rgba(222,119,214,.34),inset 0 0 40px rgba(222,119,214,.17);}
-.number-box.rare-ethereal{border-color:rgba(226,203,255,.95);box-shadow:0 0 65px rgba(207,180,255,.38),inset 0 0 45px rgba(207,180,255,.2);}
-.number-box.rare-genesis{border-color:#fff;box-shadow:0 0 80px 14px rgba(194,134,255,.45),inset 0 0 50px rgba(255,255,255,.2);}
+const particleSetting = $("particle-setting");
+const speedSetting = $("speed-setting");
+const effectSetting = $("effect-setting");
+const rareSetting = $("rare-setting");
 
-#history-list li.rare-history-celestial,#rare-history-list li.rare-history-celestial{border-color:rgba(160,190,255,.8);background:rgba(104,143,255,.13);}
-#history-list li.rare-history-infinity,#rare-history-list li.rare-history-infinity{border-color:rgba(202,151,255,.8);background:rgba(155,93,229,.16);}
-#history-list li.rare-history-paradox,#rare-history-list li.rare-history-paradox{border-color:rgba(255,135,205,.8);background:rgba(205,82,163,.13);}
-#history-list li.rare-history-quantum,#rare-history-list li.rare-history-quantum{border-color:rgba(110,255,218,.8);background:rgba(65,200,177,.13);}
-#history-list li.rare-history-nebula,#rare-history-list li.rare-history-nebula{border-color:rgba(179,137,255,.8);background:rgba(112,71,190,.14);}
-#history-list li.rare-history-nova,#rare-history-list li.rare-history-nova{border-color:rgba(255,222,151,.85);background:rgba(255,210,115,.14);}
-#history-list li.rare-history-astral,#rare-history-list li.rare-history-astral{border-color:rgba(140,220,255,.8);background:rgba(125,190,255,.13);}
-#history-list li.rare-history-zenith,#rare-history-list li.rare-history-zenith{border-color:rgba(255,172,241,.8);background:rgba(222,119,214,.13);}
-#history-list li.rare-history-ethereal,#rare-history-list li.rare-history-ethereal{border-color:rgba(226,203,255,.8);background:rgba(207,180,255,.15);}
-#history-list li.rare-history-genesis,#rare-history-list li.rare-history-genesis{border-color:rgba(255,255,255,.9);background:linear-gradient(100deg,rgba(127,69,198,.28),rgba(240,220,255,.15));box-shadow:0 0 16px rgba(194,134,255,.18);}
+const particleValue = $("particle-value");
+const speedValue = $("speed-value");
+const effectValue = $("effect-value");
+const themeSetting = $("theme-setting");
+const themeValue = $("theme-value");
 
-.rare-flash.celestial{background:radial-gradient(circle at 50% 45%,rgba(160,190,255,.35),rgba(104,143,255,.12) 40%,transparent 72%);}
-.rare-flash.infinity{background:radial-gradient(circle at 50% 45%,rgba(202,151,255,.4),rgba(155,93,229,.16) 40%,transparent 74%);}
-.rare-flash.paradox{background:radial-gradient(circle at 50% 45%,rgba(255,135,205,.36),rgba(205,82,163,.13) 40%,transparent 72%);}
-.rare-flash.quantum{background:radial-gradient(circle at 50% 45%,rgba(110,255,218,.32),rgba(65,200,177,.12) 40%,transparent 72%);}
-.rare-flash.nebula{background:radial-gradient(circle at 50% 45%,rgba(179,137,255,.4),rgba(112,71,190,.15) 40%,transparent 74%);}
-.rare-flash.nova{background:radial-gradient(circle at 50% 45%,rgba(255,222,151,.4),rgba(255,190,65,.13) 40%,transparent 72%);}
-.rare-flash.astral{background:radial-gradient(circle at 50% 45%,rgba(140,220,255,.36),rgba(85,170,255,.13) 40%,transparent 72%);}
-.rare-flash.zenith{background:radial-gradient(circle at 50% 45%,rgba(255,172,241,.38),rgba(222,119,214,.14) 40%,transparent 72%);}
-.rare-flash.ethereal{background:radial-gradient(circle at 50% 45%,rgba(226,203,255,.4),rgba(207,180,255,.15) 40%,transparent 74%);}
-.rare-flash.genesis{background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.55),rgba(194,134,255,.3) 40%,rgba(127,69,198,.15) 68%,transparent 82%);}
+const cheatButton = $("cheat-button");
+const cheatOverlay = $("cheat-overlay");
+const closeCheatButton = $("close-cheat");
+const cheatNumberInput = $("cheat-number-input");
+const applyCheatButton = $("apply-cheat");
+const clearCheatButton = $("clear-cheat");
+const cheatMessage = $("cheat-message");
 
-.number-box.rarity-celestial-impact{animation:celestial-impact 1050ms ease-out;}
-.number-box.rarity-infinity-impact{animation:infinity-impact 1200ms ease-out;}
-.number-box.rarity-paradox-impact{animation:paradox-impact 1100ms ease-out;}
-.number-box.rarity-quantum-impact{animation:quantum-impact 1050ms ease-out;}
-.number-box.rarity-nebula-impact{animation:nebula-impact 1200ms ease-out;}
-.number-box.rarity-nova-impact{animation:nova-impact 1100ms ease-out;}
-.number-box.rarity-astral-impact{animation:astral-impact 1100ms ease-out;}
-.number-box.rarity-zenith-impact{animation:zenith-impact 1200ms ease-out;}
-.number-box.rarity-ethereal-impact{animation:ethereal-impact 1300ms ease-out;}
-.number-box.rarity-genesis-impact{animation:genesis-impact 1500ms ease-out;}
+const rarityButton = $("rarity-button");
+const rarityOverlay = $("rarity-overlay");
+const closeRarityButton = $("close-rarity");
 
-@keyframes celestial-impact{0%,100%{filter:brightness(1)}25%{filter:brightness(1.8);box-shadow:0 0 75px 12px rgba(104,143,255,.45);border-color:#d9e7ff}55%{filter:brightness(1.2)}}
-@keyframes infinity-impact{0%,100%{filter:brightness(1)}20%{filter:brightness(2);box-shadow:0 0 90px 18px rgba(155,93,229,.55);border-color:#f0d9ff}50%{filter:brightness(1.4);transform:scale(1.035)}}
-@keyframes paradox-impact{0%,100%{filter:brightness(1)}25%{filter:brightness(1.9);box-shadow:0 0 80px 16px rgba(205,82,163,.45);border-color:#ffd6ec}55%{filter:brightness(1.25);transform:scale(.99)}}
-@keyframes quantum-impact{0%,100%{filter:brightness(1)}25%{filter:brightness(1.8);box-shadow:0 0 75px 14px rgba(65,200,177,.4);border-color:#b9fff6}60%{filter:brightness(1.25)}}
-@keyframes nebula-impact{0%,100%{filter:brightness(1)}20%{filter:brightness(2);box-shadow:0 0 90px 18px rgba(112,71,190,.5);border-color:#e2d0ff}50%{filter:brightness(1.4);transform:scale(1.04)}}
-@keyframes nova-impact{0%,100%{filter:brightness(1)}25%{filter:brightness(2);box-shadow:0 0 90px 18px rgba(255,190,65,.5);border-color:#fff0c4}55%{filter:brightness(1.35);transform:scale(1.03)}}
-@keyframes astral-impact{0%,100%{filter:brightness(1)}25%{filter:brightness(1.9);box-shadow:0 0 85px 16px rgba(85,170,255,.45);border-color:#d4f1ff}55%{filter:brightness(1.3)}}
-@keyframes zenith-impact{0%,100%{filter:brightness(1)}20%{filter:brightness(2);box-shadow:0 0 90px 18px rgba(222,119,214,.5);border-color:#ffe0fa}55%{filter:brightness(1.4);transform:scale(1.035)}}
-@keyframes ethereal-impact{0%,100%{filter:brightness(1)}20%{filter:brightness(2.1);box-shadow:0 0 100px 20px rgba(207,180,255,.55);border-color:#fff}55%{filter:brightness(1.5);transform:scale(1.04)}}
-@keyframes genesis-impact{0%{filter:brightness(1);transform:scale(1)}18%{filter:brightness(2.5);transform:scale(1.07);box-shadow:0 0 0 100vmax rgba(127,69,198,.55),0 0 120px 25px rgba(255,255,255,.8);border-color:#fff}45%{filter:brightness(1.8);transform:scale(.99);box-shadow:0 0 0 100vmax rgba(127,69,198,.2),0 0 100px 20px rgba(194,134,255,.65)}100%{filter:brightness(1);transform:scale(1)}}
+const digitElements = Array.from(
+  numberElement.querySelectorAll("span")
+);
 
-.statistics-bar-fill.bar-celestial{background:linear-gradient(90deg,#526bd2,#d9e7ff);}
-.statistics-bar-fill.bar-infinity{background:linear-gradient(90deg,#7338b6,#f0d9ff);}
-.statistics-bar-fill.bar-paradox{background:linear-gradient(90deg,#a12c78,#ffd6ec);}
-.statistics-bar-fill.bar-quantum{background:linear-gradient(90deg,#218d84,#b9fff6);}
-.statistics-bar-fill.bar-nebula{background:linear-gradient(90deg,#5a329b,#e2d0ff);}
-.statistics-bar-fill.bar-nova{background:linear-gradient(90deg,#9c6419,#fff0c4);}
-.statistics-bar-fill.bar-astral{background:linear-gradient(90deg,#316fa8,#d4f1ff);}
-.statistics-bar-fill.bar-zenith{background:linear-gradient(90deg,#9b3d98,#ffe0fa);}
-.statistics-bar-fill.bar-ethereal{background:linear-gradient(90deg,#8970b2,#f4eaff);}
-.statistics-bar-fill.bar-genesis{background:linear-gradient(90deg,#7f45c6,#fff);}
+let settings = loadSettings();
 
-body.light-mode .rarity-badge.celestial{color:#465eaa;}
-body.light-mode .rarity-badge.infinity{color:#63348b;}
-body.light-mode .rarity-badge.paradox{color:#963c79;}
-body.light-mode .rarity-badge.quantum{color:#176e67;}
-body.light-mode .rarity-badge.nebula{color:#633c9d;}
-body.light-mode .rarity-badge.nova{color:#8d5c16;}
-body.light-mode .rarity-badge.astral{color:#28658f;}
-body.light-mode .rarity-badge.zenith{color:#913d8d;}
-body.light-mode .rarity-badge.ethereal{color:#68518c;}
-body.light-mode .rarity-badge.genesis{color:#fff;}
+let history = [];
+let rareHistory = [];
+let totalDraws = 0;
+let highestNumber = null;
+let lowestNumber = null;
+let lastResult = "0000000";
+let pendingProtectedAction = null;
+let isDrawing = false;
+let queuedCheatNumber = null;
+let lastDrawWasCheat = false;
 
-@media(max-width:1199px){
-  .history-panel,.rare-history-panel{width:min(100%,700px);}
+let autoRunning = false;
+let autoEndsAt = 0;
+let autoMode = "animated";
+let autoNextTimeout = null;
+let autoStopRarities = [];
+let autoLimitMode = "duration";
+let autoTargetCount = 100;
+let autoCompletedCount = 0;
+let autoResults = [];
+let autoRareResults = [];
+let autoStopReason = "";
+
+const drawStats = {
+  odd: 0,
+  even: 0,
+  prime: 0,
+  composite: 0,
+  total: 0,
+  sum: 0,
+  digits: Object.fromEntries(
+    Array.from({ length: 8 }, (_, i) => [String(i), 0])
+  ),
+  lastDigits: Object.fromEntries(
+    Array.from({ length: 10 }, (_, i) => [String(i), 0])
+  ),
+  rarities: {
+    uncommon: 0,
+    rare: 0,
+    glorious: 0,
+    legendary: 0,
+    ultimate: 0,
+    mythic: 0,
+    eclipse: 0,
+    jackpot: 0,
+    special: 0,
+    "reverse-special": 0,
+    phantom: 0,
+    aurora: 0,
+    seraph: 0,
+    common: 0
+  }
+};
+
+// 희귀도가 높은 순서. Mythic은 Legendary 바로 아래에 둔다.
+const RARITY_ORDER = [
+  "ultimate",
+  "reverse-special",
+  "special",
+  "jackpot",
+  "eclipse",
+  "legendary",
+  "mythic",
+  "seraph",
+  "aurora",
+  "phantom",
+  "glorious",
+  "rare",
+  "uncommon",
+  "common"
+];
+
+let pendingEffectOverride = null;
+
+function getRarityRank(level) {
+  const index = RARITY_ORDER.indexOf(level || "common");
+  return index === -1 ? RARITY_ORDER.length : index;
 }
-@media(max-width:640px){
-  .top-actions{flex-wrap:wrap;justify-content:center;gap:6px;}
-  .top-actions .settings-button{padding:7px 9px;font-size:10px;}
-  #history-list li{font-size:11px;padding:10px 8px;}
-  #history-list .history-number,#rare-history-list .history-number{font-size:12px;}
+
+function sortRareResults(entries) {
+  return [...entries].sort((a, b) => {
+    const rankDifference =
+      getRarityRank(a.pattern?.level) -
+      getRarityRank(b.pattern?.level);
+
+    return rankDifference || a.value - b.value;
+  });
 }
-@media(max-width:540px){
-  .rarity-panel{width:100%;padding:14px;}
-  .rarity-table{font-size:10px;}
-  .rarity-table th,.rarity-table td{padding:8px 6px;}
-  .rarity-order{width:20px;height:20px;margin-right:3px;font-size:9px;}
-  .replay-grid{grid-template-columns:1fr 1fr;}
-  .replay-rarity-button{padding:10px;min-height:70px;}
-  .replay-rarity-button .rarity-badge{font-size:9px;}
+
+function takeEffectPattern(actualPattern) {
+  if (!pendingEffectOverride) return actualPattern;
+
+  const selected = pendingEffectOverride;
+  pendingEffectOverride = null;
+
+  document.querySelectorAll("[data-preview-rarity]").forEach(button => {
+    button.classList.remove("selected");
+  });
+
+  return selected;
 }
-@media(max-width:420px){
-  .utility-button-row{gap:8px;}
-  .utility-button-row .instant-button,.utility-button-row .auto-button{padding:8px 12px;}
-  .auto-rarity-grid{grid-template-columns:1fr;}
-  .statistics-grid{gap:8px;}
-  .statistics-card{padding:12px 10px;}
-  .statistics-card strong{font-size:19px;}
-  .statistics-bar-heading{font-size:9px;}
-  .statistics-bar-heading strong{font-size:9px;}
+
+function triggerNextResultEffect(actualPattern, result) {
+  const hasOverride = Boolean(pendingEffectOverride);
+  const previousRareEffects = settings.rareEffects;
+  const effectPattern = takeEffectPattern(actualPattern);
+
+  // 직접 선택한 연출은 희귀 숫자 이펙트 설정이 꺼져 있어도 적용한다.
+  if (hasOverride) {
+    settings.rareEffects = true;
+  }
+
+  triggerResultImpact(effectPattern, result);
+
+  settings.rareEffects = previousRareEffects;
+
+  return effectPattern;
 }
-@media(prefers-reduced-motion:reduce){
-  .number-box.rarity-uncommon-impact,.number-box.rarity-rare-impact,.number-box.rarity-glorious-impact,.number-box.rarity-legendary-impact,.number-box.rarity-ultimate-impact,.number-box.rarity-jackpot-impact,.number-box.rarity-special-impact,.number-box.rarity-reverse-special-impact,.number-box.rarity-mythic-impact,.number-box.rarity-eclipse-impact,.number-box.rarity-celestial-impact,.number-box.rarity-infinity-impact,.number-box.rarity-paradox-impact,.number-box.rarity-quantum-impact,.number-box.rarity-nebula-impact,.number-box.rarity-nova-impact,.number-box.rarity-astral-impact,.number-box.rarity-zenith-impact,.number-box.rarity-ethereal-impact,.number-box.rarity-genesis-impact,.jackpot-coin{animation-duration:.01ms!important;}
+
+let rollTimeouts = [];
+let rollIntervals = [];
+let backgroundParticles = [];
+
+/* =====================================
+   사운드: 외부 파일 없이 Web Audio로 생성
+===================================== */
+
+let audioContext = null;
+
+function getAudioContext() {
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return null;
+
+  if (!audioContext) audioContext = new AudioCtor();
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume().catch(() => {});
+  }
+
+  return audioContext;
 }
+
+function playTone(
+  frequency,
+  duration = 0.12,
+  type = "sine",
+  volume = 0.045,
+  delay = 0
+) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const start = ctx.currentTime + delay;
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+
+  gain.gain.setValueAtTime(0.0001, start);
+
+  // 기존 음색은 유지하면서 모든 효과음의 음량을 높인다.
+  // 과도한 증폭으로 소리가 찢어지는 현상은 제한한다.
+  const louderVolume = Math.min(0.22, Math.max(0.0002, volume * 2.8));
+
+  gain.gain.exponentialRampToValueAtTime(
+    louderVolume,
+    start + 0.012
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    start + duration
+  );
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function playUiClick() {
+  playTone(620, 0.055, "triangle", 0.04);
+  playTone(840, 0.045, "sine", 0.025, 0.025);
+}
+
+function playRaritySound(level) {
+  const sounds = {
+    common: [
+      [420, 0.07, "sine"]
+    ],
+
+    uncommon: [
+      [520, 0.09, "triangle"]
+    ],
+
+    rare: [
+      [580, 0.09, "triangle"],
+      [760, 0.12, "sine", 0.025, 0.055]
+    ],
+
+    glorious: [
+      [490, 0.13, "sine"],
+      [660, 0.13, "sine", 0.035, 0.08],
+      [880, 0.18, "triangle", 0.03, 0.16]
+    ],
+
+    mythic: [
+      [440, 0.18, "sine"],
+      [587, 0.2, "triangle", 0.035, 0.09],
+      [784, 0.24, "sine", 0.03, 0.2]
+    ],
+
+    legendary: [
+      [660, 0.13, "triangle"],
+      [880, 0.16, "sine", 0.04, 0.08],
+      [1175, 0.23, "triangle", 0.035, 0.17]
+    ],
+
+    phantom: [
+      [330, 0.2, "sine"],
+      [494, 0.22, "triangle", 0.03, 0.1],
+      [370, 0.25, "sine", 0.025, 0.22]
+    ],
+
+    aurora: [
+      [523, 0.18, "sine"],
+      [659, 0.2, "sine", 0.035, 0.09],
+      [784, 0.23, "triangle", 0.03, 0.18],
+      [1047, 0.28, "sine", 0.025, 0.29]
+    ],
+
+    seraph: [
+      [784, 0.16, "sine"],
+      [988, 0.2, "triangle", 0.04, 0.08],
+      [1175, 0.25, "sine", 0.035, 0.17],
+      [1568, 0.32, "triangle", 0.03, 0.29]
+    ],
+
+    eclipse: [
+      [220, 0.22, "sawtooth", 0.035],
+      [330, 0.24, "triangle", 0.03, 0.1],
+      [660, 0.3, "sine", 0.035, 0.23]
+    ],
+
+    ultimate: [
+      [392, 0.2, "sine"],
+      [587, 0.22, "triangle", 0.04, 0.09],
+      [784, 0.25, "sine", 0.04, 0.18],
+      [1175, 0.32, "triangle", 0.04, 0.28]
+    ],
+
+    jackpot: [
+      [880, 0.1, "square", 0.025],
+      [1175, 0.13, "triangle", 0.035, 0.07],
+      [1568, 0.2, "sine", 0.04, 0.15]
+    ],
+
+    special: [
+      [659, 0.12, "triangle"],
+      [880, 0.18, "sine", 0.035, 0.09]
+    ],
+
+    "reverse-special": [
+      [880, 0.1, "triangle"],
+      [659, 0.12, "triangle", 0.035, 0.08],
+      [440, 0.2, "sine", 0.03, 0.17]
+    ]
+  };
+
+  (sounds[level] || sounds.common).forEach(
+    ([frequency, duration, type, volume = 0.035, delay = 0]) => {
+      playTone(frequency, duration, type, volume, delay);
+    }
+  );
+}
+
+document.addEventListener("click", event => {
+  const target = event.target.closest(
+    "button, .auto-mode-option, .auto-rarity-grid label, .setting-toggle"
+  );
+
+  if (target && !target.disabled) {
+    playUiClick();
+  }
+});
+
+/* =====================================
+   설정
+===================================== */
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+
+    if (!saved) {
+      return { ...DEFAULT_SETTINGS };
+    }
+
+    const parsed = JSON.parse(saved);
+
+    return {
+      particles: clamp(parsed.particles, 0, 150, 65),
+      speed: clamp(parsed.speed, 1, 5, 2),
+      effect: clamp(parsed.effect, 0, 3, 2),
+      rareEffects:
+        typeof parsed.rareEffects === "boolean"
+          ? parsed.rareEffects
+          : true,
+      theme: parsed.theme === "light" ? "light" : "dark"
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function clamp(value, min, max, fallback) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, number));
+}
+
+function populateSettingsControls() {
+  particleSetting.value = settings.particles;
+  speedSetting.value = settings.speed;
+  effectSetting.value = settings.effect;
+  rareSetting.checked = settings.rareEffects;
+  themeSetting.value = settings.theme;
+
+  updateSettingLabels();
+}
+
+function readSettingsControls() {
+  settings = {
+    particles: Number(particleSetting.value),
+    speed: Number(speedSetting.value),
+    effect: Number(effectSetting.value),
+    rareEffects: rareSetting.checked,
+    theme: themeSetting.value === "light" ? "light" : "dark"
+  };
+}
+
+function updateSettingLabels() {
+  particleValue.textContent = particleSetting.value;
+
+  const speedNames = {
+    1: "아주 느리게",
+    2: "느리게",
+    3: "보통",
+    4: "빠르게",
+    5: "아주 빠르게"
+  };
+
+  const effectNames = {
+    0: "없음",
+    1: "약하게",
+    2: "보통",
+    3: "강하게"
+  };
+
+  speedValue.textContent = speedNames[speedSetting.value];
+  effectValue.textContent = effectNames[effectSetting.value];
+
+  themeValue.textContent =
+    themeSetting.value === "light" ? "라이트 모드" : "다크 모드";
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    settingsMessage.textContent = "설정을 저장했어! 💜";
+    return true;
+  } catch {
+    settingsMessage.textContent =
+      "설정 저장에 실패했어. 브라우저 저장 공간을 확인해 줘.";
+    return false;
+  }
+}
+
+function applySettings() {
+  updateSettingLabels();
+
+  document.body.classList.toggle(
+    "light-mode",
+    settings.theme === "light"
+  );
+
+  resizeCanvas();
+}
+
+function openSettings() {
+  populateSettingsControls();
+  settingsMessage.textContent = "설정은 이 브라우저에 저장돼.";
+  settingsOverlay.hidden = false;
+  settingsButton.setAttribute("aria-expanded", "true");
+  closeSettingsButton.focus();
+}
+
+function closeSettings() {
+  settingsOverlay.hidden = true;
+  settingsButton.setAttribute("aria-expanded", "false");
+  settingsButton.focus();
+}
+
+settingsButton.addEventListener("click", openSettings);
+closeSettingsButton.addEventListener("click", closeSettings);
+
+settingsOverlay.addEventListener("click", event => {
+  if (event.target === settingsOverlay) {
+    closeSettings();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !settingsOverlay.hidden) {
+    closeSettings();
+  }
+});
+
+[
+  particleSetting,
+  speedSetting,
+  effectSetting,
+  rareSetting,
+  themeSetting
+].forEach(control => {
+  control.addEventListener("input", () => {
+    readSettingsControls();
+    applySettings();
+
+    settingsMessage.textContent =
+      "미리 보는 중이야. 저장 버튼을 누르면 유지돼.";
+  });
+});
+
+saveSettingsButton.addEventListener("click", () => {
+  readSettingsControls();
+  applySettings();
+
+  if (saveSettings()) {
+    closeSettings();
+  }
+});
+
+resetSettingsButton.addEventListener("click", () => {
+  settings = { ...DEFAULT_SETTINGS };
+  populateSettingsControls();
+  applySettings();
+
+  settingsMessage.textContent =
+    "기본값으로 바꿨어. 저장 버튼을 눌러 적용해 줘.";
+});
+
+/* =====================================
+   치트 설정
+===================================== */
+
+function openCheatPanel() {
+  cheatOverlay.hidden = false;
+  cheatButton.setAttribute("aria-expanded", "true");
+
+  cheatMessage.textContent = queuedCheatNumber === null
+    ? "치트를 설정하면 다음 추첨에 한 번 적용돼."
+    : `다음 추첨 예약 숫자: ${queuedCheatNumber}`;
+
+  closeCheatButton.focus();
+}
+
+function closeCheat() {
+  cheatOverlay.hidden = true;
+  cheatButton.setAttribute("aria-expanded", "false");
+  cheatButton.focus();
+}
+
+cheatButton.addEventListener("click", () => requestProtectedAccess("cheat"));
+closeCheatButton.addEventListener("click", closeCheat);
+
+cheatOverlay.addEventListener("click", event => {
+  if (event.target === cheatOverlay) {
+    closeCheat();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !cheatOverlay.hidden) {
+    closeCheat();
+  }
+});
+
+applyCheatButton.addEventListener("click", () => {
+  const raw = cheatNumberInput.value.trim();
+  const value = Number(raw);
+
+  if (
+    raw === "" ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > 9999999
+  ) {
+    cheatMessage.textContent =
+      "0부터 9,999,999 사이의 정수를 입력해 줘.";
+    return;
+  }
+
+  queuedCheatNumber = String(value).padStart(DIGITS, "0");
+
+  cheatMessage.textContent =
+    `설정 완료! 다음 추첨에서 ${value.toLocaleString("en-US")}이(가) 나와.`;
+});
+
+clearCheatButton.addEventListener("click", () => {
+  queuedCheatNumber = null;
+  cheatNumberInput.value = "";
+  cheatMessage.textContent =
+    "치트를 해제했어. 이제 무작위 숫자가 나와.";
+});
+
+function getNextResult() {
+  if (queuedCheatNumber !== null) {
+    const result = queuedCheatNumber;
+    queuedCheatNumber = null;
+    lastDrawWasCheat = true;
+    return result;
+  }
+
+  lastDrawWasCheat = false;
+  return secureRandomNumber();
+}
+
+/* =====================================
+   균등 확률 난수
+===================================== */
+
+function secureRandomNumber() {
+  const RANGE = 10_000_000;
+  const MAX = 0x100000000;
+  const LIMIT = Math.floor(MAX / RANGE) * RANGE;
+  const buffer = new Uint32Array(1);
+
+  // 편향을 제거해 0~9,999,999의 모든 결과가
+  // 정확히 같은 확률로 나오도록 한다.
+  do {
+    crypto.getRandomValues(buffer);
+  } while (buffer[0] >= LIMIT);
+
+  return String(buffer[0] % RANGE).padStart(DIGITS, "0");
+}
+
+/* =====================================
+   롤링 타이머 관리
+===================================== */
+
+function clearRollTimers() {
+  rollTimeouts.forEach(id => clearTimeout(id));
+  rollIntervals.forEach(id => clearInterval(id));
+
+  rollTimeouts = [];
+  rollIntervals = [];
+}
+
+function scheduleRollTimeout(callback, delay) {
+  const id = setTimeout(callback, delay);
+  rollTimeouts.push(id);
+  return id;
+}
+
+function setButtonsDisabled(disabled) {
+  drawButton.disabled = disabled || autoRunning;
+  instantButton.disabled = disabled || autoRunning;
+}
+
+function resetNumberEffects() {
+  numberElement.classList.remove("finished");
+
+  numberBox.classList.remove(
+    "impact",
+    "rare",
+    "rare-legendary",
+    "rare-glorious",
+    "rare-uncommon",
+    "rare-ultimate",
+    "rare-jackpot",
+    "rare-special",
+    "rare-reverse-special",
+    "rare-mythic",
+    "rare-eclipse",
+    "rare-phantom",
+    "rare-aurora",
+    "rare-seraph",
+    "rarity-uncommon-impact",
+    "rarity-rare-impact",
+    "rarity-glorious-impact",
+    "rarity-legendary-impact",
+    "rarity-ultimate-impact",
+    "rarity-jackpot-impact",
+    "rarity-special-impact",
+    "rarity-reverse-special-impact",
+    "rarity-mythic-impact",
+    "rarity-eclipse-impact",
+    "rarity-phantom-impact",
+    "rarity-aurora-impact",
+    "rarity-seraph-impact",
+    "magnitude-6",
+    "magnitude-5",
+    "magnitude-4",
+    "magnitude-3",
+    "magnitude-2",
+    "magnitude-1"
+  );
+
+  rareLabel.textContent = "";
+
+  digitElements.forEach(digit => {
+    digit.classList.remove("rolling");
+    digit.style.display = "inline-block";
+  });
+}
+
+function setDisplayedNumber(value, hideLeadingZeros = false) {
+  digitElements.forEach((digit, index) => {
+    digit.textContent = value[index];
+
+    const isLeadingZero =
+      hideLeadingZeros &&
+      index < DIGITS - 1 &&
+      value
+        .slice(0, index + 1)
+        .split("")
+        .every(char => char === "0");
+
+    digit.style.display = isLeadingZero ? "none" : "inline-block";
+    digit.classList.remove("rolling");
+  });
+}
+
+/* =====================================
+   희귀 패턴 판별
+===================================== */
+
+function getRarePattern(value) {
+  // 앞자리 0은 실제 자릿수에 포함하지 않는다.
+  const normalized = String(Number(value));
+  const digits = normalized.split("");
+  const length = normalized === "0" ? 0 : normalized.length;
+  const result = (title, level, detail = title) => ({ title, level, detail });
+
+  // 지정 숫자는 일반 패턴보다 항상 우선한다.
+  if (["7777777", "777777", "77777", "7777", "777"].includes(normalized)) {
+    return result("✦ JACKPOT ✦", "jackpot", "Jackpot");
+  }
+
+  if (normalized === "708" || normalized === "1234567") {
+    return result("✧ SPECIAL ✧", "special", "Special");
+  }
+
+  if (normalized === "7654321") {
+    return result("✧ REVERSE SPECIAL ✧", "reverse-special", "Reverse Special");
+  }
+
+  if (length === 7 && /^(\d)\1{6}$/.test(normalized)) {
+    return result("✦ ECLIPSE · 7자리 단일 숫자 ✦", "eclipse", "Eclipse");
+  }
+
+  // Aurora: 일곱 자리가 한 칸씩 증가하거나 감소하는 연속 패턴.
+  if (
+    length === 7 &&
+    (
+      normalized === "2345678" ||
+      normalized === "3456789" ||
+      normalized === "8765432" ||
+      normalized === "9876543"
+    )
+  ) {
+    return result("✧ AURORA · 연속 숫자 ✧", "aurora", "Aurora");
+  }
+
+  // Phantom: ABABABA 형태의 7자리 교차 반복.
+  if (
+    length === 7 &&
+    digits[0] === digits[2] &&
+    digits[2] === digits[4] &&
+    digits[4] === digits[6] &&
+    digits[1] === digits[3] &&
+    digits[3] === digits[5] &&
+    digits[0] !== digits[1]
+  ) {
+    return result("✧ PHANTOM · 교차 반복 ✧", "phantom", "Phantom");
+  }
+
+  // Seraph: 중복 숫자 없이, 숫자 합이 35 또는 42인 7자리 조합.
+  if (
+    length === 7 &&
+    new Set(digits).size === 7 &&
+    [35, 42].includes(
+      digits.reduce((sum, digit) => sum + Number(digit), 0)
+    )
+  ) {
+    return result("✦ SERAPH · 완전 무중복 ✦", "seraph", "Seraph");
+  }
+
+  // Mythic은 Legendary보다 한 단계 아래다.
+  if (
+    length === 7 &&
+    normalized === normalized.split("").reverse().join("")
+  ) {
+    return result("✧ MYTHIC · 좌우 대칭 ✧", "mythic", "Mythic");
+  }
+
+  let longestRun = 1;
+  let currentRun = 1;
+
+  for (let i = 1; i < digits.length; i++) {
+    if (digits[i] === digits[i - 1]) {
+      currentRun++;
+      longestRun = Math.max(longestRun, currentRun);
+    } else {
+      currentRun = 1;
+    }
+  }
+
+  if (longestRun >= 7) {
+    return result("✦ LEGENDARY · 7연속 반복 ✦", "legendary", "Legendary");
+  }
+
+  if (longestRun === 6) {
+    return result("✦ GLORIOUS · 6연속 반복 ✦", "glorious", "Glorious");
+  }
+
+  if (longestRun >= 3 && longestRun <= 5) {
+    return result("✧ RARE · 연속 반복 ✧", "rare", "Rare");
+  }
+
+  for (let size = 2; size <= 3; size++) {
+    for (let start = 0; start + size * 3 <= normalized.length; start++) {
+      const block = normalized.slice(start, start + size);
+
+      if (
+        normalized.slice(start + size, start + size * 2) === block &&
+        normalized.slice(start + size * 2, start + size * 3) === block
+      ) {
+        return result(
+          "✦ GLORIOUS · 숫자 집합 3회 반복 ✦",
+          "glorious",
+          "Glorious"
+        );
+      }
+    }
+  }
+
+  for (let size = 2; size <= 3; size++) {
+    for (let start = 0; start + size * 2 <= normalized.length; start++) {
+      const block = normalized.slice(start, start + size);
+
+      if (
+        normalized.slice(start + size, start + size * 2) === block
+      ) {
+        return result("✧ RARE · 숫자 집합 반복 ✧", "rare", "Rare");
+      }
+    }
+  }
+
+  if (length === 0) {
+    return result("✦ ULTIMATE ✦", "ultimate", "Ultimate");
+  }
+
+  if (length === 1) {
+    return result("✦ LEGENDARY ✦", "legendary", "Legendary");
+  }
+
+  if (length === 2) {
+    return result("✦ GLORIOUS ✦", "glorious", "Glorious");
+  }
+
+  if (length >= 3 && length <= 5) {
+    return result("✧ RARE ✧", "rare", "Rare");
+  }
+
+  if (length === 6) {
+    return result("✧ UNCOMMON ✧", "uncommon", "Uncommon");
+  }
+
+  return null;
+}
+
+function getDigitCountLabel(value) {
+  const normalized = String(Number(value));
+  const length = normalized === "0" ? 0 : normalized.length;
+  const pattern = getRarePattern(normalized);
+  const countText = length === 0 ? "0자리 수" : `${length}자리 수`;
+
+  return pattern
+    ? `${countText} · ${pattern.detail}`
+    : countText;
+}
+
+/* =====================================
+   소수 판별
+===================================== */
+
+function isPrime(number) {
+  if (!Number.isInteger(number) || number < 2) {
+    return false;
+  }
+
+  if (number === 2) {
+    return true;
+  }
+
+  if (number % 2 === 0) {
+    return false;
+  }
+
+  for (let divisor = 3; divisor * divisor <= number; divisor += 2) {
+    if (number % divisor === 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function updateNumberInfo(value) {
+  const number = Number(value);
+  const prime = isPrime(number);
+
+  primeStatus.classList.toggle("prime", prime);
+  primeStatus.classList.toggle("not-prime", !prime);
+
+  if (prime) {
+    primeStatus.textContent = "✦ 소수 · 약수 2개";
+    divisorStatus.textContent =
+      `약수: 1, ${number.toLocaleString("en-US")}`;
+  } else if (number < 2) {
+    primeStatus.textContent = "소수 아님";
+    divisorStatus.textContent =
+      "소수는 2 이상의 자연수 중에서 찾아";
+  } else {
+    primeStatus.textContent = "소수 아님 · 합성수";
+    divisorStatus.textContent = "약수가 2개보다 많아";
+  }
+}
+
+/* =====================================
+   파티클 및 임팩트
+===================================== */
+
+function createBurst(
+  x,
+  y,
+  count = 30,
+  distance = 150,
+  kind = "normal"
+) {
+  if (settings.effect === 0) return;
+
+  const multiplier = settings.effect / 2;
+  const actualCount = Math.max(1, Math.round(count * multiplier));
+  const actualDistance = distance * (0.55 + multiplier * 0.35);
+  const fragment = document.createDocumentFragment();
+
+  for (let i = 0; i < actualCount; i++) {
+    const particle = document.createElement("span");
+    const isStar = Math.random() < 0.38;
+
+    particle.className = isStar
+      ? "burst-particle star"
+      : "burst-particle";
+
+    if (isStar) {
+      particle.textContent = Math.random() < 0.5 ? "✦" : "✧";
+
+      if (kind === "legendary") {
+        particle.classList.add("gold-star");
+      } else if (kind === "rare") {
+        particle.classList.add("rare-star");
+      }
+    }
+
+    const angle = Math.random() * Math.PI * 2;
+    const travelDistance =
+      actualDistance * (0.35 + Math.random() * 0.65);
+
+    const dx = Math.cos(angle) * travelDistance;
+    const dy = Math.sin(angle) * travelDistance;
+
+    const size = isStar
+      ? `${8 + Math.random() * 10 * multiplier}px`
+      : `${2 + Math.random() * 4 * multiplier}px`;
+
+    particle.style.left = `${x}px`;
+    particle.style.top = `${y}px`;
+    particle.style.setProperty("--dx", `${dx}px`);
+    particle.style.setProperty("--dy", `${dy}px`);
+    particle.style.setProperty("--size", size);
+
+    particle.style.setProperty(
+      "--rotation",
+      `${Math.random() * 360 - 180}deg`
+    );
+
+    particle.style.setProperty(
+      "--duration",
+      `${500 + Math.random() * 500}ms`
+    );
+
+    particle.addEventListener(
+      "animationend",
+      () => particle.remove(),
+      { once: true }
+    );
+
+    fragment.appendChild(particle);
+  }
+
+  effectsLayer.appendChild(fragment);
+}
+
+function triggerButtonImpact(button) {
+  if (settings.effect === 0) return;
+
+  button.classList.remove("button-impact");
+  void button.offsetWidth;
+  button.classList.add("button-impact");
+
+  scheduleRollTimeout(() => {
+    button.classList.remove("button-impact");
+  }, 450);
+
+  const rect = button.getBoundingClientRect();
+
+  createBurst(
+    rect.left + rect.width / 2,
+    rect.top + rect.height / 2,
+    15,
+    65
+  );
+}
+
+function createCoinBurst(x, y) {
+  if (settings.effect === 0) return;
+
+  const count = Math.round(12 * (settings.effect / 2));
+
+  for (let i = 0; i < count; i++) {
+    const coin = document.createElement("span");
+    coin.className = "jackpot-coin";
+    coin.textContent = "＄";
+    coin.style.left = `${x + (Math.random() - 0.5) * 90}px`;
+    coin.style.top = `${y + (Math.random() - 0.5) * 25}px`;
+    coin.style.setProperty("--coin-x", `${(Math.random() - 0.5) * 300}px`);
+    coin.style.setProperty("--coin-y", `${-80 - Math.random() * 180}px`);
+    coin.style.setProperty("--coin-spin", `${360 + Math.random() * 720}deg`);
+    coin.style.setProperty("--coin-delay", `${Math.random() * 180}ms`);
+
+    coin.addEventListener("animationend", () => coin.remove(), {
+      once: true
+    });
+
+    effectsLayer.appendChild(coin);
+  }
+}
+
+function triggerResultImpact(pattern = null, result = "0000000") {
+  numberElement.classList.remove("finished");
+
+  numberBox.classList.remove(
+    "impact",
+    "rare",
+    "rare-legendary",
+    "rare-glorious",
+    "rare-uncommon",
+    "rare-ultimate",
+    "rare-jackpot",
+    "rare-special",
+    "rare-reverse-special",
+    "rare-mythic",
+    "rare-eclipse",
+    "rare-phantom",
+    "rare-aurora",
+    "rare-seraph",
+    "rarity-uncommon-impact",
+    "rarity-rare-impact",
+    "rarity-glorious-impact",
+    "rarity-legendary-impact",
+    "rarity-ultimate-impact",
+    "rarity-jackpot-impact",
+    "rarity-special-impact",
+    "rarity-reverse-special-impact",
+    "rarity-mythic-impact",
+    "rarity-eclipse-impact",
+    "rarity-phantom-impact",
+    "rarity-aurora-impact",
+    "rarity-seraph-impact",
+    "magnitude-6",
+    "magnitude-5",
+    "magnitude-4",
+    "magnitude-3",
+    "magnitude-2",
+    "magnitude-1"
+  );
+
+  void numberElement.offsetWidth;
+  numberElement.classList.add("finished");
+
+  const rect = numberBox.getBoundingClientRect();
+  const rareActive = Boolean(pattern && settings.rareEffects);
+
+  if (rareActive) {
+    playRaritySound(pattern.level);
+  }
+
+  const normalized = String(Number(result));
+  const visibleDigits = normalized === "0" ? 0 : normalized.length;
+
+  const magnitudeClass =
+    visibleDigits >= 1 && visibleDigits <= 6
+      ? `magnitude-${visibleDigits}`
+      : "";
+
+  if (magnitudeClass && settings.effect > 0) {
+    numberBox.classList.add(magnitudeClass);
+  }
+
+  if (pattern && settings.rareEffects) {
+    numberBox.classList.add(`rare-${pattern.level}`);
+    numberBox.classList.add(`rarity-${pattern.level}-impact`);
+
+    if (pattern.level === "jackpot") {
+      createCoinBurst(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2
+      );
+    }
+  }
+
+  // 자릿수가 낮거나 등급이 높을수록 파티클과 연출을 강화한다.
+  const magnitudeScale =
+    visibleDigits === 0
+      ? 3.2
+      : visibleDigits >= 7
+        ? 1
+        : 1 + (7 - visibleDigits) * 0.42;
+
+  const levelScales = {
+    uncommon: 1.15,
+    rare: 1.3,
+    glorious: 1.65,
+    legendary: 2,
+    ultimate: 3,
+    mythic: 2.6,
+    eclipse: 3.2,
+    jackpot: 2.8,
+    special: 2.1,
+    "reverse-special": 2.4,
+    phantom: 2.45,
+    aurora: 2.7,
+    seraph: 3.1
+  };
+
+  const rareScale = rareActive
+    ? (levelScales[pattern.level] || 1.3)
+    : 1;
+
+  const totalScale = magnitudeScale * rareScale;
+
+  if (settings.effect > 0) {
+    numberBox.classList.add("impact");
+  }
+
+  if (rareActive) {
+    if (pattern.level === "legendary") {
+      numberBox.classList.add("rare-legendary");
+    } else if (pattern.level === "ultimate") {
+      numberBox.classList.add("rare-ultimate");
+    } else if (pattern.level === "jackpot") {
+      numberBox.classList.add("rare-jackpot");
+    } else if (pattern.level === "glorious") {
+      numberBox.classList.add("rare-glorious");
+    } else if (pattern.level === "uncommon") {
+      numberBox.classList.add("rare-uncommon");
+    } else if (pattern.level === "special") {
+      numberBox.classList.add("rare-special");
+    } else if (pattern.level === "reverse-special") {
+      numberBox.classList.add("rare-reverse-special");
+    } else if (pattern.level === "mythic") {
+      numberBox.classList.add("rare-mythic");
+    } else if (pattern.level === "eclipse") {
+      numberBox.classList.add("rare-eclipse");
+    } else if (["phantom", "aurora", "seraph"].includes(pattern.level)) {
+      numberBox.classList.add(`rare-${pattern.level}`);
+    } else {
+      numberBox.classList.add("rare");
+    }
+
+    rareLabel.textContent = pattern.title;
+
+    const flash = document.createElement("div");
+    flash.className = `rare-flash ${pattern.level}`;
+
+    if (
+      [
+        "legendary",
+        "ultimate",
+        "jackpot",
+        "reverse-special",
+        "mythic",
+        "eclipse",
+        "phantom",
+        "aurora",
+        "seraph"
+      ].includes(pattern.level)
+    ) {
+      flash.classList.add("legendary");
+    }
+
+    effectsLayer.appendChild(flash);
+    setTimeout(() => flash.remove(), 900);
+  } else {
+    rareLabel.textContent = "";
+  }
+
+  createBurst(
+    rect.left + rect.width / 2,
+    rect.top + rect.height / 2,
+    Math.round(
+      (
+        rareActive
+          ? (
+              pattern.level === "eclipse" ? 190
+              : pattern.level === "ultimate" ? 150
+              : pattern.level === "jackpot" ? 135
+              : pattern.level === "mythic" ? 120
+              : pattern.level === "legendary" ? 100
+              : pattern.level === "seraph" ? 145
+              : pattern.level === "aurora" ? 115
+              : pattern.level === "phantom" ? 95
+              : 65
+            )
+          : 30
+      ) * totalScale
+    ),
+    Math.min(rect.width * (0.4 + (totalScale - 1) * 0.13), 320),
+    rareActive ? pattern.level : "normal"
+  );
+
+  if (settings.effect > 0 && visibleDigits <= 6) {
+    numberBox.classList.add("impact");
+
+    createBurst(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      Math.round(
+        (
+          visibleDigits === 6
+            ? 12
+            : 18 + (6 - visibleDigits) * 12
+        ) * (settings.effect / 2)
+      ),
+      Math.min(100 + (6 - visibleDigits) * 45, 300),
+      visibleDigits <= 3 ? "legendary" : "rare"
+    );
+  }
+
+  scheduleRollTimeout(() => {
+    numberBox.classList.remove("impact");
+  }, 650);
+}
+
+/* =====================================
+   기록 및 통계
+===================================== */
+
+function trackDrawStatistics(result, options = {}) {
+  const { render = true, persist = true } = options;
+  const value = Number(result);
+  const normalized = String(value);
+  const digitLength = value === 0 ? 0 : normalized.length;
+  const pattern = getRarePattern(normalized);
+
+  drawStats.total++;
+  drawStats.sum += value;
+
+  if (value % 2 === 0) {
+    drawStats.even++;
+  } else {
+    drawStats.odd++;
+  }
+
+  if (isPrime(value)) {
+    drawStats.prime++;
+  } else if (value > 1) {
+    drawStats.composite++;
+  }
+
+  drawStats.digits[String(digitLength)]++;
+  drawStats.lastDigits[normalized.slice(-1)]++;
+
+  if (pattern) {
+    drawStats.rarities[pattern.level]++;
+  } else {
+    drawStats.rarities.common++;
+  }
+
+  if (render) renderStatistics();
+  if (persist) saveProgress();
+}
+
+function percentage(part, total) {
+  return total ? `${(part / total * 100).toFixed(1)}%` : "0%";
+}
+
+function renderStatBar(container, entries, total) {
+  container.replaceChildren();
+
+  entries.forEach(([label, count, colorClass]) => {
+    const row = document.createElement("div");
+    row.className = "statistics-bar-row";
+
+    const heading = document.createElement("div");
+    heading.className = "statistics-bar-heading";
+
+    const name = document.createElement("span");
+    name.textContent = label;
+
+    const amount = document.createElement("strong");
+    amount.textContent =
+      `${count.toLocaleString("en-US")} · ${percentage(count, total)}`;
+
+    heading.append(name, amount);
+
+    const track = document.createElement("div");
+    track.className = "statistics-bar-track";
+
+    const fill = document.createElement("div");
+    fill.className = `statistics-bar-fill ${colorClass || ""}`;
+    fill.style.width = percentage(count, total);
+
+    track.appendChild(fill);
+    row.append(heading, track);
+    container.appendChild(row);
+  });
+}
+
+function renderStatistics() {
+  const setText = (id, value) => {
+    const element = $(id);
+    if (element) element.textContent = value;
+  };
+
+  setText("odd-count", drawStats.odd.toLocaleString("en-US"));
+  setText("even-count", drawStats.even.toLocaleString("en-US"));
+  setText("odd-ratio", percentage(drawStats.odd, drawStats.total));
+  setText("even-ratio", percentage(drawStats.even, drawStats.total));
+  setText("prime-count", drawStats.prime.toLocaleString("en-US"));
+  setText("composite-count", drawStats.composite.toLocaleString("en-US"));
+  setText("prime-ratio", percentage(drawStats.prime, drawStats.total));
+  setText("composite-ratio", percentage(drawStats.composite, drawStats.total));
+
+  setText(
+    "overall-average",
+    drawStats.total
+      ? Math.round(drawStats.sum / drawStats.total).toLocaleString("en-US")
+      : "—"
+  );
+
+  setText(
+    "statistics-max",
+    highestNumber === null
+      ? "—"
+      : highestNumber.toLocaleString("en-US")
+  );
+
+  setText(
+    "statistics-min",
+    lowestNumber === null
+      ? "—"
+      : lowestNumber.toLocaleString("en-US")
+  );
+
+  const lastDigitEntries = Object.entries(drawStats.lastDigits)
+    .sort((a, b) => b[1] - a[1]);
+
+  const mostCommon = drawStats.total ? lastDigitEntries[0] : null;
+
+  setText(
+    "most-common-last-digit",
+    mostCommon ? mostCommon[0] : "—"
+  );
+
+  setText(
+    "most-common-last-digit-count",
+    mostCommon
+      ? `${mostCommon[1].toLocaleString("en-US")}회 · ${percentage(mostCommon[1], drawStats.total)}`
+      : "아직 기록 없음"
+  );
+
+  setText(
+    "statistics-total",
+    `누적 ${drawStats.total.toLocaleString("en-US")}회 추첨 기준 · 기록은 자동 저장돼.`
+  );
+
+  const digitNames = {
+    0: "0 (숫자 0)",
+    1: "1자리",
+    2: "2자리",
+    3: "3자리",
+    4: "4자리",
+    5: "5자리",
+    6: "6자리",
+    7: "7자리"
+  };
+
+  renderStatBar(
+    $("digit-statistics"),
+    Object.entries(drawStats.digits).map(
+      ([digits, count]) => [digitNames[digits], count, ""]
+    ),
+    drawStats.total
+  );
+
+  renderStatBar(
+    $("last-digit-statistics"),
+    Object.entries(drawStats.lastDigits).map(
+      ([digit, count]) => [`끝자리 ${digit}`, count, ""]
+    ),
+    drawStats.total
+  );
+
+  // 통계에서도 동일한 희귀도 순서를 사용한다.
+  const rarityNames = [
+    ["ultimate", "Ultimate"],
+    ["reverse-special", "Reverse Special"],
+    ["special", "Special"],
+    ["jackpot", "Jackpot"],
+    ["eclipse", "Eclipse"],
+    ["legendary", "Legendary"],
+    ["mythic", "Mythic"],
+    ["seraph", "Seraph"],
+    ["aurora", "Aurora"],
+    ["phantom", "Phantom"],
+    ["glorious", "Glorious"],
+    ["rare", "Rare"],
+    ["uncommon", "Uncommon"],
+    ["common", "일반 숫자"]
+  ];
+
+  renderStatBar(
+    $("rarity-statistics"),
+    rarityNames.map(
+      ([key, label]) => [label, drawStats.rarities[key], `bar-${key}`]
+    ),
+    drawStats.total
+  );
+}
+
+function openStatistics() {
+  renderStatistics();
+  statisticsOverlay.hidden = false;
+  statisticsButton.setAttribute("aria-expanded", "true");
+  closeStatisticsButton.focus();
+}
+
+function closeStatistics() {
+  statisticsOverlay.hidden = true;
+  statisticsButton.setAttribute("aria-expanded", "false");
+  statisticsButton.focus();
+}
+
+statisticsButton.addEventListener("click", openStatistics);
+closeStatisticsButton.addEventListener("click", closeStatistics);
+
+statisticsOverlay.addEventListener("click", event => {
+  if (event.target === statisticsOverlay) {
+    closeStatistics();
+  }
+});
+
+document.querySelectorAll('input[name="auto-limit-mode"]').forEach(input => {
+  input.addEventListener("change", () => {
+    const countMode = input.checked && input.value === "count";
+    if (!input.checked) return;
+
+    autoDurationSetting.hidden = countMode;
+    autoCountSetting.hidden = !countMode;
+  });
+});
+
+function showAutoSummary(reason) {
+  if (autoCompletedCount <= 0) return;
+
+  $("summary-draw-count").textContent =
+    autoCompletedCount.toLocaleString("en-US");
+
+  const sum = autoResults.reduce((total, value) => total + value, 0);
+
+  $("summary-average").textContent =
+    Math.round(sum / autoResults.length).toLocaleString("en-US");
+
+  $("summary-max").textContent =
+    autoResults
+      .reduce((best, value) => Math.max(best, value), -Infinity)
+      .toLocaleString("en-US");
+
+  $("summary-min").textContent =
+    autoResults
+      .reduce((best, value) => Math.min(best, value), Infinity)
+      .toLocaleString("en-US");
+
+  const list = $("summary-rare-list");
+  list.replaceChildren();
+
+  if (!autoRareResults.length) {
+    const item = document.createElement("li");
+    item.textContent = "이번 자동 뽑기에서 희귀 숫자가 나오지 않았어.";
+    list.appendChild(item);
+  } else {
+    sortRareResults(autoRareResults).slice(0, 20).forEach(entry => {
+      const item = document.createElement("li");
+
+      item.textContent =
+        `${entry.pattern.detail} · ${entry.value.toLocaleString("en-US")}`;
+
+      item.className = `summary-${entry.pattern.level}`;
+      list.appendChild(item);
+    });
+
+    if (autoRareResults.length > 20) {
+      const more = document.createElement("li");
+      more.textContent = `외 ${autoRareResults.length - 20}개 희귀 결과`;
+      list.appendChild(more);
+    }
+  }
+
+  $("summary-reason").textContent = reason || "자동 뽑기가 종료됐어.";
+  autoSummaryOverlay.hidden = false;
+  closeAutoSummaryButton.focus();
+}
+
+function closeAutoSummary() {
+  autoSummaryOverlay.hidden = true;
+}
+
+closeAutoSummaryButton.addEventListener("click", closeAutoSummary);
+closeSummaryDoneButton.addEventListener("click", closeAutoSummary);
+
+autoSummaryOverlay.addEventListener("click", event => {
+  if (event.target === autoSummaryOverlay) {
+    closeAutoSummary();
+  }
+});
+
+function addToHistory(result) {
+  const value = Number(result);
+  const pattern = getRarePattern(String(value));
+
+  history.unshift(value);
+  history = history.slice(0, HISTORY_LIMIT);
+
+  if (pattern) {
+    rareHistory.unshift({ value, pattern });
+    rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
+    renderRareHistory();
+  }
+
+  totalDraws += 1;
+
+  if (highestNumber === null || value > highestNumber) {
+    highestNumber = value;
+  }
+
+  if (lowestNumber === null || value < lowestNumber) {
+    lowestNumber = value;
+  }
+
+  renderHistory();
+  updateAverage();
+  updateStatistics();
+}
+
+function renderHistory() {
+  historyList.replaceChildren();
+
+  if (history.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "empty-history";
+    empty.textContent = "아직 추첨 기록이 없어!";
+    historyList.appendChild(empty);
+    return;
+  }
+
+  history.forEach((value, index) => {
+    const item = document.createElement("li");
+
+    const rank = document.createElement("span");
+    rank.className = "history-index";
+    rank.textContent = `#${index + 1}`;
+
+    const number = document.createElement("span");
+    number.className = "history-number";
+    number.textContent = value.toLocaleString("en-US");
+
+    const pattern = getRarePattern(String(value));
+
+    if (pattern) {
+      item.classList.add(
+        "rare-history-item",
+        `rare-history-${pattern.level}`
+      );
+
+      if (
+        [
+          "legendary",
+          "ultimate",
+          "jackpot",
+          "reverse-special",
+          "seraph",
+          "aurora"
+        ].includes(pattern.level)
+      ) {
+        item.classList.add("rare-history-legendary");
+      }
+
+      number.title = pattern.title;
+
+      const mark = document.createElement("span");
+      mark.className = "history-rare-mark";
+      mark.textContent = pattern.detail.toUpperCase();
+
+      item.append(rank, mark, number);
+    } else {
+      item.append(rank, number);
+    }
+
+    historyList.appendChild(item);
+  });
+}
+
+function renderRareHistory() {
+  rareHistoryList.replaceChildren();
+
+  if (rareHistory.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "empty-history";
+    empty.textContent = "아직 희귀 숫자가 없어!";
+    rareHistoryList.appendChild(empty);
+    return;
+  }
+
+  rareHistory.forEach((entry, index) => {
+    const item = document.createElement("li");
+
+    item.classList.add(
+      "rare-history-item",
+      `rare-history-${entry.pattern.level}`
+    );
+
+    if (
+      [
+        "legendary",
+        "ultimate",
+        "jackpot",
+        "reverse-special",
+        "seraph",
+        "aurora"
+      ].includes(entry.pattern.level)
+    ) {
+      item.classList.add("rare-history-legendary");
+    }
+
+    const rank = document.createElement("span");
+    rank.className = "history-index";
+    rank.textContent = `#${index + 1}`;
+
+    const mark = document.createElement("span");
+    mark.className = "history-rare-mark";
+    mark.textContent = entry.pattern.detail.toUpperCase();
+
+    const number = document.createElement("span");
+    number.className = "history-number";
+    number.textContent = entry.value.toLocaleString("en-US");
+    number.title = entry.pattern.title;
+
+    item.append(rank, mark, number);
+    rareHistoryList.appendChild(item);
+  });
+}
+
+function updateAverage() {
+  if (history.length < HISTORY_LIMIT) {
+    averageElement.textContent = "—";
+    averageStatus.textContent =
+      `${history.length}/${HISTORY_LIMIT}회 추첨 완료`;
+    return;
+  }
+
+  const sum = history.reduce((total, value) => total + value, 0);
+  const average = sum / HISTORY_LIMIT;
+
+  averageElement.textContent =
+    Math.round(average).toLocaleString("en-US");
+
+  averageStatus.textContent = "최근 10회 결과의 평균";
+}
+
+function updateStatistics() {
+  maxNumberElement.textContent =
+    highestNumber === null
+      ? "—"
+      : highestNumber.toLocaleString("en-US");
+
+  minNumberElement.textContent =
+    lowestNumber === null
+      ? "—"
+      : lowestNumber.toLocaleString("en-US");
+
+  totalDrawsElement.textContent =
+    totalDraws.toLocaleString("en-US");
+}
+
+/* =====================================
+   추첨 완료
+===================================== */
+
+function finishDraw(result) {
+  // 롤링만 정리한다. 결과 효과에 필요한 타이머는 건드리지 않는다.
+  clearRollTimers();
+
+  setDisplayedNumber(result, true);
+
+  const value = Number(result);
+  const pattern = getRarePattern(result);
+  lastResult = result;
+
+  digitCountLabel.textContent = getDigitCountLabel(result);
+
+  addToHistory(result);
+  trackDrawStatistics(result);
+
+  if (autoRunning) {
+    autoCompletedCount++;
+    autoResults.push(Number(result));
+
+    if (pattern) {
+      autoRareResults.push({ value: Number(result), pattern });
+    }
+  }
+
+  updateNumberInfo(result);
+
+  const effectPattern = triggerNextResultEffect(pattern, result);
+
+  if (effectPattern && effectPattern !== pattern) {
+    statusElement.textContent =
+      `선택한 ${effectPattern.detail} 연출 적용 · ${value.toLocaleString("en-US")}`;
+  } else if (lastDrawWasCheat) {
+    statusElement.textContent =
+      `치트 추첨 완료 · ${value.toLocaleString("en-US")}`;
+  } else if (pattern && settings.rareEffects) {
+    statusElement.textContent =
+      `특별한 패턴 발견! · ${value.toLocaleString("en-US")}`;
+  } else {
+    statusElement.textContent =
+      `추첨 완료 · ${value.toLocaleString("en-US")}`;
+  }
+
+  isDrawing = false;
+  setButtonsDisabled(false);
+
+  if (autoRunning) {
+    handleAutoAfterDraw(pattern);
+  }
+}
+
+/* 즉각 뽑기 */
+function drawInstantly() {
+  if (isDrawing) return;
+
+  isDrawing = true;
+  clearRollTimers();
+  resetNumberEffects();
+  setButtonsDisabled(true);
+
+  triggerButtonImpact(instantButton);
+
+  const result = getNextResult();
+  finishDraw(result);
+}
+
+/* =====================================
+   느리고 부드러운 숫자 롤링
+===================================== */
+
+function drawWithAnimation() {
+  if (isDrawing) return;
+
+  isDrawing = true;
+  clearRollTimers();
+  resetNumberEffects();
+  setButtonsDisabled(true);
+
+  triggerButtonImpact(drawButton);
+  statusElement.textContent = "숫자를 추첨하는 중...";
+
+  digitElements.forEach(digit => {
+    digit.style.display = "inline-block";
+    digit.classList.add("rolling");
+  });
+
+  const result = getNextResult();
+
+  // 1이 가장 느리고, 5가 가장 빠르다.
+  const speedSettings = {
+    1: { start: 1900, interval: 850, spin: 100 },
+    2: { start: 1500, interval: 650, spin: 85 },
+    3: { start: 1200, interval: 500, spin: 70 },
+    4: { start: 900, interval: 380, spin: 60 },
+    5: { start: 650, interval: 300, spin: 50 }
+  };
+
+  const timing = speedSettings[settings.speed];
+
+  digitElements.forEach((digit, index) => {
+    // 각 자리의 롤링은 추첨 연출용이다.
+    const intervalId = setInterval(() => {
+      digit.textContent = String(Math.floor(Math.random() * 10));
+    }, timing.spin);
+
+    rollIntervals.push(intervalId);
+
+    const stopId = setTimeout(() => {
+      clearInterval(intervalId);
+
+      digit.classList.remove("rolling");
+      digit.textContent = result[index];
+
+      // 브라우저가 Web Animations API를 지원할 때만 사용
+      if (typeof digit.animate === "function") {
+        digit.animate(
+          [
+            { transform: "translateY(-5px) scale(0.98)" },
+            { transform: "translateY(2px) scale(1.035)" },
+            { transform: "translateY(0) scale(1)" }
+          ],
+          {
+            duration: 380,
+            easing: "cubic-bezier(.2, .8, .25, 1)"
+          }
+        );
+      }
+
+      if (index === DIGITS - 1) {
+        scheduleRollTimeout(() => {
+          finishDraw(result);
+        }, 400);
+      }
+    }, timing.start + index * timing.interval);
+
+    rollTimeouts.push(stopId);
+  });
+}
+
+/* =====================================
+   자동 뽑기
+===================================== */
+
+function openAutoSettings() {
+  if (autoRunning) {
+    stopAutoDraw("자동 뽑기를 중지했어.");
+    return;
+  }
+
+  autoOverlay.hidden = false;
+  autoButton.setAttribute("aria-expanded", "true");
+  autoMessage.textContent = "설정을 정한 다음 자동 뽑기를 시작해 봐.";
+  closeAutoButton.focus();
+}
+
+function closeAutoSettings() {
+  autoOverlay.hidden = true;
+  autoButton.setAttribute("aria-expanded", "false");
+  autoButton.focus();
+}
+
+function getSelectedAutoRarities() {
+  return Array.from(
+    document.querySelectorAll('input[name="auto-stop-rarity"]:checked')
+  ).map(input => input.value);
+}
+
+function startAutoDraw() {
+  autoLimitMode =
+    document.querySelector('input[name="auto-limit-mode"]:checked')?.value ||
+    "duration";
+
+  const duration = Number(autoDurationInput.value);
+  const count = Number(autoCountInput.value);
+
+  if (
+    autoLimitMode === "duration" &&
+    (!Number.isInteger(duration) || duration < 1 || duration > 3600)
+  ) {
+    autoMessage.textContent =
+      "지속시간은 1초부터 3600초 사이의 정수로 입력해 줘.";
+    return;
+  }
+
+  if (
+    autoLimitMode === "count" &&
+    (!Number.isInteger(count) || count < 1 || count > 100000)
+  ) {
+    autoMessage.textContent =
+      "추첨 횟수는 1회부터 100,000회 사이의 정수로 입력해 줘.";
+    return;
+  }
+
+  autoMode =
+    document.querySelector('input[name="auto-mode"]:checked')?.value ||
+    "animated";
+
+  autoStopRarities = getSelectedAutoRarities();
+  autoRunning = true;
+  autoTargetCount = count;
+  autoCompletedCount = 0;
+  autoResults = [];
+  autoRareResults = [];
+  autoStopReason = "";
+
+  autoEndsAt =
+    autoLimitMode === "duration"
+      ? Date.now() + duration * 1000
+      : Infinity;
+
+  if (autoNextTimeout !== null) {
+    clearTimeout(autoNextTimeout);
+    autoNextTimeout = null;
+  }
+
+  autoButton.innerHTML =
+    '<span class="button-icon">■</span> 자동 뽑기 중지';
+
+  autoButton.classList.add("auto-running");
+
+  closeAutoSettings();
+
+  statusElement.textContent = autoLimitMode === "count"
+    ? `자동 뽑기 시작 · ${count.toLocaleString("en-US")}회 추첨`
+    : `자동 뽑기 시작 · ${duration}초 동안 실행`;
+
+  setButtonsDisabled(true);
+  runNextAutoDraw();
+}
+
+function stopAutoDraw(message = "자동 뽑기가 멈췄어.") {
+  if (!autoRunning) return;
+
+  autoRunning = false;
+  autoStopReason = message;
+
+  if (autoNextTimeout !== null) {
+    clearTimeout(autoNextTimeout);
+    autoNextTimeout = null;
+  }
+
+  autoButton.innerHTML =
+    '<span class="button-icon">⟳</span> 자동 뽑기';
+
+  autoButton.classList.remove("auto-running");
+
+  setButtonsDisabled(isDrawing);
+  statusElement.textContent = message;
+  showAutoSummary(message);
+}
+
+function runNextAutoDraw() {
+  if (!autoRunning) return;
+
+  if (autoLimitMode === "duration" && Date.now() >= autoEndsAt) {
+    stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
+    return;
+  }
+
+  if (autoLimitMode === "count" && autoCompletedCount >= autoTargetCount) {
+    stopAutoDraw(
+      `설정한 ${autoTargetCount.toLocaleString("en-US")}회 추첨을 완료했어!`
+    );
+    return;
+  }
+
+  if (isDrawing) {
+    autoNextTimeout = setTimeout(runNextAutoDraw, 100);
+    return;
+  }
+
+  if (autoMode === "instant") {
+    drawInstantly();
+  } else {
+    drawWithAnimation();
+  }
+}
+
+function handleAutoAfterDraw(pattern) {
+  if (!autoRunning) return;
+
+  if (pattern && autoStopRarities.includes(pattern.level)) {
+    stopAutoDraw(
+      `${pattern.detail} 등급이 나와 자동 뽑기를 멈췄어!`
+    );
+    return;
+  }
+
+  if (autoLimitMode === "duration" && Date.now() >= autoEndsAt) {
+    stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
+    return;
+  }
+
+  if (autoLimitMode === "count" && autoCompletedCount >= autoTargetCount) {
+    stopAutoDraw(
+      `설정한 ${autoTargetCount.toLocaleString("en-US")}회 추첨을 완료했어!`
+    );
+    return;
+  }
+
+  // 즉각 모드에서도 잠깐 간격을 둬 브라우저가 멈추지 않도록 한다.
+  autoNextTimeout = setTimeout(
+    runNextAutoDraw,
+    autoMode === "instant" ? 120 : 100
+  );
+}
+
+autoButton.addEventListener("click", openAutoSettings);
+closeAutoButton.addEventListener("click", closeAutoSettings);
+cancelAutoButton.addEventListener("click", closeAutoSettings);
+startAutoButton.addEventListener("click", startAutoDraw);
+
+autoOverlay.addEventListener("click", event => {
+  if (event.target === autoOverlay) {
+    closeAutoSettings();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape") return;
+
+  if (!autoOverlay.hidden) closeAutoSettings();
+  if (!statisticsOverlay.hidden) closeStatistics();
+  if (!autoSummaryOverlay.hidden) closeAutoSummary();
+});
+
+/* =====================================
+   희귀도 표
+===================================== */
+
+function openRarity() {
+  rarityOverlay.hidden = false;
+  rarityButton.setAttribute("aria-expanded", "true");
+  closeRarityButton.focus();
+}
+
+function closeRarity() {
+  rarityOverlay.hidden = true;
+  rarityButton.setAttribute("aria-expanded", "false");
+  rarityButton.focus();
+}
+
+rarityButton.addEventListener("click", openRarity);
+closeRarityButton.addEventListener("click", closeRarity);
+
+rarityOverlay.addEventListener("click", event => {
+  if (event.target === rarityOverlay) {
+    closeRarity();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !rarityOverlay.hidden) {
+    closeRarity();
+  }
+});
+
+drawButton.addEventListener("click", drawWithAnimation);
+instantButton.addEventListener("click", drawInstantly);
+
+/* =====================================
+   배경 파티클
+===================================== */
+
+const canvas = $("particles");
+const ctx = canvas.getContext("2d");
+
+let width = 0;
+let height = 0;
+
+function resizeCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  width = window.innerWidth;
+  height = window.innerHeight;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  backgroundParticles = Array.from(
+    { length: settings.particles },
+    () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: 0.6 + Math.random() * 1.8,
+      speed: 0.12 + Math.random() * 0.3,
+      drift: (Math.random() - 0.5) * 0.3,
+      alpha: 0.15 + Math.random() * 0.45
+    })
+  );
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, width, height);
+
+  for (const particle of backgroundParticles) {
+    particle.y -= particle.speed;
+    particle.x += particle.drift;
+
+    if (particle.y < -5) {
+      particle.y = height + 5;
+      particle.x = Math.random() * width;
+    }
+
+    if (particle.x < -5) {
+      particle.x = width + 5;
+    }
+
+    if (particle.x > width + 5) {
+      particle.x = -5;
+    }
+
+    ctx.beginPath();
+    ctx.arc(
+      particle.x,
+      particle.y,
+      particle.size,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle =
+      `rgba(183, 124, 255, ${particle.alpha})`;
+
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = "rgba(155, 83, 255, 0.55)";
+    ctx.fill();
+  }
+
+  ctx.shadowBlur = 0;
+  requestAnimationFrame(animateParticles);
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+/* =====================================
+   기록 저장 및 복원
+===================================== */
+
+function saveProgress() {
+  const snapshot = {
+    history,
+    rareHistory,
+    totalDraws,
+    highestNumber,
+    lowestNumber,
+    lastResult,
+    drawStats
+  };
+
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot));
+  } catch (error) {
+    console.warn("Violet Random 기록 저장 실패:", error);
+  }
+}
+
+function restoreProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return;
+
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== "object") return;
+
+    history = Array.isArray(saved.history)
+      ? saved.history.filter(Number.isFinite).slice(0, HISTORY_LIMIT)
+      : [];
+
+    rareHistory = Array.isArray(saved.rareHistory)
+      ? saved.rareHistory
+          .filter(
+            item =>
+              item &&
+              Number.isFinite(item.value) &&
+              item.pattern &&
+              item.pattern.level
+          )
+          .slice(0, HISTORY_LIMIT)
+      : [];
+
+    totalDraws = Number.isFinite(saved.totalDraws)
+      ? Math.max(0, saved.totalDraws)
+      : 0;
+
+    highestNumber = Number.isFinite(saved.highestNumber)
+      ? saved.highestNumber
+      : null;
+
+    lowestNumber = Number.isFinite(saved.lowestNumber)
+      ? saved.lowestNumber
+      : null;
+
+    lastResult =
+      typeof saved.lastResult === "string" &&
+      /^\d{7}$/.test(saved.lastResult)
+        ? saved.lastResult
+        : "0000000";
+
+    if (saved.drawStats && typeof saved.drawStats === "object") {
+      ["odd", "even", "prime", "composite", "total", "sum"].forEach(key => {
+        if (Number.isFinite(saved.drawStats[key])) {
+          drawStats[key] = saved.drawStats[key];
+        }
+      });
+
+      ["digits", "lastDigits", "rarities"].forEach(group => {
+        if (
+          saved.drawStats[group] &&
+          typeof saved.drawStats[group] === "object"
+        ) {
+          Object.keys(drawStats[group]).forEach(key => {
+            const value = saved.drawStats[group][key];
+
+            if (Number.isFinite(value)) {
+              drawStats[group][key] = value;
+            }
+          });
+        }
+      });
+    }
+  } catch (error) {
+    console.warn("Violet Random 기록 복원 실패:", error);
+  }
+}
+
+/* =====================================
+   비밀번호 보호 기능
+===================================== */
+
+function requestProtectedAccess(action) {
+  pendingProtectedAction = action;
+  passwordInput.value = "";
+  passwordMessage.textContent = "비밀번호를 입력해 줘.";
+  passwordOverlay.hidden = false;
+  passwordInput.focus();
+}
+
+function closePassword() {
+  passwordOverlay.hidden = true;
+  pendingProtectedAction = null;
+  passwordInput.value = "";
+}
+
+function submitPassword() {
+  if (passwordInput.value !== FEATURE_PASSWORD) {
+    passwordMessage.textContent = "비밀번호가 틀렸어. 사용할 수 없어.";
+    passwordInput.value = "";
+    passwordInput.focus();
+    return;
+  }
+
+  const action = pendingProtectedAction;
+  closePassword();
+
+  if (action === "cheat") {
+    openCheatPanel();
+  }
+
+  if (action === "turbo") {
+    turboOverlay.hidden = false;
+    turboButton.setAttribute("aria-expanded", "true");
+    turboMessage.textContent = "실행하면 결과 요약이 표시돼.";
+    closeTurboButton.focus();
+  }
+}
+
+submitPasswordButton.addEventListener("click", submitPassword);
+
+passwordInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    submitPassword();
+  }
+});
+
+closePasswordButton.addEventListener("click", closePassword);
+cancelPasswordButton.addEventListener("click", closePassword);
+
+passwordOverlay.addEventListener("click", event => {
+  if (event.target === passwordOverlay) {
+    closePassword();
+  }
+});
+
+/* =====================================
+   희귀 연출 선택
+===================================== */
+
+function openReplay() {
+  replayOverlay.hidden = false;
+  replayButton.setAttribute("aria-expanded", "true");
+  replayMessage.textContent = "보고 싶은 연출을 선택해 줘.";
+  closeReplayButton.focus();
+}
+
+function closeReplay() {
+  replayOverlay.hidden = true;
+  replayButton.setAttribute("aria-expanded", "false");
+  replayButton.focus();
+}
+
+replayButton.addEventListener("click", openReplay);
+closeReplayButton.addEventListener("click", closeReplay);
+
+replayOverlay.addEventListener("click", event => {
+  if (event.target === replayOverlay) {
+    closeReplay();
+  }
+});
+
+document.querySelectorAll("[data-preview-rarity]").forEach(button => {
+  button.addEventListener("click", () => {
+    const level = button.dataset.previewRarity;
+    const label = button.querySelector(".rarity-badge")?.textContent?.trim();
+
+    if (!level || !label) return;
+
+    pendingEffectOverride = {
+      title: `✦ ${label.toUpperCase()} EFFECT ✦`,
+      level,
+      detail: label
+    };
+
+    document.querySelectorAll("[data-preview-rarity]").forEach(item => {
+      item.classList.toggle("selected", item === button);
+    });
+
+    replayMessage.textContent =
+      `${label} 연출을 선택했어. 창을 닫고 다음 숫자를 뽑으면 그 숫자에 이 연출이 적용돼!`;
+
+    closeReplay();
+
+    statusElement.textContent =
+      `다음 추첨에 ${label} 연출이 예약됐어.`;
+  });
+});
+
+/* =====================================
+   초고속 추첨
+===================================== */
+
+turboButton.addEventListener("click", () => {
+  requestProtectedAccess("turbo");
+});
+
+function closeTurbo() {
+  turboOverlay.hidden = true;
+  turboButton.setAttribute("aria-expanded", "false");
+  turboButton.focus();
+}
+
+closeTurboButton.addEventListener("click", closeTurbo);
+cancelTurboButton.addEventListener("click", closeTurbo);
+
+turboOverlay.addEventListener("click", event => {
+  if (event.target === turboOverlay) {
+    closeTurbo();
+  }
+});
+
+function runTurboDraw() {
+  if (isDrawing || autoRunning) {
+    turboMessage.textContent =
+      "일반 추첨이나 자동 뽑기가 실행 중일 때는 사용할 수 없어.";
+    return;
+  }
+
+  const count = Number(turboCountInput.value);
+
+  if (!Number.isInteger(count) || count < 1 || count > 10000) {
+    turboMessage.textContent =
+      "추첨 횟수는 1회부터 10,000회 사이의 정수로 입력해 줘.";
+    return;
+  }
+
+  const results = [];
+  const rareResults = [];
+
+  let localMax = -Infinity;
+  let localMin = Infinity;
+  let sum = 0;
+
+  startTurboButton.disabled = true;
+  turboMessage.textContent = `${count.toLocaleString("en-US")}회 추첨 중...`;
+
+  // 일괄 처리하므로 중간 애니메이션은 생략하지만 모든 결과는 통계와 기록에 반영한다.
+  for (let i = 0; i < count; i++) {
+    const result = secureRandomNumber();
+    const value = Number(result);
+    const pattern = getRarePattern(result);
+
+    results.push(value);
+    sum += value;
+    localMax = Math.max(localMax, value);
+    localMin = Math.min(localMin, value);
+
+    history.unshift(value);
+    history = history.slice(0, HISTORY_LIMIT);
+
+    if (pattern) {
+      rareHistory.unshift({ value, pattern });
+      rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
+      rareResults.push({ value, pattern });
+    }
+
+    totalDraws++;
+
+    if (highestNumber === null || value > highestNumber) {
+      highestNumber = value;
+    }
+
+    if (lowestNumber === null || value < lowestNumber) {
+      lowestNumber = value;
+    }
+
+    trackDrawStatistics(result, {
+      render: false,
+      persist: false
+    });
+  }
+
+  const finalResult =
+    String(results[results.length - 1]).padStart(DIGITS, "0");
+
+  lastResult = finalResult;
+
+  setDisplayedNumber(finalResult, true);
+  digitCountLabel.textContent = getDigitCountLabel(finalResult);
+  updateNumberInfo(finalResult);
+
+  const finalPattern = getRarePattern(finalResult);
+  triggerNextResultEffect(finalPattern, finalResult);
+
+  renderHistory();
+  renderRareHistory();
+  updateAverage();
+  updateStatistics();
+  renderStatistics();
+  saveProgress();
+
+  autoCompletedCount = count;
+  autoResults = results;
+  autoRareResults = rareResults;
+
+  statusElement.textContent =
+    `초고속 추첨 완료 · ${count.toLocaleString("en-US")}회`;
+
+  turboMessage.textContent =
+    `완료! 평균 ${Math.round(sum / count).toLocaleString("en-US")} · 최댓값 ${localMax.toLocaleString("en-US")} · 최솟값 ${localMin.toLocaleString("en-US")}`;
+
+  startTurboButton.disabled = false;
+  closeTurbo();
+
+  showAutoSummary(`초고속 추첨 ${count.toLocaleString("en-US")}회 완료!`);
+}
+
+startTurboButton.addEventListener("click", runTurboDraw);
+
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape") return;
+
+  if (!passwordOverlay.hidden) closePassword();
+  if (!replayOverlay.hidden) closeReplay();
+  if (!turboOverlay.hidden) closeTurbo();
+});
+
+/* =====================================
+   초기화
+===================================== */
+
+restoreProgress();
+populateSettingsControls();
+applySettings();
+setDisplayedNumber(lastResult, true);
+
+if (totalDraws > 0) {
+  digitCountLabel.textContent = getDigitCountLabel(lastResult);
+  updateNumberInfo(lastResult);
+  statusElement.textContent = "이전 기록을 불러왔어. 계속 추첨해 봐!";
+}
+
+renderHistory();
+renderRareHistory();
+updateAverage();
+updateStatistics();
+
+animateParticles();
