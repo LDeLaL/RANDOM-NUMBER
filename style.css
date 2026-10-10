@@ -212,10 +212,8 @@ body.light-mode .auto-mode-option strong{color:#38204e;}
 body.light-mode .auto-mode-option,body.light-mode .auto-rarity-grid label{border-color:rgba(139,82,203,0.16);background:rgba(155,93,229,0.05);}
 @media (min-width:1200px){.history-panel{position:fixed;left:24px;top:50%;transform:translateY(-50%);}.rare-history-panel{position:fixed;right:24px;top:50%;transform:translateY(-50%);max-height:calc(100vh - 30px);overflow-y:auto;}.container{width:min(790px,calc(100vw - 560px));margin-left:0;margin-right:0;}}
 @media (max-width:1199px){.rare-history-panel{width:min(100%,700px);}#rare-history-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}}
-@media (max-width:420px){.utility-button-row{gap:8px;}.utility-button-row .instant-button,.utility-button-row .auto-button{padding:8px 12px;}.auto-rarity-grid{grid-template-columns:1fr;}}
 @media (max-width:1199px){.app-layout{flex-direction:column;}.container{order:0;width:min(100%,790px);margin:0;}.history-panel{order:1;position:static;transform:none;}.rare-history-panel{order:2;position:static;transform:none;}}
-
-/* 추가 기능: 통계와 자동 추첨 요약. 기존 Violet Random 테마는 유지한다. */
+@media (max-width:420px){.utility-button-row{gap:8px;}.utility-button-row .instant-button,.utility-button-row .auto-button{padding:8px 12px;}.auto-rarity-grid{grid-template-columns:1fr;}}
 .statistics-panel{width:min(100%,560px);}
 .statistics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 20px;}
 .statistics-card{display:flex;flex-direction:column;gap:7px;padding:15px 13px;border:1px solid rgba(181,135,241,0.17);border-radius:12px;background:rgba(155,93,229,0.08);}
@@ -246,8 +244,6 @@ body.light-mode .statistics-card{background:rgba(155,93,229,0.06);border-color:r
 body.light-mode .statistics-bar-heading{color:#63477f;}
 body.light-mode .statistics-bar-heading strong{color:#785496;}
 body.light-mode .summary-rare-list{color:#63477f;}
-
-/* 희귀도별 결과 연출 */
 .number-box.rarity-uncommon-impact{animation:uncommon-glow 850ms ease-out;}
 .number-box.rarity-rare-impact{animation:rare-particle-pop 720ms cubic-bezier(.16,1.2,.3,1);}
 .number-box.rarity-glorious-impact{animation:glorious-teal-flare 900ms ease-out;}
@@ -265,4 +261,41 @@ body.light-mode .summary-rare-list{color:#63477f;}
 @keyframes special-red-flare{0%{filter:brightness(1)}28%{filter:brightness(1.8);border-color:#ffb2b2;box-shadow:0 0 60px 10px rgba(255,53,70,.4),inset 0 0 35px rgba(255,53,70,.18)}100%{filter:brightness(1)}}
 @keyframes reverse-special-red-flare{0%{filter:brightness(1)}18%{filter:brightness(2.2);border-color:#ff777e;box-shadow:0 0 90px 20px rgba(255,25,54,.65),inset 0 0 55px rgba(255,25,54,.3)}50%{filter:brightness(1.35)}100%{filter:brightness(1)}}
 .jackpot-coin{position:fixed;z-index:12;display:grid;place-items:center;width:25px;height:25px;border:2px solid #ffe6a1;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff1b8,#d99524 68%,#8d5712);color:#75420c;font-size:14px;font-weight:900;text-shadow:none;box-shadow:0 0 14px rgba(255,199,77,.65);animation:coin-toss 1000ms cubic-bezier(.16,.7,.25,1) var(--coin-delay) forwards;}
-@keyframes coin-toss{0%{opacity:0;transform:translate(0,0) rotateY(0) scale(.4)}12%{opacity:1}100%{opacity:0;transform:translate(var(--coin-x),var(--coin-y
+@keyframes coin-toss{0%{opacity:0;transform:translate(0,0) rotateY(0) scale(.4)}12%{opacity:1}100%{opacity:0;transform:translate(var(--coin-x),var(--coin-y)) rotateY(var(--coin-spin)) rotateZ(var(--coin-spin)) scale(.8)}}
+@media(max-width:420px){.statistics-grid{gap:8px}.statistics-card{padding:12px 10px}.statistics-card strong{font-size:19px}.statistics-bar-heading{font-size:9px}.statistics-bar-heading strong{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.number-box.rarity-uncommon-impact,.number-box.rarity-rare-impact,.number-box.rarity-glorious-impact,.number-box.rarity-legendary-impact,.number-box.rarity-ultimate-impact,.number-box.rarity-jackpot-impact,.number-box.rarity-special-impact,.number-box.rarity-reverse-special-impact,.jackpot-coin{animation-duration:.01ms!important}}
+.rare-flash.uncommon{background:radial-gradient(circle at 50% 45%,rgba(165,105,255,.14),transparent 65%);}
+.rare-flash.rare{background:radial-gradient(circle at 50% 45%,rgba(181,115,255,.25),rgba(100,38,168,.07) 40%,transparent 72%);}
+.rare-flash.glorious{background:radial-gradient(circle at 50% 45%,rgba(74,226,239,.34),rgba(43,167,202,.1) 38%,transparent 72%);}
+.rare-flash.legendary{background:radial-gradient(circle at 50% 45%,rgba(255,221,163,.36),rgba(190,108,255,.16) 35%,transparent 72%);}
+.rare-flash.ultimate{background:radial-gradient(circle at 50% 45%,rgba(198,137,255,.75),rgba(117,39,202,.65) 42%,rgba(54,17,92,.42) 75%);}
+.rare-flash.jackpot{background:radial-gradient(circle at 50% 45%,rgba(255,205,93,.34),rgba(176,108,22,.12) 38%,transparent 72%);}
+.rare-flash.special{background:radial-gradient(circle at 50% 45%,rgba(255,62,74,.34),rgba(170,22,45,.13) 40%,transparent 72%);}
+.rare-flash.reverse-special{background:radial-gradient(circle at 50% 45%,rgba(255,24,53,.56),rgba(150,0,27,.23) 43%,transparent 76%);}
+
+/* 요청한 기능 추가: 기존 테마와 기존 스타일은 변경하지 않는다. */
+.rarity-panel{width:min(96vw,900px);}
+.rarity-table{table-layout:fixed;}
+.rarity-table th:nth-child(1),.rarity-table td:nth-child(1){width:48%;}
+.rarity-table th:nth-child(2),.rarity-table td:nth-child(2){width:20%;}
+.rarity-table th:nth-child(3),.rarity-table td:nth-child(3){width:32%;}
+.rarity-table td{vertical-align:middle;line-height:1.6;overflow-wrap:anywhere;}
+.rarity-order{display:inline-grid;place-items:center;width:25px;height:25px;margin-right:7px;border-radius:7px;background:rgba(155,93,229,.14);color:var(--purple-light);font-size:10px;font-weight:800;}
+body.light-mode .rarity-order{color:#785496;background:rgba(155,93,229,.1);}
+.replay-panel{width:min(100%,650px);}
+.replay-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.replay-rarity-button{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:76px;padding:13px;border:1px solid rgba(181,135,241,.17);border-radius:11px;background:rgba(155,93,229,.07);color:var(--text);cursor:pointer;text-align:left;transition:transform 120ms ease,border-color 120ms ease,background 120ms ease;}
+.replay-rarity-button:hover{transform:translateY(-2px);border-color:rgba(190,133,255,.55);background:rgba(155,93,229,.14);}
+.replay-rarity-button:active{transform:translateY(1px) scale(.99);}
+.replay-rarity-button small{color:var(--muted);font-size:10px;}
+.small-mode-button{align-self:center;min-height:30px;margin-top:0;padding:6px 13px;border:1px solid rgba(183,127,255,.22);border-radius:9px;background:rgba(83,47,119,.16);color:#bfa0e6;font-size:10px;cursor:pointer;transition:background 120ms ease,border-color 120ms ease;}
+.small-mode-button:hover{background:rgba(124,69,185,.24);border-color:rgba(183,127,255,.48);}
+.password-panel{width:min(100%,400px);}
+.turbo-panel{width:min(100%,460px);}
+body.light-mode .replay-rarity-button{border-color:rgba(139,82,203,.18);background:rgba(155,93,229,.05);color:#38204e;}
+body.light-mode .replay-rarity-button small{color:#806d94;}
+body.light-mode .small-mode-button{color:#693b96;background:rgba(155,93,229,.07);border-color:rgba(139,82,203,.22);}
+@media(max-width:540px){.rarity-panel{width:100%;padding:14px;}.rarity-table{font-size:10px;}.rarity-table th,.rarity-table td{padding:8px 6px;}.rarity-table th:nth-child(1),.rarity-table td:nth-child(1){width:48%;}.rarity-table th:nth-child(2),.rarity-table td:nth-child(2){width:24%;}.rarity-table th:nth-child(3),.rarity-table td:nth-child(3){width:28%;}.rarity-order{width:20px;height:20px;margin-right:3px;font-size:9px;}.replay-grid{grid-template-columns:1fr 1fr;}.replay-rarity-button{padding:10px;min-height:70px;}.replay-rarity-button .rarity-badge{font-size:9px;}}
+.rarity-badge.common{color:#c8c0d4;background:rgba(160,150,175,.12);}
+body.light-mode .rarity-badge.common{color:#695a7d;background:rgba(130,110,150,.1);}
+@media(max-width:640px){.top-actions{flex-wrap:wrap;justify-content:center;gap:6px}.top-actions .settings-button{padding:7px 9px;font-size:10px}}
