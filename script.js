@@ -1,9 +1,10 @@
-
 "use strict";
 
 const DIGITS = 7;
 const HISTORY_LIMIT = 10;
 const SETTINGS_KEY = "violetRandomSettings";
+const PROGRESS_KEY = "violetRandomProgress";
+const FEATURE_PASSWORD = "0708";
 
 const DEFAULT_SETTINGS = {
   particles: 65,
@@ -30,6 +31,23 @@ const autoCountInput = $("auto-count");
 const autoDurationSetting = $("auto-duration-setting");
 const autoCountSetting = $("auto-count-setting");
 const statisticsButton = $("statistics-button");
+const replayButton = $("replay-button");
+const replayOverlay = $("replay-overlay");
+const closeReplayButton = $("close-replay");
+const replayMessage = $("replay-message");
+const passwordOverlay = $("password-overlay");
+const passwordInput = $("password-input");
+const passwordMessage = $("password-message");
+const submitPasswordButton = $("submit-password");
+const closePasswordButton = $("close-password");
+const cancelPasswordButton = $("cancel-password");
+const turboButton = $("turbo-button");
+const turboOverlay = $("turbo-overlay");
+const closeTurboButton = $("close-turbo");
+const cancelTurboButton = $("cancel-turbo");
+const startTurboButton = $("start-turbo");
+const turboCountInput = $("turbo-count");
+const turboMessage = $("turbo-message");
 const statisticsOverlay = $("statistics-overlay");
 const closeStatisticsButton = $("close-statistics");
 const autoSummaryOverlay = $("auto-summary-overlay");
@@ -80,7 +98,6 @@ const cheatMessage = $("cheat-message");
 const rarityButton = $("rarity-button");
 const rarityOverlay = $("rarity-overlay");
 const closeRarityButton = $("close-rarity");
-const soundToggleButton = $("sound-toggle");
 
 const digitElements = Array.from(
   numberElement.querySelectorAll("span")
@@ -93,6 +110,8 @@ let rareHistory = [];
 let totalDraws = 0;
 let highestNumber = null;
 let lowestNumber = null;
+let lastResult = "0000000";
+let pendingProtectedAction = null;
 let isDrawing = false;
 let queuedCheatNumber = null;
 let lastDrawWasCheat = false;
@@ -115,20 +134,21 @@ const drawStats = {
   prime: 0,
   composite: 0,
   total: 0,
+  sum: 0,
   digits: Object.fromEntries(
     Array.from({ length: 8 }, (_, i) => [String(i), 0])
+  ),
+  lastDigits: Object.fromEntries(
+    Array.from({ length: 10 }, (_, i) => [String(i), 0])
   ),
   rarities: {
     uncommon: 0,
     rare: 0,
     glorious: 0,
-    mythic: 0,
     legendary: 0,
-    aurora: 0,
-    phantom: 0,
-    seraph: 0,
-    eclipse: 0,
     ultimate: 0,
+    mythic: 0,
+    eclipse: 0,
     jackpot: 0,
     special: 0,
     "reverse-special": 0,
@@ -136,411 +156,71 @@ const drawStats = {
   }
 };
 
+// 결과 요약은 희귀도가 높은 등급부터 표시한다.
+const RARITY_ORDER = [
+  "ultimate",
+  "reverse-special",
+  "special",
+  "jackpot",
+  "eclipse",
+  "mythic",
+  "legendary",
+  "glorious",
+  "rare",
+  "uncommon",
+  "common"
+];
+
+let pendingEffectOverride = null;
+
+function getRarityRank(level) {
+  const index = RARITY_ORDER.indexOf(level || "common");
+  return index === -1 ? RARITY_ORDER.length : index;
+}
+
+function sortRareResults(entries) {
+  return [...entries].sort((a, b) => {
+    const rankDifference =
+      getRarityRank(a.pattern?.level) -
+      getRarityRank(b.pattern?.level);
+
+    return rankDifference || a.value - b.value;
+  });
+}
+
+function takeEffectPattern(actualPattern) {
+  if (!pendingEffectOverride) return actualPattern;
+
+  const selected = pendingEffectOverride;
+  pendingEffectOverride = null;
+
+  document.querySelectorAll("[data-preview-rarity]").forEach(button => {
+    button.classList.remove("selected");
+  });
+
+  return selected;
+}
+
+function triggerNextResultEffect(actualPattern, result) {
+  const hasOverride = Boolean(pendingEffectOverride);
+  const previousRareEffects = settings.rareEffects;
+  const effectPattern = takeEffectPattern(actualPattern);
+
+  // 직접 선택한 연출은 희귀 숫자 이펙트 설정이 꺼져 있어도 적용한다.
+  if (hasOverride) {
+    settings.rareEffects = true;
+  }
+
+  triggerResultImpact(effectPattern, result);
+
+  settings.rareEffects = previousRareEffects;
+
+  return effectPattern;
+}
+
 let rollTimeouts = [];
 let rollIntervals = [];
 let backgroundParticles = [];
-
-/* =====================================
-   직접 생성하는 UI / 등급 사운드
-   외부 오디오 파일 없이 Web Audio API로 생성한다.
-===================================== */
-
-const SOUND_KEY = "violetRandomSoundEnabled";
-let soundEnabled = true;
-let audioContext = null;
-let masterGain = null;
-
-try {
-  const savedSound = localStorage.getItem(SOUND_KEY);
-  if (savedSound === "false") soundEnabled = false;
-} catch (_) {}
-
-function updateSoundToggle() {
-  if (!soundToggleButton) return;
-
-  soundToggleButton.textContent = soundEnabled
-    ? "🔊 소리 켜짐"
-    : "🔇 소리 꺼짐";
-
-  soundToggleButton.setAttribute(
-    "aria-pressed",
-    String(soundEnabled)
-  );
-
-  soundToggleButton.title = soundEnabled
-    ? "소리 끄기"
-    : "소리 켜기";
-}
-
-function getAudioContext() {
-  if (!soundEnabled) return null;
-
-  const AudioContextClass =
-    window.AudioContext || window.webkitAudioContext;
-
-  if (!AudioContextClass) return null;
-
-  if (!audioContext) {
-    audioContext = new AudioContextClass();
-    masterGain = audioContext.createGain();
-    masterGain.gain.value = 0.72;
-    masterGain.connect(audioContext.destination);
-  }
-
-  if (audioContext.state === "suspended") {
-    audioContext.resume().catch(() => {});
-  }
-
-  return audioContext;
-}
-
-function playTone(frequency, duration, options = {}) {
-  const context = getAudioContext();
-  if (!context || !masterGain) return;
-
-  const {
-    type = "sine",
-    volume = 0.16,
-    delay = 0,
-    endFrequency = frequency,
-    attack = 0.012
-  } = options;
-
-  const start = context.currentTime + delay;
-  const end = start + Math.max(0.045, duration);
-
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-
-  oscillator.type = type;
-
-  oscillator.frequency.setValueAtTime(
-    Math.max(25, frequency),
-    start
-  );
-
-  oscillator.frequency.exponentialRampToValueAtTime(
-    Math.max(25, endFrequency),
-    end
-  );
-
-  gain.gain.setValueAtTime(0.0001, start);
-
-  gain.gain.exponentialRampToValueAtTime(
-    Math.max(0.0002, volume),
-    start + attack
-  );
-
-  gain.gain.exponentialRampToValueAtTime(0.0001, end);
-
-  oscillator.connect(gain);
-  gain.connect(masterGain);
-
-  oscillator.start(start);
-  oscillator.stop(end + 0.025);
-}
-
-function playNoiseTick(delay = 0, volume = 0.06) {
-  const context = getAudioContext();
-  if (!context || !masterGain) return;
-
-  const length = Math.max(
-    1,
-    Math.floor(context.sampleRate * 0.055)
-  );
-
-  const buffer = context.createBuffer(
-    1,
-    length,
-    context.sampleRate
-  );
-
-  const data = buffer.getChannelData(0);
-
-  for (let i = 0; i < length; i++) {
-    data[i] =
-      (Math.random() * 2 - 1) * (1 - i / length);
-  }
-
-  const source = context.createBufferSource();
-  const filter = context.createBiquadFilter();
-  const gain = context.createGain();
-
-  const start = context.currentTime + delay;
-
-  filter.type = "highpass";
-  filter.frequency.value = 1800;
-
-  gain.gain.setValueAtTime(volume, start);
-  gain.gain.exponentialRampToValueAtTime(
-    0.0001,
-    start + 0.055
-  );
-
-  source.buffer = buffer;
-  source.connect(filter);
-  filter.connect(gain);
-  gain.connect(masterGain);
-
-  source.start(start);
-  source.stop(start + 0.06);
-}
-
-function playUISound(kind = "click") {
-  if (!soundEnabled) return;
-
-  if (kind === "toggle") {
-    playTone(660, 0.07, {
-      type: "sine",
-      volume: 0.1,
-      endFrequency: 880
-    });
-    return;
-  }
-
-  if (kind === "open") {
-    playTone(520, 0.07, {
-      volume: 0.09,
-      endFrequency: 720
-    });
-
-    playTone(780, 0.08, {
-      volume: 0.07,
-      delay: 0.045,
-      endFrequency: 920
-    });
-
-    return;
-  }
-
-  if (kind === "close") {
-    playTone(680, 0.08, {
-      volume: 0.08,
-      endFrequency: 430
-    });
-
-    return;
-  }
-
-  // 버튼마다 짧고 분명한 유리 같은 클릭음
-  playTone(1150, 0.045, {
-    type: "triangle",
-    volume: 0.085,
-    endFrequency: 780,
-    attack: 0.004
-  });
-
-  playNoiseTick(0, 0.018);
-}
-
-function playRaritySound(pattern) {
-  if (!soundEnabled) return;
-
-  if (!pattern) {
-    playTone(520, 0.1, {
-      type: "triangle",
-      volume: 0.12,
-      endFrequency: 680
-    });
-
-    return;
-  }
-
-  const sounds = {
-    uncommon: {
-      notes: [520, 650],
-      type: "sine",
-      duration: 0.095,
-      volume: 0.11
-    },
-
-    rare: {
-      notes: [520, 660, 790],
-      type: "triangle",
-      duration: 0.09,
-      volume: 0.13
-    },
-
-    glorious: {
-      notes: [440, 587, 784, 988],
-      type: "triangle",
-      duration: 0.11,
-      volume: 0.14
-    },
-
-    mythic: {
-      notes: [392, 523, 659, 784, 1046],
-      type: "sine",
-      duration: 0.13,
-      volume: 0.15
-    },
-
-    legendary: {
-      notes: [523, 659, 784, 1047, 1319],
-      type: "triangle",
-      duration: 0.14,
-      volume: 0.17
-    },
-
-    aurora: {
-      notes: [659, 784, 988, 1319, 1568],
-      type: "sine",
-      duration: 0.15,
-      volume: 0.16
-    },
-
-    phantom: {
-      notes: [587, 440, 698, 523, 880],
-      type: "sine",
-      duration: 0.15,
-      volume: 0.16
-    },
-
-    seraph: {
-      notes: [523, 659, 784, 988, 1175, 1568],
-      type: "triangle",
-      duration: 0.16,
-      volume: 0.17
-    },
-
-    eclipse: {
-      notes: [98, 147, 220, 440, 880],
-      type: "sawtooth",
-      duration: 0.17,
-      volume: 0.18
-    },
-
-    ultimate: {
-      notes: [392, 523, 659, 784, 1047, 1319, 1568],
-      type: "sine",
-      duration: 0.17,
-      volume: 0.19
-    },
-
-    jackpot: {
-      notes: [784, 988, 1175, 1568, 1760],
-      type: "square",
-      duration: 0.11,
-      volume: 0.14
-    },
-
-    special: {
-      notes: [440, 554, 740, 880],
-      type: "triangle",
-      duration: 0.12,
-      volume: 0.16
-    },
-
-    "reverse-special": {
-      notes: [880, 659, 523, 392, 262],
-      type: "sawtooth",
-      duration: 0.14,
-      volume: 0.17
-    }
-  };
-
-  const sound = sounds[pattern.level] || sounds.rare;
-
-  sound.notes.forEach((note, index) => {
-    playTone(note, sound.duration, {
-      type: sound.type,
-      volume: sound.volume,
-      delay: index * sound.duration * 0.72,
-      endFrequency:
-        note * (pattern.level === "eclipse" ? 0.72 : 1.025)
-    });
-  });
-
-  if (
-    [
-      "legendary",
-      "aurora",
-      "phantom",
-      "seraph",
-      "eclipse",
-      "ultimate",
-      "jackpot",
-      "special",
-      "reverse-special"
-    ].includes(pattern.level)
-  ) {
-    playTone(
-      pattern.level === "eclipse" ? 55 : 196,
-      0.42,
-      {
-        type:
-          pattern.level === "eclipse"
-            ? "sawtooth"
-            : "sine",
-        volume:
-          pattern.level === "eclipse"
-            ? 0.12
-            : 0.055,
-        delay: 0.02,
-        endFrequency:
-          pattern.level === "eclipse" ? 36 : 98
-      }
-    );
-  }
-}
-
-if (soundToggleButton) {
-  soundToggleButton.addEventListener("click", () => {
-    soundEnabled = !soundEnabled;
-
-    try {
-      localStorage.setItem(
-        SOUND_KEY,
-        String(soundEnabled)
-      );
-    } catch (_) {}
-
-    updateSoundToggle();
-
-    if (soundEnabled) {
-      playUISound("toggle");
-    }
-  });
-}
-
-// 실제 사용자 입력으로 AudioContext를 깨운 뒤
-// 모든 주요 UI 조작에 클릭음을 붙인다.
-document.addEventListener(
-  "click",
-  event => {
-    const target =
-      event.target instanceof Element
-        ? event.target
-        : null;
-
-    if (!target) return;
-
-    const control = target.closest(
-      "button, [role='button'], .auto-mode-option, .setting-toggle, .auto-rarity-grid label"
-    );
-
-    if (!control || control === soundToggleButton) return;
-
-    if (
-      control.disabled ||
-      control.getAttribute("aria-disabled") === "true"
-    ) {
-      return;
-    }
-
-    const isOverlayClose =
-      control.classList.contains("close-settings") ||
-      control.id.startsWith("close-") ||
-      control.id.startsWith("cancel-");
-
-    playUISound(
-      isOverlayClose ? "close" : "click"
-    );
-  },
-  true
-);
-
-updateSoundToggle();
 
 /* =====================================
    설정
@@ -560,16 +240,11 @@ function loadSettings() {
       particles: clamp(parsed.particles, 0, 150, 65),
       speed: clamp(parsed.speed, 1, 5, 2),
       effect: clamp(parsed.effect, 0, 3, 2),
-
       rareEffects:
         typeof parsed.rareEffects === "boolean"
           ? parsed.rareEffects
           : true,
-
-      theme:
-        parsed.theme === "light"
-          ? "light"
-          : "dark"
+      theme: parsed.theme === "light" ? "light" : "dark"
     };
   } catch {
     return { ...DEFAULT_SETTINGS };
@@ -602,11 +277,7 @@ function readSettingsControls() {
     speed: Number(speedSetting.value),
     effect: Number(effectSetting.value),
     rareEffects: rareSetting.checked,
-
-    theme:
-      themeSetting.value === "light"
-        ? "light"
-        : "dark"
+    theme: themeSetting.value === "light" ? "light" : "dark"
   };
 }
 
@@ -628,33 +299,21 @@ function updateSettingLabels() {
     3: "강하게"
   };
 
-  speedValue.textContent =
-    speedNames[speedSetting.value];
-
-  effectValue.textContent =
-    effectNames[effectSetting.value];
+  speedValue.textContent = speedNames[speedSetting.value];
+  effectValue.textContent = effectNames[effectSetting.value];
 
   themeValue.textContent =
-    themeSetting.value === "light"
-      ? "라이트 모드"
-      : "다크 모드";
+    themeSetting.value === "light" ? "라이트 모드" : "다크 모드";
 }
 
 function saveSettings() {
   try {
-    localStorage.setItem(
-      SETTINGS_KEY,
-      JSON.stringify(settings)
-    );
-
-    settingsMessage.textContent =
-      "설정을 저장했어! 💜";
-
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    settingsMessage.textContent = "설정을 저장했어! 💜";
     return true;
   } catch {
     settingsMessage.textContent =
       "설정 저장에 실패했어. 브라우저 저장 공간을 확인해 줈.";
-
     return false;
   }
 }
@@ -672,40 +331,20 @@ function applySettings() {
 
 function openSettings() {
   populateSettingsControls();
-
-  settingsMessage.textContent =
-    "설정은 이 브라우저에 저장돼.";
-
+  settingsMessage.textContent = "설정은 이 브라우저에 저장돼.";
   settingsOverlay.hidden = false;
-
-  settingsButton.setAttribute(
-    "aria-expanded",
-    "true"
-  );
-
+  settingsButton.setAttribute("aria-expanded", "true");
   closeSettingsButton.focus();
 }
 
 function closeSettings() {
   settingsOverlay.hidden = true;
-
-  settingsButton.setAttribute(
-    "aria-expanded",
-    "false"
-  );
-
+  settingsButton.setAttribute("aria-expanded", "false");
   settingsButton.focus();
 }
 
-settingsButton.addEventListener(
-  "click",
-  openSettings
-);
-
-closeSettingsButton.addEventListener(
-  "click",
-  closeSettings
-);
+settingsButton.addEventListener("click", openSettings);
+closeSettingsButton.addEventListener("click", closeSettings);
 
 settingsOverlay.addEventListener("click", event => {
   if (event.target === settingsOverlay) {
@@ -714,10 +353,7 @@ settingsOverlay.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (
-    event.key === "Escape" &&
-    !settingsOverlay.hidden
-  ) {
+  if (event.key === "Escape" && !settingsOverlay.hidden) {
     closeSettings();
   }
 });
@@ -749,7 +385,6 @@ saveSettingsButton.addEventListener("click", () => {
 
 resetSettingsButton.addEventListener("click", () => {
   settings = { ...DEFAULT_SETTINGS };
-
   populateSettingsControls();
   applySettings();
 
@@ -761,34 +396,24 @@ resetSettingsButton.addEventListener("click", () => {
    치트 설정
 ===================================== */
 
-function openCheat() {
+function openCheatPanel() {
   cheatOverlay.hidden = false;
+  cheatButton.setAttribute("aria-expanded", "true");
 
-  cheatButton.setAttribute(
-    "aria-expanded",
-    "true"
-  );
-
-  cheatMessage.textContent =
-    queuedCheatNumber === null
-      ? "치트를 설정하면 다음 추첨에 한 번 적용돼."
-      : `다음 추첨 예약 숫자: ${queuedCheatNumber}`;
+  cheatMessage.textContent = queuedCheatNumber === null
+    ? "치트를 설정하면 다음 추첨에 한 번 적용돼."
+    : `다음 추첨 예약 숫자: ${queuedCheatNumber}`;
 
   closeCheatButton.focus();
 }
 
 function closeCheat() {
   cheatOverlay.hidden = true;
-
-  cheatButton.setAttribute(
-    "aria-expanded",
-    "false"
-  );
-
+  cheatButton.setAttribute("aria-expanded", "false");
   cheatButton.focus();
 }
 
-cheatButton.addEventListener("click", openCheat);
+cheatButton.addEventListener("click", () => requestProtectedAccess("cheat"));
 closeCheatButton.addEventListener("click", closeCheat);
 
 cheatOverlay.addEventListener("click", event => {
@@ -798,10 +423,7 @@ cheatOverlay.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (
-    event.key === "Escape" &&
-    !cheatOverlay.hidden
-  ) {
+  if (event.key === "Escape" && !cheatOverlay.hidden) {
     closeCheat();
   }
 });
@@ -818,14 +440,10 @@ applyCheatButton.addEventListener("click", () => {
   ) {
     cheatMessage.textContent =
       "0부터 9,999,999 사이의 정수를 입력해 줘.";
-
     return;
   }
 
-  queuedCheatNumber = String(value).padStart(
-    DIGITS,
-    "0"
-  );
+  queuedCheatNumber = String(value).padStart(DIGITS, "0");
 
   cheatMessage.textContent =
     `설정 완료! 다음 추첨에서 ${value.toLocaleString("en-US")}이(가) 나와.`;
@@ -834,7 +452,6 @@ applyCheatButton.addEventListener("click", () => {
 clearCheatButton.addEventListener("click", () => {
   queuedCheatNumber = null;
   cheatNumberInput.value = "";
-
   cheatMessage.textContent =
     "치트를 해제했어. 이제 무작위 숫자가 나와.";
 });
@@ -842,15 +459,12 @@ clearCheatButton.addEventListener("click", () => {
 function getNextResult() {
   if (queuedCheatNumber !== null) {
     const result = queuedCheatNumber;
-
     queuedCheatNumber = null;
     lastDrawWasCheat = true;
-
     return result;
   }
 
   lastDrawWasCheat = false;
-
   return secureRandomNumber();
 }
 
@@ -870,10 +484,7 @@ function secureRandomNumber() {
     crypto.getRandomValues(buffer);
   } while (buffer[0] >= LIMIT);
 
-  return String(buffer[0] % RANGE).padStart(
-    DIGITS,
-    "0"
-  );
+  return String(buffer[0] % RANGE).padStart(DIGITS, "0");
 }
 
 /* =====================================
@@ -890,9 +501,7 @@ function clearRollTimers() {
 
 function scheduleRollTimeout(callback, delay) {
   const id = setTimeout(callback, delay);
-
   rollTimeouts.push(id);
-
   return id;
 }
 
@@ -915,9 +524,6 @@ function resetNumberEffects() {
     "rare-special",
     "rare-reverse-special",
     "rare-mythic",
-    "rare-aurora",
-    "rare-phantom",
-    "rare-seraph",
     "rare-eclipse",
     "rarity-uncommon-impact",
     "rarity-rare-impact",
@@ -928,9 +534,6 @@ function resetNumberEffects() {
     "rarity-special-impact",
     "rarity-reverse-special-impact",
     "rarity-mythic-impact",
-    "rarity-aurora-impact",
-    "rarity-phantom-impact",
-    "rarity-seraph-impact",
     "rarity-eclipse-impact",
     "magnitude-6",
     "magnitude-5",
@@ -948,10 +551,7 @@ function resetNumberEffects() {
   });
 }
 
-function setDisplayedNumber(
-  value,
-  hideLeadingZeros = false
-) {
+function setDisplayedNumber(value, hideLeadingZeros = false) {
   digitElements.forEach((digit, index) => {
     digit.textContent = value[index];
 
@@ -963,9 +563,7 @@ function setDisplayedNumber(
         .split("")
         .every(char => char === "0");
 
-    digit.style.display =
-      isLeadingZero ? "none" : "inline-block";
-
+    digit.style.display = isLeadingZero ? "none" : "inline-block";
     digit.classList.remove("rolling");
   });
 }
@@ -978,42 +576,23 @@ function getRarePattern(value) {
   // 앞자리 0은 실제 자릿수에 포함하지 않는다.
   const normalized = String(Number(value));
   const digits = normalized.split("");
+  const length = normalized === "0" ? 0 : normalized.length;
 
-  const length =
-    normalized === "0" ? 0 : normalized.length;
-
-  const result = (
+  const result = (title, level, detail = title) => ({
     title,
     level,
-    detail = title
-  ) => ({ title, level, detail });
+    detail
+  });
 
-  // 지정된 숫자는 패턴 등급보다 우선한다.
+  // 지정된 숫자 패턴은 일반 규칙보다 우선한다.
   if (
-    [
-      "7777777",
-      "777777",
-      "77777",
-      "7777",
-      "777"
-    ].includes(normalized)
+    ["7777777", "777777", "77777", "7777", "777"].includes(normalized)
   ) {
-    return result(
-      "✦ JACKPOT ✦",
-      "jackpot",
-      "Jackpot"
-    );
+    return result("✦ JACKPOT ✦", "jackpot", "Jackpot");
   }
 
-  if (
-    normalized === "708" ||
-    normalized === "1234567"
-  ) {
-    return result(
-      "✧ SPECIAL ✧",
-      "special",
-      "Special"
-    );
+  if (normalized === "708" || normalized === "1234567") {
+    return result("✧ SPECIAL ✧", "special", "Special");
   }
 
   if (normalized === "7654321") {
@@ -1025,83 +604,34 @@ function getRarePattern(value) {
   }
 
   // Eclipse: 7777777을 제외한 7자리 동일 숫자.
-  if (
-    length === 7 &&
-    /^(\d)\1{6}$/.test(normalized)
-  ) {
+  if (length === 7 && /^(\d)\1{6}$/.test(normalized)) {
     return result(
-      "✦ ECLIPSE · PERFECT REPEAT ✦",
+      "✦ ECLIPSE · 7자리 단일 숫자 ✦",
       "eclipse",
       "Eclipse"
     );
   }
 
-  // Aurora: ABABABA 형태의 7자리 교대 패턴.
-  // A와 B는 달라야 한다.
-  if (
-    length === 7 &&
-    /^([0-9])([0-9])\1\2\1\2\1$/.test(normalized) &&
-    normalized[0] !== normalized[1]
-  ) {
-    return result(
-      "✧ AURORA · ALTERNATING ✧",
-      "aurora",
-      "Aurora"
-    );
-  }
-
-  // Phantom: ABCABCA 형태이며 A, B, C는 서로 다른 숫자.
-  if (
-    length === 7 &&
-    /^([0-9])([0-9])([0-9])\1\2\3\1$/.test(normalized) &&
-    new Set(normalized.slice(0, 3)).size === 3
-  ) {
-    return result(
-      "✦ PHANTOM · LOOPING TRIO ✦",
-      "phantom",
-      "Phantom"
-    );
-  }
-
-  // Seraph: 2, 3, 5, 7만 사용하고 네 숫자가 모두 포함된 7자리 수.
-  if (
-    length === 7 &&
-    /^[2357]+$/.test(normalized) &&
-    ["2", "3", "5", "7"].every(
-      digit => normalized.includes(digit)
-    )
-  ) {
-    return result(
-      "✧ SERAPH · PRIME DIGITS ✧",
-      "seraph",
-      "Seraph"
-    );
-  }
-
-  // Mythic: 7자리 좌우 대칭 수.
-  // Legendary 바로 아래 등급이다.
+  // Mythic: 좌우가 대칭인 7자리 숫자.
   if (
     length === 7 &&
     normalized === normalized.split("").reverse().join("")
   ) {
     return result(
-      "✦ MYTHIC · MIRROR NUMBER ✦",
+      "✧ MYTHIC · 좌우 대칭 ✧",
       "mythic",
       "Mythic"
     );
   }
 
+  // 동일한 숫자가 연속해서 반복되는 길이를 확인한다.
   let longestRun = 1;
   let currentRun = 1;
 
   for (let i = 1; i < digits.length; i++) {
     if (digits[i] === digits[i - 1]) {
       currentRun++;
-
-      longestRun = Math.max(
-        longestRun,
-        currentRun
-      );
+      longestRun = Math.max(longestRun, currentRun);
     } else {
       currentRun = 1;
     }
@@ -1131,27 +661,18 @@ function getRarePattern(value) {
     );
   }
 
-  // 2~3자리 숫자 집합이 연속해서 3회 반복되는지 먼저 확인한다.
+  // 2~3자리 숫자 집합이 연속해서 3회 반복되는지 확인한다.
   for (let size = 2; size <= 3; size++) {
     for (
       let start = 0;
       start + size * 3 <= normalized.length;
       start++
     ) {
-      const block = normalized.slice(
-        start,
-        start + size
-      );
+      const block = normalized.slice(start, start + size);
 
       if (
-        normalized.slice(
-          start + size,
-          start + size * 2
-        ) === block &&
-        normalized.slice(
-          start + size * 2,
-          start + size * 3
-        ) === block
+        normalized.slice(start + size, start + size * 2) === block &&
+        normalized.slice(start + size * 2, start + size * 3) === block
       ) {
         return result(
           "✦ GLORIOUS · 숫자 집합 3회 반복 ✦",
@@ -1169,17 +690,9 @@ function getRarePattern(value) {
       start + size * 2 <= normalized.length;
       start++
     ) {
-      const block = normalized.slice(
-        start,
-        start + size
-      );
+      const block = normalized.slice(start, start + size);
 
-      if (
-        normalized.slice(
-          start + size,
-          start + size * 2
-        ) === block
-      ) {
+      if (normalized.slice(start + size, start + size * 2) === block) {
         return result(
           "✧ RARE · 숫자 집합 반복 ✧",
           "rare",
@@ -1189,44 +702,25 @@ function getRarePattern(value) {
     }
   }
 
+  // 기본 자릿수 등급
   if (length === 0) {
-    return result(
-      "✦ ULTIMATE ✦",
-      "ultimate",
-      "Ultimate"
-    );
+    return result("✦ ULTIMATE ✦", "ultimate", "Ultimate");
   }
 
   if (length === 1) {
-    return result(
-      "✦ LEGENDARY ✦",
-      "legendary",
-      "Legendary"
-    );
+    return result("✦ LEGENDARY ✦", "legendary", "Legendary");
   }
 
   if (length === 2) {
-    return result(
-      "✦ GLORIOUS ✦",
-      "glorious",
-      "Glorious"
-    );
+    return result("✦ GLORIOUS ✦", "glorious", "Glorious");
   }
 
   if (length >= 3 && length <= 5) {
-    return result(
-      "✧ RARE ✧",
-      "rare",
-      "Rare"
-    );
+    return result("✧ RARE ✧", "rare", "Rare");
   }
 
   if (length === 6) {
-    return result(
-      "✧ UNCOMMON ✧",
-      "uncommon",
-      "Uncommon"
-    );
+    return result("✧ UNCOMMON ✧", "uncommon", "Uncommon");
   }
 
   return null;
@@ -1234,14 +728,9 @@ function getRarePattern(value) {
 
 function getDigitCountLabel(value) {
   const normalized = String(Number(value));
-
-  const length =
-    normalized === "0" ? 0 : normalized.length;
-
+  const length = normalized === "0" ? 0 : normalized.length;
   const pattern = getRarePattern(normalized);
-
-  const countText =
-    length === 0 ? "0자리 수" : `${length}자리 수`;
+  const countText = length === 0 ? "0자리 수" : `${length}자리 수`;
 
   return pattern
     ? `${countText} · ${pattern.detail}`
@@ -1265,11 +754,7 @@ function isPrime(number) {
     return false;
   }
 
-  for (
-    let divisor = 3;
-    divisor * divisor <= number;
-    divisor += 2
-  ) {
+  for (let divisor = 3; divisor * divisor <= number; divisor += 2) {
     if (number % divisor === 0) {
       return false;
     }
@@ -1287,20 +772,15 @@ function updateNumberInfo(value) {
 
   if (prime) {
     primeStatus.textContent = "✦ 소수 · 약수 2개";
-
     divisorStatus.textContent =
       `약수: 1, ${number.toLocaleString("en-US")}`;
   } else if (number < 2) {
     primeStatus.textContent = "소수 아님";
-
     divisorStatus.textContent =
       "소수는 2 이상의 자연수 중에서 찾아";
   } else {
-    primeStatus.textContent =
-      "소수 아님 · 합성수";
-
-    divisorStatus.textContent =
-      "약수가 2개보다 많아";
+    primeStatus.textContent = "소수 아님 · 합성수";
+    divisorStatus.textContent = "약수가 2개보다 많아";
   }
 }
 
@@ -1318,20 +798,12 @@ function createBurst(
   if (settings.effect === 0) return;
 
   const multiplier = settings.effect / 2;
-
-  const actualCount = Math.max(
-    1,
-    Math.round(count * multiplier)
-  );
-
-  const actualDistance =
-    distance * (0.55 + multiplier * 0.35);
-
+  const actualCount = Math.max(1, Math.round(count * multiplier));
+  const actualDistance = distance * (0.55 + multiplier * 0.35);
   const fragment = document.createDocumentFragment();
 
   for (let i = 0; i < actualCount; i++) {
     const particle = document.createElement("span");
-
     const isStar = Math.random() < 0.38;
 
     particle.className = isStar
@@ -1339,8 +811,7 @@ function createBurst(
       : "burst-particle";
 
     if (isStar) {
-      particle.textContent =
-        Math.random() < 0.5 ? "✦" : "✧";
+      particle.textContent = Math.random() < 0.5 ? "✦" : "✧";
 
       if (kind === "legendary") {
         particle.classList.add("gold-star");
@@ -1350,7 +821,6 @@ function createBurst(
     }
 
     const angle = Math.random() * Math.PI * 2;
-
     const travelDistance =
       actualDistance * (0.35 + Math.random() * 0.65);
 
@@ -1363,7 +833,6 @@ function createBurst(
 
     particle.style.left = `${x}px`;
     particle.style.top = `${y}px`;
-
     particle.style.setProperty("--dx", `${dx}px`);
     particle.style.setProperty("--dy", `${dy}px`);
     particle.style.setProperty("--size", size);
@@ -1418,50 +887,24 @@ function createCoinBurst(x, y) {
 
   for (let i = 0; i < count; i++) {
     const coin = document.createElement("span");
-
     coin.className = "jackpot-coin";
     coin.textContent = "＄";
+    coin.style.left = `${x + (Math.random() - 0.5) * 90}px`;
+    coin.style.top = `${y + (Math.random() - 0.5) * 25}px`;
+    coin.style.setProperty("--coin-x", `${(Math.random() - 0.5) * 300}px`);
+    coin.style.setProperty("--coin-y", `${-80 - Math.random() * 180}px`);
+    coin.style.setProperty("--coin-spin", `${360 + Math.random() * 720}deg`);
+    coin.style.setProperty("--coin-delay", `${Math.random() * 180}ms`);
 
-    coin.style.left =
-      `${x + (Math.random() - 0.5) * 90}px`;
-
-    coin.style.top =
-      `${y + (Math.random() - 0.5) * 25}px`;
-
-    coin.style.setProperty(
-      "--coin-x",
-      `${(Math.random() - 0.5) * 300}px`
-    );
-
-    coin.style.setProperty(
-      "--coin-y",
-      `${-80 - Math.random() * 180}px`
-    );
-
-    coin.style.setProperty(
-      "--coin-spin",
-      `${360 + Math.random() * 720}deg`
-    );
-
-    coin.style.setProperty(
-      "--coin-delay",
-      `${Math.random() * 180}ms`
-    );
-
-    coin.addEventListener(
-      "animationend",
-      () => coin.remove(),
-      { once: true }
-    );
+    coin.addEventListener("animationend", () => coin.remove(), {
+      once: true
+    });
 
     effectsLayer.appendChild(coin);
   }
 }
 
-function triggerResultImpact(
-  pattern = null,
-  result = "0000000"
-) {
+function triggerResultImpact(pattern = null, result = "0000000") {
   numberElement.classList.remove("finished");
 
   numberBox.classList.remove(
@@ -1475,9 +918,6 @@ function triggerResultImpact(
     "rare-special",
     "rare-reverse-special",
     "rare-mythic",
-    "rare-aurora",
-    "rare-phantom",
-    "rare-seraph",
     "rare-eclipse",
     "rarity-uncommon-impact",
     "rarity-rare-impact",
@@ -1488,9 +928,6 @@ function triggerResultImpact(
     "rarity-special-impact",
     "rarity-reverse-special-impact",
     "rarity-mythic-impact",
-    "rarity-aurora-impact",
-    "rarity-phantom-impact",
-    "rarity-seraph-impact",
     "rarity-eclipse-impact",
     "magnitude-6",
     "magnitude-5",
@@ -1504,14 +941,9 @@ function triggerResultImpact(
   numberElement.classList.add("finished");
 
   const rect = numberBox.getBoundingClientRect();
-
-  const rareActive =
-    Boolean(pattern && settings.rareEffects);
-
+  const rareActive = Boolean(pattern && settings.rareEffects);
   const normalized = String(Number(result));
-
-  const visibleDigits =
-    normalized === "0" ? 0 : normalized.length;
+  const visibleDigits = normalized === "0" ? 0 : normalized.length;
 
   const magnitudeClass =
     visibleDigits >= 1 && visibleDigits <= 6
@@ -1524,10 +956,7 @@ function triggerResultImpact(
 
   if (pattern && settings.rareEffects) {
     numberBox.classList.add(`rare-${pattern.level}`);
-
-    numberBox.classList.add(
-      `rarity-${pattern.level}-impact`
-    );
+    numberBox.classList.add(`rarity-${pattern.level}-impact`);
 
     if (pattern.level === "jackpot") {
       createCoinBurst(
@@ -1549,13 +978,10 @@ function triggerResultImpact(
     uncommon: 1.15,
     rare: 1.3,
     glorious: 1.65,
-    mythic: 1.85,
     legendary: 2,
-    aurora: 2.25,
-    phantom: 2.35,
-    seraph: 2.6,
-    eclipse: 3.0,
     ultimate: 3,
+    mythic: 2.6,
+    eclipse: 3.2,
     jackpot: 2.8,
     special: 2.1,
     "reverse-special": 2.4
@@ -1586,16 +1012,10 @@ function triggerResultImpact(
       numberBox.classList.add("rare-special");
     } else if (pattern.level === "reverse-special") {
       numberBox.classList.add("rare-reverse-special");
-    } else if (
-      [
-        "mythic",
-        "aurora",
-        "phantom",
-        "seraph",
-        "eclipse"
-      ].includes(pattern.level)
-    ) {
-      numberBox.classList.add(`rare-${pattern.level}`);
+    } else if (pattern.level === "mythic") {
+      numberBox.classList.add("rare-mythic");
+    } else if (pattern.level === "eclipse") {
+      numberBox.classList.add("rare-eclipse");
     } else {
       numberBox.classList.add("rare");
     }
@@ -1603,26 +1023,22 @@ function triggerResultImpact(
     rareLabel.textContent = pattern.title;
 
     const flash = document.createElement("div");
-
     flash.className = `rare-flash ${pattern.level}`;
 
     if (
       [
         "legendary",
-        "aurora",
-        "phantom",
-        "seraph",
-        "eclipse",
         "ultimate",
         "jackpot",
-        "reverse-special"
+        "reverse-special",
+        "mythic",
+        "eclipse"
       ].includes(pattern.level)
     ) {
       flash.classList.add("legendary");
     }
 
     effectsLayer.appendChild(flash);
-
     setTimeout(() => flash.remove(), 900);
   } else {
     rareLabel.textContent = "";
@@ -1635,23 +1051,17 @@ function triggerResultImpact(
       (
         rareActive
           ? (
-              pattern.level === "ultimate" ? 170
-              : pattern.level === "eclipse" ? 160
-              : pattern.level === "seraph" ? 135
-              : pattern.level === "phantom" ? 120
-              : pattern.level === "aurora" ? 110
+              pattern.level === "eclipse" ? 190
+              : pattern.level === "ultimate" ? 150
               : pattern.level === "jackpot" ? 135
+              : pattern.level === "mythic" ? 120
               : pattern.level === "legendary" ? 100
-              : pattern.level === "mythic" ? 85
               : 65
             )
           : 30
       ) * totalScale
     ),
-    Math.min(
-      rect.width * (0.4 + (totalScale - 1) * 0.13),
-      320
-    ),
+    Math.min(rect.width * (0.4 + (totalScale - 1) * 0.13), 320),
     rareActive ? pattern.level : "normal"
   );
 
@@ -1668,10 +1078,7 @@ function triggerResultImpact(
             : 18 + (6 - visibleDigits) * 12
         ) * (settings.effect / 2)
       ),
-      Math.min(
-        100 + (6 - visibleDigits) * 45,
-        300
-      ),
+      Math.min(100 + (6 - visibleDigits) * 45, 300),
       visibleDigits <= 3 ? "legendary" : "rare"
     );
   }
@@ -1685,16 +1092,15 @@ function triggerResultImpact(
    기록 및 통계
 ===================================== */
 
-function trackDrawStatistics(result) {
+function trackDrawStatistics(result, options = {}) {
+  const { render = true, persist = true } = options;
   const value = Number(result);
   const normalized = String(value);
-
-  const digitLength =
-    value === 0 ? 0 : normalized.length;
-
+  const digitLength = value === 0 ? 0 : normalized.length;
   const pattern = getRarePattern(normalized);
 
   drawStats.total++;
+  drawStats.sum += value;
 
   if (value % 2 === 0) {
     drawStats.even++;
@@ -1709,6 +1115,7 @@ function trackDrawStatistics(result) {
   }
 
   drawStats.digits[String(digitLength)]++;
+  drawStats.lastDigits[normalized.slice(-1)]++;
 
   if (pattern) {
     drawStats.rarities[pattern.level]++;
@@ -1716,13 +1123,12 @@ function trackDrawStatistics(result) {
     drawStats.rarities.common++;
   }
 
-  renderStatistics();
+  if (render) renderStatistics();
+  if (persist) saveProgress();
 }
 
 function percentage(part, total) {
-  return total
-    ? `${(part / total * 100).toFixed(1)}%`
-    : "0%";
+  return total ? `${(part / total * 100).toFixed(1)}%` : "0%";
 }
 
 function renderStatBar(container, entries, total) {
@@ -1739,7 +1145,6 @@ function renderStatBar(container, entries, total) {
     name.textContent = label;
 
     const amount = document.createElement("strong");
-
     amount.textContent =
       `${count.toLocaleString("en-US")} · ${percentage(count, total)}`;
 
@@ -1749,10 +1154,7 @@ function renderStatBar(container, entries, total) {
     track.className = "statistics-bar-track";
 
     const fill = document.createElement("div");
-
-    fill.className =
-      `statistics-bar-fill ${colorClass || ""}`;
-
+    fill.className = `statistics-bar-fill ${colorClass || ""}`;
     fill.style.width = percentage(count, total);
 
     track.appendChild(fill);
@@ -1764,55 +1166,59 @@ function renderStatBar(container, entries, total) {
 function renderStatistics() {
   const setText = (id, value) => {
     const element = $(id);
-
-    if (element) {
-      element.textContent = value;
-    }
+    if (element) element.textContent = value;
   };
 
+  setText("odd-count", drawStats.odd.toLocaleString("en-US"));
+  setText("even-count", drawStats.even.toLocaleString("en-US"));
+  setText("odd-ratio", percentage(drawStats.odd, drawStats.total));
+  setText("even-ratio", percentage(drawStats.even, drawStats.total));
+  setText("prime-count", drawStats.prime.toLocaleString("en-US"));
+  setText("composite-count", drawStats.composite.toLocaleString("en-US"));
+  setText("prime-ratio", percentage(drawStats.prime, drawStats.total));
+  setText("composite-ratio", percentage(drawStats.composite, drawStats.total));
+
   setText(
-    "odd-count",
-    drawStats.odd.toLocaleString("en-US")
+    "overall-average",
+    drawStats.total
+      ? Math.round(drawStats.sum / drawStats.total).toLocaleString("en-US")
+      : "—"
   );
 
   setText(
-    "even-count",
-    drawStats.even.toLocaleString("en-US")
+    "statistics-max",
+    highestNumber === null
+      ? "—"
+      : highestNumber.toLocaleString("en-US")
   );
 
   setText(
-    "odd-ratio",
-    percentage(drawStats.odd, drawStats.total)
+    "statistics-min",
+    lowestNumber === null
+      ? "—"
+      : lowestNumber.toLocaleString("en-US")
+  );
+
+  const lastDigitEntries = Object.entries(drawStats.lastDigits)
+    .sort((a, b) => b[1] - a[1]);
+
+  const mostCommon = drawStats.total ? lastDigitEntries[0] : null;
+
+  setText(
+    "most-common-last-digit",
+    mostCommon ? mostCommon[0] : "—"
   );
 
   setText(
-    "even-ratio",
-    percentage(drawStats.even, drawStats.total)
-  );
-
-  setText(
-    "prime-count",
-    drawStats.prime.toLocaleString("en-US")
-  );
-
-  setText(
-    "composite-count",
-    drawStats.composite.toLocaleString("en-US")
-  );
-
-  setText(
-    "prime-ratio",
-    percentage(drawStats.prime, drawStats.total)
-  );
-
-  setText(
-    "composite-ratio",
-    percentage(drawStats.composite, drawStats.total)
+    "most-common-last-digit-count",
+    mostCommon
+      ? `${mostCommon[1].toLocaleString("en-US")}회 · ${percentage(mostCommon[1], drawStats.total)}`
+      : "아직 기록 없음"
   );
 
   setText(
     "statistics-total",
-    `현재 세션의 전체 추첨 ${drawStats.total.toLocaleString("en-US")}회 기준`
+    `누적 ${drawStats.total.toLocaleString("en-US")}회 추첨 기준 · 기록은 자동 저장돼.`
   );
 
   const digitNames = {
@@ -1829,11 +1235,15 @@ function renderStatistics() {
   renderStatBar(
     $("digit-statistics"),
     Object.entries(drawStats.digits).map(
-      ([digits, count]) => [
-        digitNames[digits],
-        count,
-        ""
-      ]
+      ([digits, count]) => [digitNames[digits], count, ""]
+    ),
+    drawStats.total
+  );
+
+  renderStatBar(
+    $("last-digit-statistics"),
+    Object.entries(drawStats.lastDigits).map(
+      ([digit, count]) => [`끝자리 ${digit}`, count, ""]
     ),
     drawStats.total
   );
@@ -1842,11 +1252,8 @@ function renderStatistics() {
     ["uncommon", "Uncommon"],
     ["rare", "Rare"],
     ["glorious", "Glorious"],
-    ["mythic", "Mythic"],
     ["legendary", "Legendary"],
-    ["aurora", "Aurora"],
-    ["phantom", "Phantom"],
-    ["seraph", "Seraph"],
+    ["mythic", "Mythic"],
     ["eclipse", "Eclipse"],
     ["ultimate", "Ultimate"],
     ["jackpot", "Jackpot"],
@@ -1857,48 +1264,28 @@ function renderStatistics() {
 
   renderStatBar(
     $("rarity-statistics"),
-    rarityNames.map(([key, label]) => [
-      label,
-      drawStats.rarities[key],
-      `bar-${key}`
-    ]),
+    rarityNames.map(
+      ([key, label]) => [label, drawStats.rarities[key], `bar-${key}`]
+    ),
     drawStats.total
   );
 }
 
 function openStatistics() {
   renderStatistics();
-
   statisticsOverlay.hidden = false;
-
-  statisticsButton.setAttribute(
-    "aria-expanded",
-    "true"
-  );
-
+  statisticsButton.setAttribute("aria-expanded", "true");
   closeStatisticsButton.focus();
 }
 
 function closeStatistics() {
   statisticsOverlay.hidden = true;
-
-  statisticsButton.setAttribute(
-    "aria-expanded",
-    "false"
-  );
-
+  statisticsButton.setAttribute("aria-expanded", "false");
   statisticsButton.focus();
 }
 
-statisticsButton.addEventListener(
-  "click",
-  openStatistics
-);
-
-closeStatisticsButton.addEventListener(
-  "click",
-  closeStatistics
-);
+statisticsButton.addEventListener("click", openStatistics);
+closeStatisticsButton.addEventListener("click", closeStatistics);
 
 statisticsOverlay.addEventListener("click", event => {
   if (event.target === statisticsOverlay) {
@@ -1906,13 +1293,9 @@ statisticsOverlay.addEventListener("click", event => {
   }
 });
 
-document.querySelectorAll(
-  'input[name="auto-limit-mode"]'
-).forEach(input => {
+document.querySelectorAll('input[name="auto-limit-mode"]').forEach(input => {
   input.addEventListener("change", () => {
-    const countMode =
-      input.checked && input.value === "count";
-
+    const countMode = input.checked && input.value === "count";
     if (!input.checked) return;
 
     autoDurationSetting.hidden = countMode;
@@ -1926,87 +1309,47 @@ function showAutoSummary(reason) {
   $("summary-draw-count").textContent =
     autoCompletedCount.toLocaleString("en-US");
 
-  const sum = autoResults.reduce(
-    (total, value) => total + value,
-    0
-  );
+  const sum = autoResults.reduce((total, value) => total + value, 0);
 
   $("summary-average").textContent =
-    Math.round(sum / autoResults.length)
-      .toLocaleString("en-US");
+    Math.round(sum / autoResults.length).toLocaleString("en-US");
 
   $("summary-max").textContent =
-    autoResults.reduce(
-      (best, value) => Math.max(best, value),
-      -Infinity
-    ).toLocaleString("en-US");
+    autoResults
+      .reduce((best, value) => Math.max(best, value), -Infinity)
+      .toLocaleString("en-US");
 
   $("summary-min").textContent =
-    autoResults.reduce(
-      (best, value) => Math.min(best, value),
-      Infinity
-    ).toLocaleString("en-US");
+    autoResults
+      .reduce((best, value) => Math.min(best, value), Infinity)
+      .toLocaleString("en-US");
 
   const list = $("summary-rare-list");
-
   list.replaceChildren();
 
   if (!autoRareResults.length) {
     const item = document.createElement("li");
-
-    item.textContent =
-      "이번 자동 뽑기에서 희귀 숫자가 나오지 않았어.";
-
+    item.textContent = "이번 자동 뽑기에서 희귀 숫자가 나오지 않았어.";
     list.appendChild(item);
   } else {
-    const rarityOrder = [
-      "reverse-special",
-      "special",
-      "jackpot",
-      "ultimate",
-      "eclipse",
-      "seraph",
-      "phantom",
-      "aurora",
-      "legendary",
-      "mythic",
-      "glorious",
-      "rare",
-      "uncommon"
-    ];
+    sortRareResults(autoRareResults).slice(0, 20).forEach(entry => {
+      const item = document.createElement("li");
 
-    [...autoRareResults]
-      .sort(
-        (a, b) =>
-          rarityOrder.indexOf(a.pattern.level) -
-          rarityOrder.indexOf(b.pattern.level)
-      )
-      .slice(0, 20)
-      .forEach(entry => {
-        const item = document.createElement("li");
+      item.textContent =
+        `${entry.pattern.detail} · ${entry.value.toLocaleString("en-US")}`;
 
-        item.textContent =
-          `${entry.pattern.detail} · ${entry.value.toLocaleString("en-US")}`;
-
-        item.className =
-          `summary-${entry.pattern.level}`;
-
-        list.appendChild(item);
-      });
+      item.className = `summary-${entry.pattern.level}`;
+      list.appendChild(item);
+    });
 
     if (autoRareResults.length > 20) {
       const more = document.createElement("li");
-
-      more.textContent =
-        `외 ${autoRareResults.length - 20}개 희귀 결과`;
-
+      more.textContent = `외 ${autoRareResults.length - 20}개 희귀 결과`;
       list.appendChild(more);
     }
   }
 
-  $("summary-reason").textContent =
-    reason || "자동 뽑기가 종료됐어.";
-
+  $("summary-reason").textContent = reason || "자동 뽑기가 종료됐어.";
   autoSummaryOverlay.hidden = false;
   closeAutoSummaryButton.focus();
 }
@@ -2015,25 +1358,14 @@ function closeAutoSummary() {
   autoSummaryOverlay.hidden = true;
 }
 
-closeAutoSummaryButton.addEventListener(
-  "click",
-  closeAutoSummary
-);
-
-closeSummaryDoneButton.addEventListener(
-  "click",
-  closeAutoSummary
-);
+closeAutoSummaryButton.addEventListener("click", closeAutoSummary);
+closeSummaryDoneButton.addEventListener("click", closeAutoSummary);
 
 autoSummaryOverlay.addEventListener("click", event => {
   if (event.target === autoSummaryOverlay) {
     closeAutoSummary();
   }
 });
-
-/* =====================================
-   추첨 기록
-===================================== */
 
 function addToHistory(result) {
   const value = Number(result);
@@ -2043,32 +1375,18 @@ function addToHistory(result) {
   history = history.slice(0, HISTORY_LIMIT);
 
   if (pattern) {
-    rareHistory.unshift({
-      value,
-      pattern
-    });
-
-    rareHistory = rareHistory.slice(
-      0,
-      HISTORY_LIMIT
-    );
-
+    rareHistory.unshift({ value, pattern });
+    rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
     renderRareHistory();
   }
 
   totalDraws += 1;
 
-  if (
-    highestNumber === null ||
-    value > highestNumber
-  ) {
+  if (highestNumber === null || value > highestNumber) {
     highestNumber = value;
   }
 
-  if (
-    lowestNumber === null ||
-    value < lowestNumber
-  ) {
+  if (lowestNumber === null || value < lowestNumber) {
     lowestNumber = value;
   }
 
@@ -2082,12 +1400,9 @@ function renderHistory() {
 
   if (history.length === 0) {
     const empty = document.createElement("li");
-
     empty.className = "empty-history";
     empty.textContent = "아직 추첨 기록이 없어!";
-
     historyList.appendChild(empty);
-
     return;
   }
 
@@ -2095,15 +1410,12 @@ function renderHistory() {
     const item = document.createElement("li");
 
     const rank = document.createElement("span");
-
     rank.className = "history-index";
     rank.textContent = `#${index + 1}`;
 
     const number = document.createElement("span");
-
     number.className = "history-number";
-    number.textContent =
-      value.toLocaleString("en-US");
+    number.textContent = value.toLocaleString("en-US");
 
     const pattern = getRarePattern(String(value));
 
@@ -2121,18 +1433,14 @@ function renderHistory() {
           "reverse-special"
         ].includes(pattern.level)
       ) {
-        item.classList.add(
-          "rare-history-legendary"
-        );
+        item.classList.add("rare-history-legendary");
       }
 
       number.title = pattern.title;
 
       const mark = document.createElement("span");
-
       mark.className = "history-rare-mark";
-      mark.textContent =
-        pattern.detail.toUpperCase();
+      mark.textContent = pattern.detail.toUpperCase();
 
       item.append(rank, mark, number);
     } else {
@@ -2148,12 +1456,9 @@ function renderRareHistory() {
 
   if (rareHistory.length === 0) {
     const empty = document.createElement("li");
-
     empty.className = "empty-history";
     empty.textContent = "아직 희귀 숫자가 없어!";
-
     rareHistoryList.appendChild(empty);
-
     return;
   }
 
@@ -2173,28 +1478,20 @@ function renderRareHistory() {
         "reverse-special"
       ].includes(entry.pattern.level)
     ) {
-      item.classList.add(
-        "rare-history-legendary"
-      );
+      item.classList.add("rare-history-legendary");
     }
 
     const rank = document.createElement("span");
-
     rank.className = "history-index";
     rank.textContent = `#${index + 1}`;
 
     const mark = document.createElement("span");
-
     mark.className = "history-rare-mark";
-    mark.textContent =
-      entry.pattern.detail.toUpperCase();
+    mark.textContent = entry.pattern.detail.toUpperCase();
 
     const number = document.createElement("span");
-
     number.className = "history-number";
-    number.textContent =
-      entry.value.toLocaleString("en-US");
-
+    number.textContent = entry.value.toLocaleString("en-US");
     number.title = entry.pattern.title;
 
     item.append(rank, mark, number);
@@ -2205,25 +1502,18 @@ function renderRareHistory() {
 function updateAverage() {
   if (history.length < HISTORY_LIMIT) {
     averageElement.textContent = "—";
-
     averageStatus.textContent =
       `${history.length}/${HISTORY_LIMIT}회 추첨 완료`;
-
     return;
   }
 
-  const sum = history.reduce(
-    (total, value) => total + value,
-    0
-  );
-
+  const sum = history.reduce((total, value) => total + value, 0);
   const average = sum / HISTORY_LIMIT;
 
   averageElement.textContent =
     Math.round(average).toLocaleString("en-US");
 
-  averageStatus.textContent =
-    "최근 10회 결과의 평균";
+  averageStatus.textContent = "최근 10회 결과의 평균";
 }
 
 function updateStatistics() {
@@ -2253,9 +1543,9 @@ function finishDraw(result) {
 
   const value = Number(result);
   const pattern = getRarePattern(result);
+  lastResult = result;
 
-  digitCountLabel.textContent =
-    getDigitCountLabel(result);
+  digitCountLabel.textContent = getDigitCountLabel(result);
 
   addToHistory(result);
   trackDrawStatistics(result);
@@ -2265,18 +1555,18 @@ function finishDraw(result) {
     autoResults.push(Number(result));
 
     if (pattern) {
-      autoRareResults.push({
-        value: Number(result),
-        pattern
-      });
+      autoRareResults.push({ value: Number(result), pattern });
     }
   }
 
   updateNumberInfo(result);
-  triggerResultImpact(pattern, result);
-  playRaritySound(pattern);
 
-  if (lastDrawWasCheat) {
+  const effectPattern = triggerNextResultEffect(pattern, result);
+
+  if (effectPattern && effectPattern !== pattern) {
+    statusElement.textContent =
+      `선택한 ${effectPattern.detail} 연출 적용 · ${value.toLocaleString("en-US")}`;
+  } else if (lastDrawWasCheat) {
     statusElement.textContent =
       `치트 추첨 완료 · ${value.toLocaleString("en-US")}`;
   } else if (pattern && settings.rareEffects) {
@@ -2295,15 +1585,11 @@ function finishDraw(result) {
   }
 }
 
-/* =====================================
-   즉각 뽑기
-===================================== */
-
+/* 즉각 뽑기 */
 function drawInstantly() {
   if (isDrawing) return;
 
   isDrawing = true;
-
   clearRollTimers();
   resetNumberEffects();
   setButtonsDisabled(true);
@@ -2311,7 +1597,6 @@ function drawInstantly() {
   triggerButtonImpact(instantButton);
 
   const result = getNextResult();
-
   finishDraw(result);
 }
 
@@ -2323,15 +1608,12 @@ function drawWithAnimation() {
   if (isDrawing) return;
 
   isDrawing = true;
-
   clearRollTimers();
   resetNumberEffects();
   setButtonsDisabled(true);
 
   triggerButtonImpact(drawButton);
-
-  statusElement.textContent =
-    "숫자를 추첨하는 중...";
+  statusElement.textContent = "숫자를 추첨하는 중...";
 
   digitElements.forEach(digit => {
     digit.style.display = "inline-block";
@@ -2354,9 +1636,7 @@ function drawWithAnimation() {
   digitElements.forEach((digit, index) => {
     // 각 자리의 롤링은 추첨 연출용이다.
     const intervalId = setInterval(() => {
-      digit.textContent = String(
-        Math.floor(Math.random() * 10)
-      );
+      digit.textContent = String(Math.floor(Math.random() * 10));
     }, timing.spin);
 
     rollIntervals.push(intervalId);
@@ -2371,15 +1651,9 @@ function drawWithAnimation() {
       if (typeof digit.animate === "function") {
         digit.animate(
           [
-            {
-              transform: "translateY(-5px) scale(0.98)"
-            },
-            {
-              transform: "translateY(2px) scale(1.035)"
-            },
-            {
-              transform: "translateY(0) scale(1)"
-            }
+            { transform: "translateY(-5px) scale(0.98)" },
+            { transform: "translateY(2px) scale(1.035)" },
+            { transform: "translateY(0) scale(1)" }
           ],
           {
             duration: 380,
@@ -2410,81 +1684,54 @@ function openAutoSettings() {
   }
 
   autoOverlay.hidden = false;
-
-  autoButton.setAttribute(
-    "aria-expanded",
-    "true"
-  );
-
-  autoMessage.textContent =
-    "설정을 정한 다음 자동 뽑기를 시작해 봐.";
-
+  autoButton.setAttribute("aria-expanded", "true");
+  autoMessage.textContent = "설정을 정한 다음 자동 뽑기를 시작해 봐.";
   closeAutoButton.focus();
 }
 
 function closeAutoSettings() {
   autoOverlay.hidden = true;
-
-  autoButton.setAttribute(
-    "aria-expanded",
-    "false"
-  );
-
+  autoButton.setAttribute("aria-expanded", "false");
   autoButton.focus();
 }
 
 function getSelectedAutoRarities() {
   return Array.from(
-    document.querySelectorAll(
-      'input[name="auto-stop-rarity"]:checked'
-    )
+    document.querySelectorAll('input[name="auto-stop-rarity"]:checked')
   ).map(input => input.value);
 }
 
 function startAutoDraw() {
   autoLimitMode =
-    document.querySelector(
-      'input[name="auto-limit-mode"]:checked'
-    )?.value || "duration";
+    document.querySelector('input[name="auto-limit-mode"]:checked')?.value ||
+    "duration";
 
   const duration = Number(autoDurationInput.value);
   const count = Number(autoCountInput.value);
 
   if (
     autoLimitMode === "duration" &&
-    (
-      !Number.isInteger(duration) ||
-      duration < 1 ||
-      duration > 3600
-    )
+    (!Number.isInteger(duration) || duration < 1 || duration > 3600)
   ) {
     autoMessage.textContent =
       "지속시간은 1초부터 3600초 사이의 정수로 입력해 줘.";
-
     return;
   }
 
   if (
     autoLimitMode === "count" &&
-    (
-      !Number.isInteger(count) ||
-      count < 1 ||
-      count > 100000
-    )
+    (!Number.isInteger(count) || count < 1 || count > 100000)
   ) {
     autoMessage.textContent =
       "추첨 횟수는 1회부터 100,000회 사이의 정수로 입력해 줘.";
-
     return;
   }
 
   autoMode =
-    document.querySelector(
-      'input[name="auto-mode"]:checked'
-    )?.value || "animated";
+    document.querySelector('input[name="auto-mode"]:checked')?.value ||
+    "animated";
 
   autoStopRarities = getSelectedAutoRarities();
-
   autoRunning = true;
   autoTargetCount = count;
   autoCompletedCount = 0;
@@ -2509,19 +1756,15 @@ function startAutoDraw() {
 
   closeAutoSettings();
 
-  statusElement.textContent =
-    autoLimitMode === "count"
-      ? `자동 뽑기 시작 · ${count.toLocaleString("en-US")}회 추첨`
-      : `자동 뽑기 시작 · ${duration}초 동안 실행`;
+  statusElement.textContent = autoLimitMode === "count"
+    ? `자동 뽑기 시작 · ${count.toLocaleString("en-US")}회 추첨`
+    : `자동 뽑기 시작 · ${duration}초 동안 실행`;
 
   setButtonsDisabled(true);
-
   runNextAutoDraw();
 }
 
-function stopAutoDraw(
-  message = "자동 뽑기가 멈췄어."
-) {
+function stopAutoDraw(message = "자동 뽑기가 멈췄어.") {
   if (!autoRunning) return;
 
   autoRunning = false;
@@ -2538,43 +1781,27 @@ function stopAutoDraw(
   autoButton.classList.remove("auto-running");
 
   setButtonsDisabled(isDrawing);
-
   statusElement.textContent = message;
-
   showAutoSummary(message);
 }
 
 function runNextAutoDraw() {
   if (!autoRunning) return;
 
-  if (
-    autoLimitMode === "duration" &&
-    Date.now() >= autoEndsAt
-  ) {
-    stopAutoDraw(
-      "설정한 지속시간이 끝나 자동 뽑기를 멈췄어."
-    );
-
+  if (autoLimitMode === "duration" && Date.now() >= autoEndsAt) {
+    stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
     return;
   }
 
-  if (
-    autoLimitMode === "count" &&
-    autoCompletedCount >= autoTargetCount
-  ) {
+  if (autoLimitMode === "count" && autoCompletedCount >= autoTargetCount) {
     stopAutoDraw(
       `설정한 ${autoTargetCount.toLocaleString("en-US")}회 추첨을 완료했어!`
     );
-
     return;
   }
 
   if (isDrawing) {
-    autoNextTimeout = setTimeout(
-      runNextAutoDraw,
-      100
-    );
-
+    autoNextTimeout = setTimeout(runNextAutoDraw, 100);
     return;
   }
 
@@ -2588,36 +1815,22 @@ function runNextAutoDraw() {
 function handleAutoAfterDraw(pattern) {
   if (!autoRunning) return;
 
-  if (
-    pattern &&
-    autoStopRarities.includes(pattern.level)
-  ) {
+  if (pattern && autoStopRarities.includes(pattern.level)) {
     stopAutoDraw(
       `${pattern.detail} 등급이 나와 자동 뽑기를 멈췄어!`
     );
-
     return;
   }
 
-  if (
-    autoLimitMode === "duration" &&
-    Date.now() >= autoEndsAt
-  ) {
-    stopAutoDraw(
-      "설정한 지속시간이 끝나 자동 뽑기를 멈췄어."
-    );
-
+  if (autoLimitMode === "duration" && Date.now() >= autoEndsAt) {
+    stopAutoDraw("설정한 지속시간이 끝나 자동 뽑기를 멈췄어.");
     return;
   }
 
-  if (
-    autoLimitMode === "count" &&
-    autoCompletedCount >= autoTargetCount
-  ) {
+  if (autoLimitMode === "count" && autoCompletedCount >= autoTargetCount) {
     stopAutoDraw(
       `설정한 ${autoTargetCount.toLocaleString("en-US")}회 추첨을 완료했어!`
     );
-
     return;
   }
 
@@ -2628,25 +1841,10 @@ function handleAutoAfterDraw(pattern) {
   );
 }
 
-autoButton.addEventListener(
-  "click",
-  openAutoSettings
-);
-
-closeAutoButton.addEventListener(
-  "click",
-  closeAutoSettings
-);
-
-cancelAutoButton.addEventListener(
-  "click",
-  closeAutoSettings
-);
-
-startAutoButton.addEventListener(
-  "click",
-  startAutoDraw
-);
+autoButton.addEventListener("click", openAutoSettings);
+closeAutoButton.addEventListener("click", closeAutoSettings);
+cancelAutoButton.addEventListener("click", closeAutoSettings);
+startAutoButton.addEventListener("click", startAutoDraw);
 
 autoOverlay.addEventListener("click", event => {
   if (event.target === autoOverlay) {
@@ -2657,17 +1855,9 @@ autoOverlay.addEventListener("click", event => {
 document.addEventListener("keydown", event => {
   if (event.key !== "Escape") return;
 
-  if (!autoOverlay.hidden) {
-    closeAutoSettings();
-  }
-
-  if (!statisticsOverlay.hidden) {
-    closeStatistics();
-  }
-
-  if (!autoSummaryOverlay.hidden) {
-    closeAutoSummary();
-  }
+  if (!autoOverlay.hidden) closeAutoSettings();
+  if (!statisticsOverlay.hidden) closeStatistics();
+  if (!autoSummaryOverlay.hidden) closeAutoSummary();
 });
 
 /* =====================================
@@ -2676,35 +1866,18 @@ document.addEventListener("keydown", event => {
 
 function openRarity() {
   rarityOverlay.hidden = false;
-
-  rarityButton.setAttribute(
-    "aria-expanded",
-    "true"
-  );
-
+  rarityButton.setAttribute("aria-expanded", "true");
   closeRarityButton.focus();
 }
 
 function closeRarity() {
   rarityOverlay.hidden = true;
-
-  rarityButton.setAttribute(
-    "aria-expanded",
-    "false"
-  );
-
+  rarityButton.setAttribute("aria-expanded", "false");
   rarityButton.focus();
 }
 
-rarityButton.addEventListener(
-  "click",
-  openRarity
-);
-
-closeRarityButton.addEventListener(
-  "click",
-  closeRarity
-);
+rarityButton.addEventListener("click", openRarity);
+closeRarityButton.addEventListener("click", closeRarity);
 
 rarityOverlay.addEventListener("click", event => {
   if (event.target === rarityOverlay) {
@@ -2713,23 +1886,13 @@ rarityOverlay.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (
-    event.key === "Escape" &&
-    !rarityOverlay.hidden
-  ) {
+  if (event.key === "Escape" && !rarityOverlay.hidden) {
     closeRarity();
   }
 });
 
-drawButton.addEventListener(
-  "click",
-  drawWithAnimation
-);
-
-instantButton.addEventListener(
-  "click",
-  drawInstantly
-);
+drawButton.addEventListener("click", drawWithAnimation);
+instantButton.addEventListener("click", drawInstantly);
 
 /* =====================================
    배경 파티클
@@ -2742,17 +1905,13 @@ let width = 0;
 let height = 0;
 
 function resizeCanvas() {
-  const dpr = Math.min(
-    window.devicePixelRatio || 1,
-    2
-  );
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
   width = window.innerWidth;
   height = window.innerHeight;
 
   canvas.width = width * dpr;
   canvas.height = height * dpr;
-
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
 
@@ -2792,7 +1951,6 @@ function animateParticles() {
     }
 
     ctx.beginPath();
-
     ctx.arc(
       particle.x,
       particle.y,
@@ -2805,28 +1963,361 @@ function animateParticles() {
       `rgba(183, 124, 255, ${particle.alpha})`;
 
     ctx.shadowBlur = 8;
-    ctx.shadowColor =
-      "rgba(155, 83, 255, 0.55)";
-
+    ctx.shadowColor = "rgba(155, 83, 255, 0.55)";
     ctx.fill();
   }
 
   ctx.shadowBlur = 0;
-
   requestAnimationFrame(animateParticles);
 }
 
-window.addEventListener(
-  "resize",
-  resizeCanvas
-);
+window.addEventListener("resize", resizeCanvas);
+
+/* =====================================
+   기록 저장 및 복원
+===================================== */
+
+function saveProgress() {
+  const snapshot = {
+    history,
+    rareHistory,
+    totalDraws,
+    highestNumber,
+    lowestNumber,
+    lastResult,
+    drawStats
+  };
+
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot));
+  } catch (error) {
+    console.warn("Violet Random 기록 저장 실패:", error);
+  }
+}
+
+function restoreProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return;
+
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== "object") return;
+
+    history = Array.isArray(saved.history)
+      ? saved.history.filter(Number.isFinite).slice(0, HISTORY_LIMIT)
+      : [];
+
+    rareHistory = Array.isArray(saved.rareHistory)
+      ? saved.rareHistory
+          .filter(
+            item =>
+              item &&
+              Number.isFinite(item.value) &&
+              item.pattern &&
+              item.pattern.level
+          )
+          .slice(0, HISTORY_LIMIT)
+      : [];
+
+    totalDraws = Number.isFinite(saved.totalDraws)
+      ? Math.max(0, saved.totalDraws)
+      : 0;
+
+    highestNumber = Number.isFinite(saved.highestNumber)
+      ? saved.highestNumber
+      : null;
+
+    lowestNumber = Number.isFinite(saved.lowestNumber)
+      ? saved.lowestNumber
+      : null;
+
+    lastResult =
+      typeof saved.lastResult === "string" &&
+      /^\d{7}$/.test(saved.lastResult)
+        ? saved.lastResult
+        : "0000000";
+
+    if (saved.drawStats && typeof saved.drawStats === "object") {
+      ["odd", "even", "prime", "composite", "total", "sum"].forEach(key => {
+        if (Number.isFinite(saved.drawStats[key])) {
+          drawStats[key] = saved.drawStats[key];
+        }
+      });
+
+      ["digits", "lastDigits", "rarities"].forEach(group => {
+        if (
+          saved.drawStats[group] &&
+          typeof saved.drawStats[group] === "object"
+        ) {
+          Object.keys(drawStats[group]).forEach(key => {
+            const value = saved.drawStats[group][key];
+
+            if (Number.isFinite(value)) {
+              drawStats[group][key] = value;
+            }
+          });
+        }
+      });
+    }
+  } catch (error) {
+    console.warn("Violet Random 기록 복원 실패:", error);
+  }
+}
+
+/* =====================================
+   비밀번호 보호 기능
+===================================== */
+
+function requestProtectedAccess(action) {
+  pendingProtectedAction = action;
+  passwordInput.value = "";
+  passwordMessage.textContent = "비밀번호를 입력해 줘.";
+  passwordOverlay.hidden = false;
+  passwordInput.focus();
+}
+
+function closePassword() {
+  passwordOverlay.hidden = true;
+  pendingProtectedAction = null;
+  passwordInput.value = "";
+}
+
+function submitPassword() {
+  if (passwordInput.value !== FEATURE_PASSWORD) {
+    passwordMessage.textContent = "비밀번호가 틀렸어. 사용할 수 없어.";
+    passwordInput.value = "";
+    passwordInput.focus();
+    return;
+  }
+
+  const action = pendingProtectedAction;
+  closePassword();
+
+  if (action === "cheat") {
+    openCheatPanel();
+  }
+
+  if (action === "turbo") {
+    turboOverlay.hidden = false;
+    turboButton.setAttribute("aria-expanded", "true");
+    turboMessage.textContent = "실행하면 결과 요약이 표시돼.";
+    closeTurboButton.focus();
+  }
+}
+
+submitPasswordButton.addEventListener("click", submitPassword);
+
+passwordInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    submitPassword();
+  }
+});
+
+closePasswordButton.addEventListener("click", closePassword);
+cancelPasswordButton.addEventListener("click", closePassword);
+
+passwordOverlay.addEventListener("click", event => {
+  if (event.target === passwordOverlay) {
+    closePassword();
+  }
+});
+
+/* =====================================
+   희귀 연출 선택
+===================================== */
+
+function openReplay() {
+  replayOverlay.hidden = false;
+  replayButton.setAttribute("aria-expanded", "true");
+  replayMessage.textContent = "보고 싶은 연출을 선택해 줘.";
+  closeReplayButton.focus();
+}
+
+function closeReplay() {
+  replayOverlay.hidden = true;
+  replayButton.setAttribute("aria-expanded", "false");
+  replayButton.focus();
+}
+
+replayButton.addEventListener("click", openReplay);
+closeReplayButton.addEventListener("click", closeReplay);
+
+replayOverlay.addEventListener("click", event => {
+  if (event.target === replayOverlay) {
+    closeReplay();
+  }
+});
+
+document.querySelectorAll("[data-preview-rarity]").forEach(button => {
+  button.addEventListener("click", () => {
+    const level = button.dataset.previewRarity;
+    const label = button.querySelector(".rarity-badge")?.textContent?.trim();
+
+    if (!level || !label) return;
+
+    pendingEffectOverride = {
+      title: `✦ ${label.toUpperCase()} EFFECT ✦`,
+      level,
+      detail: label
+    };
+
+    document.querySelectorAll("[data-preview-rarity]").forEach(item => {
+      item.classList.toggle("selected", item === button);
+    });
+
+    replayMessage.textContent =
+      `${label} 연출을 선택했어. 창을 닫고 다음 숫자를 뽑으면 그 숫자에 이 연출이 적용돼!`;
+
+    closeReplay();
+
+    statusElement.textContent =
+      `다음 추첨에 ${label} 연출이 예약됐어.`;
+  });
+});
+
+/* =====================================
+   초고속 추첨
+===================================== */
+
+turboButton.addEventListener("click", () => {
+  requestProtectedAccess("turbo");
+});
+
+function closeTurbo() {
+  turboOverlay.hidden = true;
+  turboButton.setAttribute("aria-expanded", "false");
+  turboButton.focus();
+}
+
+closeTurboButton.addEventListener("click", closeTurbo);
+cancelTurboButton.addEventListener("click", closeTurbo);
+
+turboOverlay.addEventListener("click", event => {
+  if (event.target === turboOverlay) {
+    closeTurbo();
+  }
+});
+
+function runTurboDraw() {
+  if (isDrawing || autoRunning) {
+    turboMessage.textContent =
+      "일반 추첨이나 자동 뽑기가 실행 중일 때는 사용할 수 없어.";
+    return;
+  }
+
+  const count = Number(turboCountInput.value);
+
+  if (!Number.isInteger(count) || count < 1 || count > 10000) {
+    turboMessage.textContent =
+      "추첨 횟수는 1회부터 10,000회 사이의 정수로 입력해 줘.";
+    return;
+  }
+
+  const results = [];
+  const rareResults = [];
+
+  let localMax = -Infinity;
+  let localMin = Infinity;
+  let sum = 0;
+
+  startTurboButton.disabled = true;
+  turboMessage.textContent = `${count.toLocaleString("en-US")}회 추첨 중...`;
+
+  // 일괄 처리하므로 중간 애니메이션은 생략하지만 모든 결과는 통계와 기록에 반영한다.
+  for (let i = 0; i < count; i++) {
+    const result = secureRandomNumber();
+    const value = Number(result);
+    const pattern = getRarePattern(result);
+
+    results.push(value);
+    sum += value;
+    localMax = Math.max(localMax, value);
+    localMin = Math.min(localMin, value);
+
+    history.unshift(value);
+    history = history.slice(0, HISTORY_LIMIT);
+
+    if (pattern) {
+      rareHistory.unshift({ value, pattern });
+      rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
+      rareResults.push({ value, pattern });
+    }
+
+    totalDraws++;
+
+    if (highestNumber === null || value > highestNumber) {
+      highestNumber = value;
+    }
+
+    if (lowestNumber === null || value < lowestNumber) {
+      lowestNumber = value;
+    }
+
+    trackDrawStatistics(result, {
+      render: false,
+      persist: false
+    });
+  }
+
+  const finalResult =
+    String(results[results.length - 1]).padStart(DIGITS, "0");
+
+  lastResult = finalResult;
+
+  setDisplayedNumber(finalResult, true);
+  digitCountLabel.textContent = getDigitCountLabel(finalResult);
+  updateNumberInfo(finalResult);
+
+  const finalPattern = getRarePattern(finalResult);
+  triggerNextResultEffect(finalPattern, finalResult);
+
+  renderHistory();
+  renderRareHistory();
+  updateAverage();
+  updateStatistics();
+  renderStatistics();
+  saveProgress();
+
+  autoCompletedCount = count;
+  autoResults = results;
+  autoRareResults = rareResults;
+
+  statusElement.textContent =
+    `초고속 추첨 완료 · ${count.toLocaleString("en-US")}회`;
+
+  turboMessage.textContent =
+    `완료! 평균 ${Math.round(sum / count).toLocaleString("en-US")} · 최댓값 ${localMax.toLocaleString("en-US")} · 최솟값 ${localMin.toLocaleString("en-US")}`;
+
+  startTurboButton.disabled = false;
+  closeTurbo();
+
+  showAutoSummary(`초고속 추첨 ${count.toLocaleString("en-US")}회 완료!`);
+}
+
+startTurboButton.addEventListener("click", runTurboDraw);
+
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape") return;
+
+  if (!passwordOverlay.hidden) closePassword();
+  if (!replayOverlay.hidden) closeReplay();
+  if (!turboOverlay.hidden) closeTurbo();
+});
 
 /* =====================================
    초기화
 ===================================== */
 
+restoreProgress();
 populateSettingsControls();
 applySettings();
+setDisplayedNumber(lastResult, true);
+
+if (totalDraws > 0) {
+  digitCountLabel.textContent = getDigitCountLabel(lastResult);
+  updateNumberInfo(lastResult);
+  statusElement.textContent = "이전 기록을 불러왔어. 계속 추첨해 봐!";
+}
 
 renderHistory();
 renderRareHistory();
