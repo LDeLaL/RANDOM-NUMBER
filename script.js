@@ -96,6 +96,7 @@ const clearCheatButton = $("clear-cheat");
 const cheatMessage = $("cheat-message");
 
 const rarityButton = $("rarity-button");
+const soundToggle = $("sound-toggle");
 const rarityOverlay = $("rarity-overlay");
 const closeRarityButton = $("close-rarity");
 
@@ -148,6 +149,9 @@ const drawStats = {
     legendary: 0,
     ultimate: 0,
     mythic: 0,
+    phantom: 0,
+    aurora: 0,
+    seraph: 0,
     eclipse: 0,
     jackpot: 0,
     special: 0,
@@ -163,8 +167,11 @@ const RARITY_ORDER = [
   "special",
   "jackpot",
   "eclipse",
-  "mythic",
   "legendary",
+  "mythic",
+  "seraph",
+  "aurora",
+  "phantom",
   "glorious",
   "rare",
   "uncommon",
@@ -172,6 +179,193 @@ const RARITY_ORDER = [
 ];
 
 let pendingEffectOverride = null;
+
+/* =====================================
+   효과음: 외부 파일 없이 Web Audio로 생성
+===================================== */
+
+let soundEnabled = true;
+let audioContext = null;
+
+function getAudioContext() {
+  if (!soundEnabled) return null;
+
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass) return null;
+
+  if (!audioContext) {
+    audioContext = new AudioContextClass();
+  }
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume().catch(() => {});
+  }
+
+  return audioContext;
+}
+
+function playTone(
+  frequency,
+  duration = 0.09,
+  type = "sine",
+  volume = 0.045,
+  delay = 0
+) {
+  const context = getAudioContext();
+  if (!context) return;
+
+  const start = context.currentTime + delay;
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(
+    Math.max(0.0002, volume),
+    start + 0.012
+  );
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    start + duration
+  );
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.025);
+}
+
+function playUiClickSound() {
+  if (!soundEnabled) return;
+
+  playTone(620, 0.045, "sine", 0.025);
+}
+
+function playRaritySound(level) {
+  if (!soundEnabled) return;
+
+  const sounds = {
+    common: [
+      [440, 0.05, "sine", 0.018, 0]
+    ],
+
+    uncommon: [
+      [523, 0.07, "sine", 0.025, 0]
+    ],
+
+    rare: [
+      [587, 0.08, "triangle", 0.035, 0],
+      [784, 0.1, "sine", 0.028, 0.07]
+    ],
+
+    glorious: [
+      [659, 0.09, "triangle", 0.04, 0],
+      [880, 0.12, "sine", 0.035, 0.08]
+    ],
+
+    legendary: [
+      [523, 0.12, "triangle", 0.045, 0],
+      [659, 0.13, "triangle", 0.045, 0.09],
+      [1047, 0.2, "sine", 0.05, 0.18]
+    ],
+
+    mythic: [
+      [392, 0.15, "sine", 0.04, 0],
+      [587, 0.15, "sine", 0.045, 0.1],
+      [784, 0.22, "triangle", 0.05, 0.2]
+    ],
+
+    phantom: [
+      [330, 0.13, "sine", 0.04, 0],
+      [440, 0.15, "sine", 0.035, 0.1],
+      [370, 0.18, "triangle", 0.04, 0.21]
+    ],
+
+    aurora: [
+      [523, 0.16, "sine", 0.035, 0],
+      [659, 0.18, "sine", 0.04, 0.1],
+      [784, 0.2, "sine", 0.045, 0.2],
+      [1047, 0.25, "triangle", 0.04, 0.31]
+    ],
+
+    seraph: [
+      [659, 0.14, "sine", 0.04, 0],
+      [831, 0.17, "sine", 0.045, 0.1],
+      [988, 0.2, "triangle", 0.05, 0.2],
+      [1319, 0.26, "sine", 0.045, 0.31]
+    ],
+
+    eclipse: [
+      [220, 0.2, "sawtooth", 0.035, 0],
+      [165, 0.24, "sine", 0.045, 0.13],
+      [440, 0.25, "triangle", 0.05, 0.29]
+    ],
+
+    jackpot: [
+      [784, 0.1, "triangle", 0.05, 0],
+      [988, 0.12, "triangle", 0.05, 0.08],
+      [1175, 0.18, "sine", 0.055, 0.17],
+      [1568, 0.24, "sine", 0.05, 0.29]
+    ],
+
+    special: [
+      [740, 0.1, "square", 0.035, 0],
+      [988, 0.16, "triangle", 0.045, 0.09]
+    ],
+
+    "reverse-special": [
+      [988, 0.1, "square", 0.04, 0],
+      [740, 0.12, "triangle", 0.045, 0.09],
+      [494, 0.2, "sine", 0.05, 0.2]
+    ],
+
+    ultimate: [
+      [392, 0.18, "sine", 0.045, 0],
+      [523, 0.18, "triangle", 0.05, 0.12],
+      [784, 0.22, "triangle", 0.055, 0.24],
+      [1047, 0.3, "sine", 0.06, 0.38]
+    ]
+  };
+
+  (sounds[level] || sounds.common).forEach(
+    ([frequency, duration, type, volume, delay]) => {
+      playTone(frequency, duration, type, volume, delay);
+    }
+  );
+}
+
+if (soundToggle) {
+  soundToggle.setAttribute("aria-pressed", "true");
+  soundToggle.title = "효과음 켜짐 · 클릭해서 끄기";
+
+  soundToggle.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+
+    soundToggle.setAttribute(
+      "aria-pressed",
+      String(soundEnabled)
+    );
+
+    soundToggle.title = soundEnabled
+      ? "효과음 켜짐 · 클릭해서 끄기"
+      : "효과음 꺼짐 · 클릭해서 켜기";
+  });
+}
+
+document.addEventListener("click", event => {
+  const control = event.target.closest(
+    'button, [role="button"], input[type="checkbox"], input[type="radio"], select'
+  );
+
+  if (control && !control.disabled) {
+    playUiClickSound();
+  }
+});
 
 function getRarityRank(level) {
   const index = RARITY_ORDER.indexOf(level || "common");
@@ -524,6 +718,9 @@ function resetNumberEffects() {
     "rare-special",
     "rare-reverse-special",
     "rare-mythic",
+    "rare-phantom",
+    "rare-aurora",
+    "rare-seraph",
     "rare-eclipse",
     "rarity-uncommon-impact",
     "rarity-rare-impact",
@@ -534,6 +731,9 @@ function resetNumberEffects() {
     "rarity-special-impact",
     "rarity-reverse-special-impact",
     "rarity-mythic-impact",
+    "rarity-phantom-impact",
+    "rarity-aurora-impact",
+    "rarity-seraph-impact",
     "rarity-eclipse-impact",
     "magnitude-6",
     "magnitude-5",
@@ -612,6 +812,20 @@ function getRarePattern(value) {
     );
   }
 
+  // Phantom: ABABABA 형태의 7자리 교차 반복.
+  // Mythic의 대칭 판정보다 먼저 확인해 이 등급이 정상적으로 판별되게 한다.
+  if (
+    length === 7 &&
+    digits[0] === digits[2] &&
+    digits[2] === digits[4] &&
+    digits[4] === digits[6] &&
+    digits[1] === digits[3] &&
+    digits[3] === digits[5] &&
+    digits[0] !== digits[1]
+  ) {
+    return result("✧ PHANTOM · 교차 반복 ✧", "phantom", "Phantom");
+  }
+
   // Mythic: 좌우가 대칭인 7자리 숫자.
   if (
     length === 7 &&
@@ -622,6 +836,32 @@ function getRarePattern(value) {
       "mythic",
       "Mythic"
     );
+  }
+
+  // Aurora: 7자리 숫자가 1씩 증가하거나 감소하는 패턴.
+  if (length === 7) {
+    const ascending = digits.every((digit, index) =>
+      index === 0 || Number(digit) === Number(digits[index - 1]) + 1
+    );
+
+    const descending = digits.every((digit, index) =>
+      index === 0 || Number(digit) === Number(digits[index - 1]) - 1
+    );
+
+    if (ascending || descending) {
+      return result("✧ AURORA · 연속 숫자 ✧", "aurora", "Aurora");
+    }
+  }
+
+  // Seraph: 숫자가 모두 다르고 각 자릿수의 합이 35 또는 42.
+  if (
+    length === 7 &&
+    new Set(digits).size === 7 &&
+    [35, 42].includes(
+      digits.reduce((sum, digit) => sum + Number(digit), 0)
+    )
+  ) {
+    return result("✦ SERAPH · 고유 숫자 조합 ✦", "seraph", "Seraph");
   }
 
   // 동일한 숫자가 연속해서 반복되는 길이를 확인한다.
@@ -918,6 +1158,9 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     "rare-special",
     "rare-reverse-special",
     "rare-mythic",
+    "rare-phantom",
+    "rare-aurora",
+    "rare-seraph",
     "rare-eclipse",
     "rarity-uncommon-impact",
     "rarity-rare-impact",
@@ -928,6 +1171,9 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     "rarity-special-impact",
     "rarity-reverse-special-impact",
     "rarity-mythic-impact",
+    "rarity-phantom-impact",
+    "rarity-aurora-impact",
+    "rarity-seraph-impact",
     "rarity-eclipse-impact",
     "magnitude-6",
     "magnitude-5",
@@ -942,6 +1188,11 @@ function triggerResultImpact(pattern = null, result = "0000000") {
 
   const rect = numberBox.getBoundingClientRect();
   const rareActive = Boolean(pattern && settings.rareEffects);
+
+  if (rareActive) {
+    playRaritySound(pattern.level);
+  }
+
   const normalized = String(Number(result));
   const visibleDigits = normalized === "0" ? 0 : normalized.length;
 
@@ -981,6 +1232,9 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     legendary: 2,
     ultimate: 3,
     mythic: 2.6,
+    phantom: 2.15,
+    aurora: 2.3,
+    seraph: 2.7,
     eclipse: 3.2,
     jackpot: 2.8,
     special: 2.1,
@@ -1016,6 +1270,12 @@ function triggerResultImpact(pattern = null, result = "0000000") {
       numberBox.classList.add("rare-mythic");
     } else if (pattern.level === "eclipse") {
       numberBox.classList.add("rare-eclipse");
+    } else if (pattern.level === "phantom") {
+      numberBox.classList.add("rare-phantom");
+    } else if (pattern.level === "aurora") {
+      numberBox.classList.add("rare-aurora");
+    } else if (pattern.level === "seraph") {
+      numberBox.classList.add("rare-seraph");
     } else {
       numberBox.classList.add("rare");
     }
@@ -1032,6 +1292,9 @@ function triggerResultImpact(pattern = null, result = "0000000") {
         "jackpot",
         "reverse-special",
         "mythic",
+        "phantom",
+        "aurora",
+        "seraph",
         "eclipse"
       ].includes(pattern.level)
     ) {
@@ -1055,6 +1318,9 @@ function triggerResultImpact(pattern = null, result = "0000000") {
               : pattern.level === "ultimate" ? 150
               : pattern.level === "jackpot" ? 135
               : pattern.level === "mythic" ? 120
+              : pattern.level === "seraph" ? 110
+              : pattern.level === "aurora" ? 95
+              : pattern.level === "phantom" ? 85
               : pattern.level === "legendary" ? 100
               : 65
             )
@@ -1254,6 +1520,9 @@ function renderStatistics() {
     ["glorious", "Glorious"],
     ["legendary", "Legendary"],
     ["mythic", "Mythic"],
+    ["seraph", "Seraph"],
+    ["aurora", "Aurora"],
+    ["phantom", "Phantom"],
     ["eclipse", "Eclipse"],
     ["ultimate", "Ultimate"],
     ["jackpot", "Jackpot"],
