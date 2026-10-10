@@ -1,9 +1,11 @@
+
 "use strict";
 
 const DIGITS = 7;
 const HISTORY_LIMIT = 10;
 const SETTINGS_KEY = "violetRandomSettings";
 const PROGRESS_KEY = "violetRandomProgress";
+const RARE_HISTORY_FILTER_KEY = "violetRandomRareHistoryFilter";
 const FEATURE_PASSWORD = "0708";
 
 const DEFAULT_SETTINGS = {
@@ -54,6 +56,14 @@ const autoSummaryOverlay = $("auto-summary-overlay");
 const closeAutoSummaryButton = $("close-auto-summary");
 const closeSummaryDoneButton = $("close-summary-done");
 const rareHistoryList = $("rare-history-list");
+const rareHistoryFilterButton = $("rare-history-filter-button");
+const rareHistoryFilterPanel = $("rare-history-filter");
+const rareHistoryFilterCloseButton = $("rare-history-filter-close");
+const rareHistoryFilterAllButton = $("rare-history-filter-all");
+const rareHistoryFilterNoneButton = $("rare-history-filter-none");
+const rareHistoryFilterInputs = Array.from(
+  document.querySelectorAll('input[name="rare-history-rarity"]')
+);
 const statusElement = $("status");
 const historyList = $("history-list");
 const averageElement = $("average");
@@ -142,6 +152,16 @@ const drawStats = {
     Array.from({ length: 10 }, (_, i) => [String(i), 0])
   ),
   rarities: {
+    transcendent: 0,
+    singularity: 0,
+    paradox: 0,
+    infinity: 0,
+    sovereign: 0,
+    celestial: 0,
+    ethereal: 0,
+    quantum: 0,
+    astral: 0,
+    radiant: 0,
     uncommon: 0,
     rare: 0,
     glorious: 0,
@@ -159,8 +179,17 @@ const drawStats = {
   }
 };
 
-// 희귀도가 높은 순서. Mythic은 Legendary 바로 아래에 둔다.
 const RARITY_ORDER = [
+  "transcendent",
+  "singularity",
+  "paradox",
+  "infinity",
+  "sovereign",
+  "celestial",
+  "ethereal",
+  "quantum",
+  "astral",
+  "radiant",
   "ultimate",
   "reverse-special",
   "special",
@@ -178,6 +207,133 @@ const RARITY_ORDER = [
 ];
 
 let pendingEffectOverride = null;
+
+const DEFAULT_RARE_HISTORY_LEVELS = new Set(
+  RARITY_ORDER.filter(level => level !== "common")
+);
+
+let rareHistoryLevels = loadRareHistoryLevels();
+
+function loadRareHistoryLevels() {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(RARE_HISTORY_FILTER_KEY) || "null"
+    );
+
+    if (!Array.isArray(saved)) {
+      return new Set(DEFAULT_RARE_HISTORY_LEVELS);
+    }
+
+    return new Set(
+      saved.filter(
+        level => RARITY_ORDER.includes(level) && level !== "common"
+      )
+    );
+  } catch {
+    return new Set(DEFAULT_RARE_HISTORY_LEVELS);
+  }
+}
+
+function getSelectedRareHistoryLevels() {
+  if (!rareHistoryFilterInputs.length) {
+    return new Set(DEFAULT_RARE_HISTORY_LEVELS);
+  }
+
+  return new Set(
+    rareHistoryFilterInputs
+      .filter(input => input.checked)
+      .map(input => input.value)
+  );
+}
+
+function applyRareHistoryFilterControls() {
+  if (!rareHistoryFilterInputs.length) return;
+
+  rareHistoryFilterInputs.forEach(input => {
+    input.checked = rareHistoryLevels.has(input.value);
+  });
+}
+
+function saveRareHistoryLevels() {
+  rareHistoryLevels = getSelectedRareHistoryLevels();
+
+  try {
+    localStorage.setItem(
+      RARE_HISTORY_FILTER_KEY,
+      JSON.stringify([...rareHistoryLevels])
+    );
+  } catch (error) {
+    console.warn("Violet Random 희귀 기록 설정 저장 실패:", error);
+  }
+
+  renderRareHistory();
+}
+
+function openRareHistoryFilter() {
+  if (!rareHistoryFilterPanel || !rareHistoryFilterButton) return;
+
+  rareHistoryFilterPanel.hidden = false;
+  rareHistoryFilterButton.setAttribute("aria-expanded", "true");
+  rareHistoryFilterCloseButton?.focus();
+}
+
+function closeRareHistoryFilter() {
+  if (!rareHistoryFilterPanel || !rareHistoryFilterButton) return;
+
+  rareHistoryFilterPanel.hidden = true;
+  rareHistoryFilterButton.setAttribute("aria-expanded", "false");
+  rareHistoryFilterButton.focus();
+}
+
+if (rareHistoryFilterInputs.length) {
+  applyRareHistoryFilterControls();
+
+  rareHistoryFilterInputs.forEach(input => {
+    input.addEventListener("change", saveRareHistoryLevels);
+  });
+
+  rareHistoryFilterAllButton?.addEventListener("click", () => {
+    rareHistoryFilterInputs.forEach(input => {
+      input.checked = true;
+    });
+
+    saveRareHistoryLevels();
+  });
+
+  rareHistoryFilterNoneButton?.addEventListener("click", () => {
+    rareHistoryFilterInputs.forEach(input => {
+      input.checked = false;
+    });
+
+    saveRareHistoryLevels();
+  });
+
+  rareHistoryFilterButton?.addEventListener(
+    "click",
+    openRareHistoryFilter
+  );
+
+  rareHistoryFilterCloseButton?.addEventListener(
+    "click",
+    closeRareHistoryFilter
+  );
+
+  rareHistoryFilterPanel?.addEventListener("click", event => {
+    if (event.target === rareHistoryFilterPanel) {
+      closeRareHistoryFilter();
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (
+      event.key === "Escape" &&
+      rareHistoryFilterPanel &&
+      !rareHistoryFilterPanel.hidden
+    ) {
+      closeRareHistoryFilter();
+    }
+  });
+}
 
 function getRarityRank(level) {
   const index = RARITY_ORDER.indexOf(level || "common");
@@ -212,7 +368,6 @@ function triggerNextResultEffect(actualPattern, result) {
   const previousRareEffects = settings.rareEffects;
   const effectPattern = takeEffectPattern(actualPattern);
 
-  // 직접 선택한 연출은 희귀 숫자 이펙트 설정이 꺼져 있어도 적용한다.
   if (hasOverride) {
     settings.rareEffects = true;
   }
@@ -227,10 +382,6 @@ function triggerNextResultEffect(actualPattern, result) {
 let rollTimeouts = [];
 let rollIntervals = [];
 let backgroundParticles = [];
-
-/* =====================================
-   사운드: 외부 파일 없이 Web Audio로 생성
-===================================== */
 
 let audioContext = null;
 
@@ -266,9 +417,10 @@ function playTone(
 
   gain.gain.setValueAtTime(0.0001, start);
 
-  // 기존 음색은 유지하면서 모든 효과음의 음량을 높인다.
-  // 과도한 증폭으로 소리가 찢어지는 현상은 제한한다.
-  const louderVolume = Math.min(0.22, Math.max(0.0002, volume * 2.8));
+  const louderVolume = Math.min(
+    0.22,
+    Math.max(0.0002, volume * 2.8)
+  );
 
   gain.gain.exponentialRampToValueAtTime(
     louderVolume,
@@ -373,6 +525,76 @@ function playRaritySound(level) {
       [880, 0.1, "triangle"],
       [659, 0.12, "triangle", 0.035, 0.08],
       [440, 0.2, "sine", 0.03, 0.17]
+    ],
+
+    transcendent: [
+      [523, 0.18, "sine"],
+      [784, 0.2, "triangle", 0.05, 0.08],
+      [1047, 0.24, "sine", 0.05, 0.17],
+      [1568, 0.38, "triangle", 0.045, 0.27]
+    ],
+
+    singularity: [
+      [110, 0.28, "sine", 0.05],
+      [220, 0.3, "triangle", 0.045, 0.09],
+      [440, 0.32, "sawtooth", 0.035, 0.2],
+      [880, 0.4, "sine", 0.05, 0.31]
+    ],
+
+    paradox: [
+      [740, 0.13, "triangle"],
+      [494, 0.17, "sine", 0.045, 0.06],
+      [831, 0.18, "triangle", 0.045, 0.13],
+      [554, 0.28, "sine", 0.04, 0.21]
+    ],
+
+    infinity: [
+      [392, 0.2, "sine"],
+      [587, 0.23, "sine", 0.045, 0.07],
+      [784, 0.26, "triangle", 0.045, 0.14],
+      [1175, 0.32, "sine", 0.04, 0.22]
+    ],
+
+    sovereign: [
+      [392, 0.16, "triangle"],
+      [523, 0.18, "triangle", 0.05, 0.06],
+      [659, 0.22, "sine", 0.05, 0.13],
+      [1047, 0.36, "triangle", 0.05, 0.22]
+    ],
+
+    celestial: [
+      [587, 0.2, "sine"],
+      [784, 0.22, "sine", 0.045, 0.08],
+      [988, 0.26, "triangle", 0.045, 0.16],
+      [1319, 0.34, "sine", 0.04, 0.25]
+    ],
+
+    ethereal: [
+      [659, 0.24, "sine"],
+      [880, 0.28, "sine", 0.04, 0.1],
+      [1175, 0.32, "triangle", 0.04, 0.2],
+      [988, 0.4, "sine", 0.035, 0.31]
+    ],
+
+    quantum: [
+      [880, 0.1, "square", 0.035],
+      [440, 0.14, "triangle", 0.045, 0.06],
+      [1320, 0.18, "sine", 0.045, 0.12],
+      [660, 0.24, "triangle", 0.04, 0.2]
+    ],
+
+    astral: [
+      [349, 0.18, "sine"],
+      [523, 0.2, "triangle", 0.045, 0.07],
+      [698, 0.25, "sine", 0.04, 0.15],
+      [1047, 0.35, "triangle", 0.045, 0.23]
+    ],
+
+    radiant: [
+      [784, 0.13, "triangle"],
+      [988, 0.16, "sine", 0.05, 0.06],
+      [1319, 0.22, "triangle", 0.05, 0.13],
+      [1760, 0.36, "sine", 0.045, 0.21]
     ]
   };
 
@@ -649,8 +871,6 @@ function secureRandomNumber() {
   const LIMIT = Math.floor(MAX / RANGE) * RANGE;
   const buffer = new Uint32Array(1);
 
-  // 편향을 제거해 0~9,999,999의 모든 결과가
-  // 정확히 같은 확률로 나오도록 한다.
   do {
     crypto.getRandomValues(buffer);
   } while (buffer[0] >= LIMIT);
@@ -696,6 +916,26 @@ function resetNumberEffects() {
     "rare-reverse-special",
     "rare-mythic",
     "rare-eclipse",
+    "rare-transcendent",
+    "rare-singularity",
+    "rare-paradox",
+    "rare-infinity",
+    "rare-sovereign",
+    "rare-celestial",
+    "rare-ethereal",
+    "rare-quantum",
+    "rare-astral",
+    "rare-radiant",
+    "rarity-transcendent-impact",
+    "rarity-singularity-impact",
+    "rarity-paradox-impact",
+    "rarity-infinity-impact",
+    "rarity-sovereign-impact",
+    "rarity-celestial-impact",
+    "rarity-ethereal-impact",
+    "rarity-quantum-impact",
+    "rarity-astral-impact",
+    "rarity-radiant-impact",
     "rare-phantom",
     "rare-aurora",
     "rare-seraph",
@@ -750,13 +990,73 @@ function setDisplayedNumber(value, hideLeadingZeros = false) {
 ===================================== */
 
 function getRarePattern(value) {
-  // 앞자리 0은 실제 자릿수에 포함하지 않는다.
   const normalized = String(Number(value));
   const digits = normalized.split("");
   const length = normalized === "0" ? 0 : normalized.length;
-  const result = (title, level, detail = title) => ({ title, level, detail });
+  const result = (title, level, detail = title) => ({
+    title,
+    level,
+    detail
+  });
 
-  // 지정 숫자는 일반 패턴보다 항상 우선한다.
+  const exclusiveNumbers = {
+    "3141592": [
+      "✦ TRANSCENDENT · π의 숫자 배열 ✦",
+      "transcendent",
+      "Transcendent"
+    ],
+    "2718281": [
+      "✦ SINGULARITY · e의 숫자 배열 ✦",
+      "singularity",
+      "Singularity"
+    ],
+    "1618033": [
+      "✦ PARADOX · 황금비 숫자 배열 ✦",
+      "paradox",
+      "Paradox"
+    ],
+    "8675309": [
+      "✦ INFINITY · 고유 숫자 조합 ✦",
+      "infinity",
+      "Infinity"
+    ],
+    "1020304": [
+      "✦ SOVEREIGN · 일정 간격의 0 ✦",
+      "sovereign",
+      "Sovereign"
+    ],
+    "1357924": [
+      "✦ CELESTIAL · 홀수 중심 조합 ✦",
+      "celestial",
+      "Celestial"
+    ],
+    "3692581": [
+      "✦ ETHEREAL · 무중복 숫자 배열 ✦",
+      "ethereal",
+      "Ethereal"
+    ],
+    "2468135": [
+      "✦ QUANTUM · 짝홀 교차 배열 ✦",
+      "quantum",
+      "Quantum"
+    ],
+    "3142314": [
+      "✦ ASTRAL · 대칭 반복 구조 ✦",
+      "astral",
+      "Astral"
+    ],
+    "5831047": [
+      "✦ RADIANT · 고유 숫자 조합 ✦",
+      "radiant",
+      "Radiant"
+    ]
+  };
+
+  if (exclusiveNumbers[normalized]) {
+    const [title, level, detail] = exclusiveNumbers[normalized];
+    return result(title, level, detail);
+  }
+
   if (["7777777", "777777", "77777", "7777", "777"].includes(normalized)) {
     return result("✦ JACKPOT ✦", "jackpot", "Jackpot");
   }
@@ -766,14 +1066,21 @@ function getRarePattern(value) {
   }
 
   if (normalized === "7654321") {
-    return result("✧ REVERSE SPECIAL ✧", "reverse-special", "Reverse Special");
+    return result(
+      "✧ REVERSE SPECIAL ✧",
+      "reverse-special",
+      "Reverse Special"
+    );
   }
 
   if (length === 7 && /^(\d)\1{6}$/.test(normalized)) {
-    return result("✦ ECLIPSE · 7자리 단일 숫자 ✦", "eclipse", "Eclipse");
+    return result(
+      "✦ ECLIPSE · 7자리 단일 숫자 ✦",
+      "eclipse",
+      "Eclipse"
+    );
   }
 
-  // Aurora: 일곱 자리가 한 칸씩 증가하거나 감소하는 연속 패턴.
   if (
     length === 7 &&
     (
@@ -783,10 +1090,13 @@ function getRarePattern(value) {
       normalized === "9876543"
     )
   ) {
-    return result("✧ AURORA · 연속 숫자 ✧", "aurora", "Aurora");
+    return result(
+      "✧ AURORA · 연속 숫자 ✧",
+      "aurora",
+      "Aurora"
+    );
   }
 
-  // Phantom: ABABABA 형태의 7자리 교차 반복.
   if (
     length === 7 &&
     digits[0] === digits[2] &&
@@ -796,10 +1106,13 @@ function getRarePattern(value) {
     digits[3] === digits[5] &&
     digits[0] !== digits[1]
   ) {
-    return result("✧ PHANTOM · 교차 반복 ✧", "phantom", "Phantom");
+    return result(
+      "✧ PHANTOM · 교차 반복 ✧",
+      "phantom",
+      "Phantom"
+    );
   }
 
-  // Seraph: 중복 숫자 없이, 숫자 합이 35 또는 42인 7자리 조합.
   if (
     length === 7 &&
     new Set(digits).size === 7 &&
@@ -807,15 +1120,22 @@ function getRarePattern(value) {
       digits.reduce((sum, digit) => sum + Number(digit), 0)
     )
   ) {
-    return result("✦ SERAPH · 완전 무중복 ✦", "seraph", "Seraph");
+    return result(
+      "✦ SERAPH · 완전 무중복 ✦",
+      "seraph",
+      "Seraph"
+    );
   }
 
-  // Mythic은 Legendary보다 한 단계 아래다.
   if (
     length === 7 &&
     normalized === normalized.split("").reverse().join("")
   ) {
-    return result("✧ MYTHIC · 좌우 대칭 ✧", "mythic", "Mythic");
+    return result(
+      "✧ MYTHIC · 좌우 대칭 ✧",
+      "mythic",
+      "Mythic"
+    );
   }
 
   let longestRun = 1;
@@ -831,11 +1151,19 @@ function getRarePattern(value) {
   }
 
   if (longestRun >= 7) {
-    return result("✦ LEGENDARY · 7연속 반복 ✦", "legendary", "Legendary");
+    return result(
+      "✦ LEGENDARY · 7연속 반복 ✦",
+      "legendary",
+      "Legendary"
+    );
   }
 
   if (longestRun === 6) {
-    return result("✦ GLORIOUS · 6연속 반복 ✦", "glorious", "Glorious");
+    return result(
+      "✦ GLORIOUS · 6연속 반복 ✦",
+      "glorious",
+      "Glorious"
+    );
   }
 
   if (longestRun >= 3 && longestRun <= 5) {
@@ -866,7 +1194,11 @@ function getRarePattern(value) {
       if (
         normalized.slice(start + size, start + size * 2) === block
       ) {
-        return result("✧ RARE · 숫자 집합 반복 ✧", "rare", "Rare");
+        return result(
+          "✧ RARE · 숫자 집합 반복 ✧",
+          "rare",
+          "Rare"
+        );
       }
     }
   }
@@ -1087,6 +1419,26 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     "rare-reverse-special",
     "rare-mythic",
     "rare-eclipse",
+    "rare-transcendent",
+    "rare-singularity",
+    "rare-paradox",
+    "rare-infinity",
+    "rare-sovereign",
+    "rare-celestial",
+    "rare-ethereal",
+    "rare-quantum",
+    "rare-astral",
+    "rare-radiant",
+    "rarity-transcendent-impact",
+    "rarity-singularity-impact",
+    "rarity-paradox-impact",
+    "rarity-infinity-impact",
+    "rarity-sovereign-impact",
+    "rarity-celestial-impact",
+    "rarity-ethereal-impact",
+    "rarity-quantum-impact",
+    "rarity-astral-impact",
+    "rarity-radiant-impact",
     "rare-phantom",
     "rare-aurora",
     "rare-seraph",
@@ -1145,7 +1497,6 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     }
   }
 
-  // 자릿수가 낮거나 등급이 높을수록 파티클과 연출을 강화한다.
   const magnitudeScale =
     visibleDigits === 0
       ? 3.2
@@ -1154,6 +1505,16 @@ function triggerResultImpact(pattern = null, result = "0000000") {
         : 1 + (7 - visibleDigits) * 0.42;
 
   const levelScales = {
+    transcendent: 4.8,
+    singularity: 4.6,
+    paradox: 4.3,
+    infinity: 4.1,
+    sovereign: 3.9,
+    celestial: 3.7,
+    ethereal: 3.5,
+    quantum: 3.4,
+    astral: 3.2,
+    radiant: 3.1,
     uncommon: 1.15,
     rare: 1.3,
     glorious: 1.65,
@@ -1213,6 +1574,16 @@ function triggerResultImpact(pattern = null, result = "0000000") {
       [
         "legendary",
         "ultimate",
+        "transcendent",
+        "singularity",
+        "paradox",
+        "infinity",
+        "sovereign",
+        "celestial",
+        "ethereal",
+        "quantum",
+        "astral",
+        "radiant",
         "jackpot",
         "reverse-special",
         "mythic",
@@ -1438,8 +1809,17 @@ function renderStatistics() {
     drawStats.total
   );
 
-  // 통계에서도 동일한 희귀도 순서를 사용한다.
   const rarityNames = [
+    ["transcendent", "Transcendent"],
+    ["singularity", "Singularity"],
+    ["paradox", "Paradox"],
+    ["infinity", "Infinity"],
+    ["sovereign", "Sovereign"],
+    ["celestial", "Celestial"],
+    ["ethereal", "Ethereal"],
+    ["quantum", "Quantum"],
+    ["astral", "Astral"],
+    ["radiant", "Radiant"],
     ["ultimate", "Ultimate"],
     ["reverse-special", "Reverse Special"],
     ["special", "Special"],
@@ -1568,7 +1948,7 @@ function addToHistory(result) {
   history.unshift(value);
   history = history.slice(0, HISTORY_LIMIT);
 
-  if (pattern) {
+  if (pattern && rareHistoryLevels.has(pattern.level)) {
     rareHistory.unshift({ value, pattern });
     rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
     renderRareHistory();
@@ -1623,6 +2003,16 @@ function renderHistory() {
         [
           "legendary",
           "ultimate",
+          "transcendent",
+          "singularity",
+          "paradox",
+          "infinity",
+          "sovereign",
+          "celestial",
+          "ethereal",
+          "quantum",
+          "astral",
+          "radiant",
           "jackpot",
           "reverse-special",
           "seraph",
@@ -1650,7 +2040,11 @@ function renderHistory() {
 function renderRareHistory() {
   rareHistoryList.replaceChildren();
 
-  if (rareHistory.length === 0) {
+  const visibleRareHistory = rareHistory.filter(entry =>
+    rareHistoryLevels.has(entry.pattern.level)
+  );
+
+  if (visibleRareHistory.length === 0) {
     const empty = document.createElement("li");
     empty.className = "empty-history";
     empty.textContent = "아직 희귀 숫자가 없어!";
@@ -1658,7 +2052,7 @@ function renderRareHistory() {
     return;
   }
 
-  rareHistory.forEach((entry, index) => {
+  visibleRareHistory.forEach((entry, index) => {
     const item = document.createElement("li");
 
     item.classList.add(
@@ -1670,6 +2064,16 @@ function renderRareHistory() {
       [
         "legendary",
         "ultimate",
+        "transcendent",
+        "singularity",
+        "paradox",
+        "infinity",
+        "sovereign",
+        "celestial",
+        "ethereal",
+        "quantum",
+        "astral",
+        "radiant",
         "jackpot",
         "reverse-special",
         "seraph",
@@ -1734,7 +2138,6 @@ function updateStatistics() {
 ===================================== */
 
 function finishDraw(result) {
-  // 롤링만 정리한다. 결과 효과에 필요한 타이머는 건드리지 않는다.
   clearRollTimers();
 
   setDisplayedNumber(result, true);
@@ -1783,7 +2186,6 @@ function finishDraw(result) {
   }
 }
 
-/* 즉각 뽑기 */
 function drawInstantly() {
   if (isDrawing) return;
 
@@ -1820,7 +2222,6 @@ function drawWithAnimation() {
 
   const result = getNextResult();
 
-  // 1이 가장 느리고, 5가 가장 빠르다.
   const speedSettings = {
     1: { start: 1900, interval: 850, spin: 100 },
     2: { start: 1500, interval: 650, spin: 85 },
@@ -1832,7 +2233,6 @@ function drawWithAnimation() {
   const timing = speedSettings[settings.speed];
 
   digitElements.forEach((digit, index) => {
-    // 각 자리의 롤링은 추첨 연출용이다.
     const intervalId = setInterval(() => {
       digit.textContent = String(Math.floor(Math.random() * 10));
     }, timing.spin);
@@ -1845,7 +2245,6 @@ function drawWithAnimation() {
       digit.classList.remove("rolling");
       digit.textContent = result[index];
 
-      // 브라우저가 Web Animations API를 지원할 때만 사용
       if (typeof digit.animate === "function") {
         digit.animate(
           [
@@ -2032,7 +2431,6 @@ function handleAutoAfterDraw(pattern) {
     return;
   }
 
-  // 즉각 모드에서도 잠깐 간격을 둬 브라우저가 멈추지 않도록 한다.
   autoNextTimeout = setTimeout(
     runNextAutoDraw,
     autoMode === "instant" ? 120 : 100
@@ -2421,7 +2819,6 @@ function runTurboDraw() {
   startTurboButton.disabled = true;
   turboMessage.textContent = `${count.toLocaleString("en-US")}회 추첨 중...`;
 
-  // 일괄 처리하므로 중간 애니메이션은 생략하지만 모든 결과는 통계와 기록에 반영한다.
   for (let i = 0; i < count; i++) {
     const result = secureRandomNumber();
     const value = Number(result);
@@ -2436,8 +2833,11 @@ function runTurboDraw() {
     history = history.slice(0, HISTORY_LIMIT);
 
     if (pattern) {
-      rareHistory.unshift({ value, pattern });
-      rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
+      if (rareHistoryLevels.has(pattern.level)) {
+        rareHistory.unshift({ value, pattern });
+        rareHistory = rareHistory.slice(0, HISTORY_LIMIT);
+      }
+
       rareResults.push({ value, pattern });
     }
 
