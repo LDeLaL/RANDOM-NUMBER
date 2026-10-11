@@ -1,4 +1,3 @@
-
 /* =========================================
    VIOLET RANDOM - ACHIEVEMENTS SYSTEM
    기존 script.js와 style.css는 수정하지 않음
@@ -352,6 +351,11 @@
     document.head.appendChild(link);
   }
 
+  /* =========================================
+     업적 버튼 생성 및 위치 변경
+     버튼 순서: 업적 → 설정 → 초기화
+     ========================================= */
+
   function createAchievementsButton() {
     const topActions = document.querySelector(".top-actions");
     const resetButton = $("reset-button");
@@ -377,16 +381,11 @@
       button.textContent = "🏆 업적";
     }
 
-    /*
-      기존 버튼 순서:
-      초기화 → 설정
-
-      변경할 버튼 순서:
-      설정 → 업적 → 초기화
-    */
-
+    // 설정 버튼을 초기화 버튼 앞으로 배치한다.
     topActions.insertBefore(settingsButton, resetButton);
-    topActions.insertBefore(button, resetButton);
+
+    // 업적 버튼을 설정 버튼 앞으로 배치한다.
+    topActions.insertBefore(button, settingsButton);
   }
 
   function createAchievementsModal() {
