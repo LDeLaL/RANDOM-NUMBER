@@ -1,3 +1,4 @@
+```javascript
 /* =========================================
    VIOLET RANDOM - NUMBER CODEX
    도감 창 / 자동 수집 / 직접 추가 / 검색 / 저장
@@ -23,7 +24,7 @@
     { id: "eclipse", label: "Eclipse", icon: "☾" },
     { id: "pi", label: "π · 원주율", icon: "π" },
     { id: "euler", label: "e · 자연상수", icon: "e" },
-    { id: "golden-light", label: "황금빛 · 황금비", icon: "φ" },
+    { id: "golden-light", label: "황금비", icon: "φ" },
     { id: "aurora", label: "Aurora", icon: "✧" },
     { id: "hallow", label: "Hallow", icon: "☽" },
     { id: "apex", label: "Apex", icon: "▲" },
@@ -34,6 +35,23 @@
     { id: "quantum", label: "Quantum", icon: "⚛" },
     { id: "paradox", label: "Paradox", icon: "⟳" },
     { id: "prismatic", label: "Prismatic", icon: "◇" },
+
+    // 추가 희귀도 7종 · 중간 등급
+    { id: "luminous", label: "Luminous · 빛의 파동", icon: "✧" },
+    { id: "starlight", label: "Starlight · 별빛의 흔적", icon: "✦" },
+    { id: "crystal", label: "Crystal · 수정 공명", icon: "◇" },
+    { id: "orbit", label: "Orbit · 궤도의 조화", icon: "◎" },
+    { id: "spectrum", label: "Spectrum · 빛의 스펙트럼", icon: "◇" },
+    { id: "nebula", label: "Nebula · 성운의 파편", icon: "☄" },
+    { id: "nova", label: "Nova · 별의 섬광", icon: "✹" },
+
+    // 추가 희귀도 2종 · 상위 등급
+    { id: "astral", label: "Astral · 성계의 각성", icon: "✦" },
+    { id: "infinity", label: "Infinity · 무한의 경계", icon: "∞" },
+
+    // 추가 희귀도 1종 · 초희귀 등급
+    { id: "singularity", label: "Singularity · 특이점의 도래", icon: "⟡" },
+
     { id: "legendary", label: "Legendary", icon: "★" },
     { id: "mythic", label: "Mythic", icon: "◇" },
     { id: "seraph", label: "Seraph", icon: "♢" },
@@ -193,7 +211,11 @@
 
     return {
       id: rarity.id,
-      label: pattern?.title || rarity.label,
+      // codex.js 내부에서는 기존 명칭 오타를 "황금비"로 통일한다.
+      label:
+        pattern?.level === "golden-light"
+          ? "황금비"
+          : pattern?.title || rarity.label,
       icon: rarity.icon
     };
   }
@@ -1382,3 +1404,4 @@
     initializeCodex();
   }
 })();
+```
