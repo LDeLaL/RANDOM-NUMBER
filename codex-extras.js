@@ -1,8 +1,9 @@
-
+```javascript
 /* =========================================
    VIOLET RANDOM - EXTRA FEATURES
-   개별 도감 삭제 / 전체 초기화 / 통계 초기화
-   기존 파일과 테마를 최대한 그대로 유지
+   개별 도감 삭제 / 도감 전체 삭제
+   통계 초기화 / 전체 초기화
+   기존 script.js와 style.css는 수정하지 않음
 ========================================= */
 
 (() => {
@@ -17,9 +18,10 @@
   let pendingExtraAction = null;
   let pendingDeleteValue = null;
   let codexObserver = null;
+  let codexButtonObserver = null;
 
   /* =========================================
-     스타일
+     1. 스타일
   ========================================= */
 
   function installExtraStyles() {
@@ -33,7 +35,8 @@
         display: none !important;
       }
 
-      /* 도감의 개별 숫자 삭제 버튼 */
+      /* 개별 숫자 삭제 버튼 */
+
       .codex-delete-entry {
         display: block;
         width: 100%;
@@ -56,12 +59,49 @@
         border-color: rgba(225, 135, 159, 0.55);
       }
 
-      .codex-delete-entry:focus-visible {
+      .codex-delete-entry:focus-visible,
+      .codex-delete-all-button:focus-visible {
         outline: 2px solid #c99aff;
         outline-offset: 3px;
       }
 
+      /* 도감 전체 삭제 버튼 */
+
+      .codex-delete-all-row {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+      }
+
+      .codex-delete-all-button {
+        padding: 9px 13px;
+        border: 1px solid rgba(220, 105, 135, 0.38);
+        border-radius: 9px;
+        background: rgba(140, 44, 75, 0.12);
+        color: #e8a8ba;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 750;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .codex-delete-all-button:hover {
+        background: rgba(140, 44, 75, 0.24);
+        border-color: rgba(225, 135, 159, 0.62);
+      }
+
+      .codex-delete-all-button:active {
+        transform: translateY(1px);
+      }
+
       /* 추가 초기화 버튼 */
+
       .reset-extra-action {
         margin-top: 8px;
       }
@@ -77,7 +117,7 @@
       }
 
       /* =====================================
-         도감 숫자 삭제 확인 창
+         도감 삭제 확인 창
       ===================================== */
 
       .codex-delete-confirm-overlay {
@@ -119,7 +159,9 @@
           0 25px 80px rgba(0, 0, 0, 0.5),
           0 0 40px rgba(128, 59, 199, 0.17);
         color: #f4edff;
-        animation: codex-delete-panel-in 230ms cubic-bezier(.2, .8, .2, 1) both;
+        animation:
+          codex-delete-panel-in
+          230ms cubic-bezier(.2, .8, .2, 1) both;
       }
 
       .codex-delete-confirm-eyebrow {
@@ -157,6 +199,10 @@
         font-weight: 850;
         text-align: center;
         font-variant-numeric: tabular-nums;
+      }
+
+      .codex-delete-confirm-number[hidden] {
+        display: none !important;
       }
 
       .codex-delete-confirm-actions {
@@ -213,22 +259,23 @@
           opacity: 0;
           transform: translateY(12px) scale(0.97);
         }
+
         to {
           opacity: 1;
           transform: translateY(0) scale(1);
         }
       }
 
-      /* =====================================
-         업적 창 열기 애니메이션
-      ===================================== */
+      /* 업적 창 열기 애니메이션 */
 
       #achievements-overlay.is-open {
         animation: violet-achievements-overlay-in 200ms ease-out both;
       }
 
       #achievements-overlay.is-open .achievements-panel {
-        animation: violet-achievements-panel-in 260ms cubic-bezier(.2, .8, .2, 1) both;
+        animation:
+          violet-achievements-panel-in
+          260ms cubic-bezier(.2, .8, .2, 1) both;
       }
 
       @keyframes violet-achievements-overlay-in {
@@ -241,6 +288,7 @@
           opacity: 0;
           transform: translateY(12px) scale(0.975);
         }
+
         to {
           opacity: 1;
           transform: translateY(0) scale(1);
@@ -255,13 +303,27 @@
           animation-duration: 0.01ms !important;
         }
       }
+
+      @media (max-width: 520px) {
+        .codex-delete-all-row {
+          justify-content: stretch;
+        }
+
+        .codex-delete-all-button {
+          width: 100%;
+        }
+
+        .codex-delete-confirm-panel {
+          padding: 21px;
+        }
+      }
     `;
 
     document.head.appendChild(style);
   }
 
   /* =========================================
-     도감 삭제 확인 창 생성
+     2. 공통 삭제 확인 창
   ========================================= */
 
   function createDeleteConfirmModal() {
@@ -321,7 +383,7 @@
     document.body.appendChild(overlay);
 
     cancel.addEventListener("click", closeDeleteConfirm);
-    approve.addEventListener("click", confirmDeleteEntry);
+    approve.addEventListener("click", confirmDeleteAction);
 
     overlay.addEventListener("click", event => {
       if (event.target === overlay) {
@@ -331,25 +393,64 @@
   }
 
   function openDeleteConfirm(value) {
+    pendingExtraAction = "delete-entry";
     pendingDeleteValue = value;
 
     const overlay = $("codex-delete-confirm-overlay");
+    const title = $("codex-delete-confirm-title");
+    const description = $("codex-delete-confirm-description");
     const number = $("codex-delete-confirm-number");
+    const approve = $("codex-delete-approve");
 
     if (!overlay || !number) return;
 
+    title.textContent = "숫자 기록 삭제";
+    description.textContent =
+      "이 숫자의 도감 기록을 삭제할까? 삭제한 기록은 복구할 수 없어.";
+
+    number.hidden = false;
     number.textContent = value.toLocaleString("en-US");
+    approve.textContent = "삭제하기";
 
     overlay.classList.add("is-open");
     overlay.setAttribute("aria-hidden", "false");
 
-    $("codex-delete-approve")?.focus();
+    approve.focus();
+  }
+
+  function openDeleteAllCodexConfirm() {
+    pendingExtraAction = "delete-codex";
+    pendingDeleteValue = null;
+
+    const overlay = $("codex-delete-confirm-overlay");
+    const title = $("codex-delete-confirm-title");
+    const description = $("codex-delete-confirm-description");
+    const number = $("codex-delete-confirm-number");
+    const approve = $("codex-delete-approve");
+
+    if (!overlay) return;
+
+    title.textContent = "도감 전체 삭제";
+    description.textContent =
+      "수집한 모든 숫자의 도감 기록을 삭제할까? " +
+      "이 작업은 되돌릴 수 없어. " +
+      "추첨 횟수, 통계, 업적 기록은 유지돼.";
+
+    number.hidden = true;
+    number.textContent = "";
+    approve.textContent = "전체 삭제";
+
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
+
+    approve.focus();
   }
 
   function closeDeleteConfirm() {
     const overlay = $("codex-delete-confirm-overlay");
 
     pendingDeleteValue = null;
+    pendingExtraAction = null;
 
     if (!overlay) return;
 
@@ -358,7 +459,7 @@
   }
 
   /* =========================================
-     도감 숫자별 삭제 버튼
+     3. 도감 카드 개별 삭제 버튼
   ========================================= */
 
   function addDeleteButtons() {
@@ -397,22 +498,80 @@
     });
   }
 
+  /* =========================================
+     4. 도감 전체 삭제 버튼
+  ========================================= */
+
+  function addDeleteAllCodexButton() {
+    const overlay = $("codex-overlay");
+    const grid = $("codex-grid");
+
+    if (!overlay || !grid) return;
+
+    let row = $("codex-delete-all-row");
+
+    if (!row) {
+      row = document.createElement("div");
+      row.id = "codex-delete-all-row";
+      row.className = "codex-delete-all-row";
+
+      const button = document.createElement("button");
+      button.id = "codex-delete-all-button";
+      button.type = "button";
+      button.className = "codex-delete-all-button";
+      button.textContent = "🗑 도감 전체 삭제";
+      button.setAttribute(
+        "aria-label",
+        "모든 도감 숫자 기록 삭제"
+      );
+
+      button.addEventListener(
+        "click",
+        openDeleteAllCodexConfirm
+      );
+
+      row.appendChild(button);
+
+      // 도감 목록 바로 위에 버튼을 배치한다.
+      grid.parentElement.insertBefore(row, grid);
+    }
+  }
+
   function installCodexDelete() {
     addDeleteButtons();
+    addDeleteAllCodexButton();
 
     const grid = $("codex-grid");
 
-    if (!grid || codexObserver) return;
+    if (grid && !codexObserver) {
+      codexObserver = new MutationObserver(() => {
+        addDeleteButtons();
+        addDeleteAllCodexButton();
+      });
 
-    codexObserver = new MutationObserver(() => {
-      addDeleteButtons();
-    });
+      codexObserver.observe(grid, {
+        childList: true,
+        subtree: true
+      });
+    }
 
-    codexObserver.observe(grid, {
-      childList: true,
-      subtree: true
-    });
+    if (!codexButtonObserver) {
+      codexButtonObserver = new MutationObserver(() => {
+        addDeleteAllCodexButton();
+        addDeleteButtons();
+      });
 
+      const overlay = $("codex-overlay");
+
+      if (overlay) {
+        codexButtonObserver.observe(overlay, {
+          childList: true,
+          subtree: true
+        });
+      }
+    }
+
+    // 이벤트 위임으로 동적으로 생성된 카드도 처리한다.
     document.addEventListener("click", event => {
       const target = event.target;
 
@@ -435,9 +594,11 @@
     });
   }
 
-  function confirmDeleteEntry() {
-    const value = pendingDeleteValue;
+  /* =========================================
+     5. 개별 삭제 실행
+  ========================================= */
 
+  function confirmDeleteEntry(value) {
     if (
       !Number.isInteger(value) ||
       value < 0 ||
@@ -447,76 +608,145 @@
       return;
     }
 
+    const raw = localStorage.getItem(CODEX_KEY);
+    const saved = raw ? JSON.parse(raw) : null;
+
+    if (!saved || !Array.isArray(saved.entries)) {
+      alert("도감 기록을 찾지 못했어.");
+      closeDeleteConfirm();
+      return;
+    }
+
+    const previousLength = saved.entries.length;
+
+    saved.entries = saved.entries.filter(
+      entry => Number(entry.value) !== value
+    );
+
+    if (saved.entries.length === previousLength) {
+      alert("해당 숫자의 기록이 이미 없어.");
+      closeDeleteConfirm();
+      return;
+    }
+
+    localStorage.setItem(
+      CODEX_KEY,
+      JSON.stringify(saved)
+    );
+
+    const grid = $("codex-grid");
+
+    if (grid) {
+      grid.querySelectorAll(".codex-entry").forEach(card => {
+        const numberElement = card.querySelector(
+          ".codex-entry-number"
+        );
+
+        if (!numberElement) return;
+
+        const cardValue = Number(
+          numberElement.textContent.replace(/,/g, "").trim()
+        );
+
+        if (cardValue === value) {
+          card.remove();
+        }
+      });
+    }
+
+    updateCodexVisibleCount();
+    updateCodexTotalCount(saved.entries.length);
+
+    closeDeleteConfirm();
+
+    const message = document.querySelector(".codex-message");
+
+    if (message) {
+      message.textContent =
+        `${value.toLocaleString("en-US")} 기록을 삭제했어. 💜`;
+    }
+  }
+
+  /* =========================================
+     6. 도감 전체 삭제 실행
+  ========================================= */
+
+  function confirmDeleteAllCodex() {
+    const raw = localStorage.getItem(CODEX_KEY);
+
+    if (!raw) {
+      alert("삭제할 도감 기록이 없어.");
+      closeDeleteConfirm();
+      return;
+    }
+
+    const saved = JSON.parse(raw);
+
+    if (!saved || !Array.isArray(saved.entries)) {
+      alert("도감 기록을 읽을 수 없어.");
+      closeDeleteConfirm();
+      return;
+    }
+
+    const deletedCount = saved.entries.length;
+
+    // 다른 도감 설정과 메타데이터는 유지하고 숫자 목록만 비운다.
+    saved.entries = [];
+
+    localStorage.setItem(
+      CODEX_KEY,
+      JSON.stringify(saved)
+    );
+
+    const grid = $("codex-grid");
+
+    if (grid) {
+      grid.querySelectorAll(".codex-entry").forEach(card => {
+        card.remove();
+      });
+    }
+
+    updateCodexVisibleCount();
+    updateCodexTotalCount(0);
+
+    closeDeleteConfirm();
+
+    const message = document.querySelector(".codex-message");
+
+    if (message) {
+      message.textContent = deletedCount > 0
+        ? `도감 기록 ${deletedCount.toLocaleString("en-US")}개를 모두 삭제했어. 💜`
+        : "도감에 삭제할 기록이 없었어.";
+    }
+  }
+
+  function confirmDeleteAction() {
+    const action = pendingExtraAction;
+    const value = pendingDeleteValue;
+
     try {
-      const raw = localStorage.getItem(CODEX_KEY);
-      const saved = raw ? JSON.parse(raw) : null;
-
-      if (!saved || !Array.isArray(saved.entries)) {
-        alert("도감 기록을 찾지 못했어.");
-        closeDeleteConfirm();
+      if (action === "delete-entry") {
+        confirmDeleteEntry(value);
         return;
       }
 
-      const previousLength = saved.entries.length;
-
-      saved.entries = saved.entries.filter(
-        entry => Number(entry.value) !== value
-      );
-
-      if (saved.entries.length === previousLength) {
-        alert("해당 숫자의 기록이 이미 없어.");
-        closeDeleteConfirm();
+      if (action === "delete-codex") {
+        confirmDeleteAllCodex();
         return;
       }
-
-      localStorage.setItem(
-        CODEX_KEY,
-        JSON.stringify(saved)
-      );
-
-      /*
-        페이지를 새로고침하지 않고 화면에서 해당 카드만 제거한다.
-        따라서 도감 창은 열린 상태로 유지된다.
-      */
-
-      const grid = $("codex-grid");
-
-      if (grid) {
-        grid.querySelectorAll(".codex-entry").forEach(card => {
-          const numberElement = card.querySelector(
-            ".codex-entry-number"
-          );
-
-          if (!numberElement) return;
-
-          const cardValue = Number(
-            numberElement.textContent.replace(/,/g, "").trim()
-          );
-
-          if (cardValue === value) {
-            card.remove();
-          }
-        });
-      }
-
-      updateCodexVisibleCount();
-      updateCodexTotalCount(saved.entries.length);
 
       closeDeleteConfirm();
-
-      const message = document.querySelector(".codex-message");
-
-      if (message) {
-        message.textContent =
-          `${value.toLocaleString("en-US")} 기록을 삭제했어. 💜`;
-      }
     } catch (error) {
-      console.error("도감 숫자 삭제 실패:", error);
+      console.error("도감 삭제 실패:", error);
 
       alert("도감 기록을 삭제하지 못했어. 다시 시도해 줘.");
       closeDeleteConfirm();
     }
   }
+
+  /* =========================================
+     7. 도감 표시 개수 갱신
+  ========================================= */
 
   function updateCodexVisibleCount() {
     const grid = $("codex-grid");
@@ -526,7 +756,8 @@
     const resultCount = document.querySelector(".codex-result-count");
 
     if (resultCount) {
-      resultCount.textContent = `${count.toLocaleString("en-US")}개 표시`;
+      resultCount.textContent =
+        `${count.toLocaleString("en-US")}개 표시`;
     }
   }
 
@@ -537,17 +768,18 @@
 
     /*
       첫 번째 요약 숫자를 전체 수집 숫자와 동기화한다.
-      다른 요약 통계의 의미는 임의로 바꾸지 않는다.
+      나머지 통계의 의미는 변경하지 않는다.
     */
 
     if (statValues.length > 0) {
-      statValues[0].textContent = total.toLocaleString("en-US");
+      statValues[0].textContent =
+        total.toLocaleString("en-US");
     }
   }
 
   /* =========================================
-     초기화 메뉴 버튼
-     통계 초기화가 위, 전체 초기화가 맨 아래
+     8. 초기화 메뉴 버튼
+     통계 초기화가 위, 전체 초기화가 아래
   ========================================= */
 
   function addResetButtons() {
@@ -557,7 +789,6 @@
 
     if (!overlay || !message || !panel) return;
 
-    /* 통계 초기화 버튼을 먼저 추가 */
     if (!$("reset-statistics-data")) {
       const row = document.createElement("div");
       row.className = "settings-actions reset-action-row";
@@ -566,14 +797,18 @@
       button.id = "reset-statistics-data";
       button.type = "button";
       button.className =
-        "secondary-button reset-action-button reset-extra-action reset-stats-button";
+        "secondary-button reset-action-button " +
+        "reset-extra-action reset-stats-button";
       button.textContent = "▤ 통계 초기화";
 
       row.appendChild(button);
       panel.insertBefore(row, message);
+
+      button.addEventListener("click", () => {
+        requestExtraReset("statistics");
+      });
     }
 
-    /* 전체 초기화 버튼을 나중에 추가해 맨 아래 배치 */
     if (!$("reset-all-data")) {
       const row = document.createElement("div");
       row.className = "settings-actions reset-action-row";
@@ -582,26 +817,21 @@
       button.id = "reset-all-data";
       button.type = "button";
       button.className =
-        "secondary-button reset-action-button reset-extra-action reset-all-button";
+        "secondary-button reset-action-button " +
+        "reset-extra-action reset-all-button";
       button.textContent = "⚠ 전체 초기화";
 
       row.appendChild(button);
       panel.insertBefore(row, message);
+
+      button.addEventListener("click", () => {
+        requestExtraReset("all");
+      });
     }
-
-    $("reset-all-data")?.addEventListener(
-      "click",
-      () => requestExtraReset("all")
-    );
-
-    $("reset-statistics-data")?.addEventListener(
-      "click",
-      () => requestExtraReset("statistics")
-    );
   }
 
   /* =========================================
-     초기화 확인 창
+     9. 초기화 확인 창 연결
      정확히 '초기화'를 입력해야 실행
   ========================================= */
 
@@ -636,6 +866,11 @@
     confirmOverlay.hidden = false;
     input.focus();
   }
+
+  /* =========================================
+     10. 통계 초기화
+     숫자 기록과 추첨 횟수는 유지
+  ========================================= */
 
   function resetStatisticsOnly() {
     let progress = {};
@@ -690,6 +925,11 @@
     );
   }
 
+  /* =========================================
+     11. 전체 초기화
+     설정은 유지
+  ========================================= */
+
   function executeExtraReset(action) {
     if (action === "statistics") {
       resetStatisticsOnly();
@@ -725,7 +965,7 @@
 
     if (input.value.trim() !== "초기화") {
       message.textContent =
-        "입력 내용이 달라. '초기화'라고 정확히 입력해 줘.";
+        "입력 내용이 달라. '초기화'라고 정확히 입력해 줊.";
       input.focus();
       return;
     }
@@ -734,7 +974,9 @@
 
     try {
       executeExtraReset(action);
+
       pendingExtraAction = null;
+
       window.location.reload();
     } catch (error) {
       console.error("초기화 실패:", error);
@@ -749,12 +991,13 @@
   }
 
   /* =========================================
-     초기화
+     12. 초기화
   ========================================= */
 
   function initialize() {
     installExtraStyles();
     createDeleteConfirmModal();
+
     installCodexDelete();
     addResetButtons();
 
@@ -786,6 +1029,7 @@
 
         event.preventDefault();
         event.stopImmediatePropagation();
+
         handleExtraConfirmation(event);
       },
       true
@@ -793,8 +1037,11 @@
 
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") {
-        if (pendingDeleteValue !== null) {
+        if (pendingDeleteValue !== null ||
+            pendingExtraAction === "delete-codex") {
           closeDeleteConfirm();
+        } else {
+          cancelExtraConfirmation();
         }
       }
     });
@@ -810,3 +1057,4 @@
     initialize();
   }
 })();
+```
