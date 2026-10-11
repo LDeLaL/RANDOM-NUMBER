@@ -175,6 +175,229 @@
       description: "비밀번호 맞추기.",
       icon: "⌘",
       type: "password"
+    },
+
+    /* =====================================
+       추가 업적 1~8: 뽑기 횟수
+       ===================================== */
+
+    {
+      id: "ten-draws",
+      title: "워밍업 완료",
+      description: "뽑기 10회 달성.",
+      icon: "Ⅰ",
+      type: "count",
+      target: 10
+    },
+    {
+      id: "fifty-draws",
+      title: "조금씩 쌓이는 운",
+      description: "뽑기 50회 달성.",
+      icon: "Ⅱ",
+      type: "count",
+      target: 50
+    },
+    {
+      id: "five-hundred-draws",
+      title: "500번의 선택",
+      description: "뽑기 500회 달성.",
+      icon: "Ⅲ",
+      type: "count",
+      target: 500
+    },
+    {
+      id: "one-thousand-draws",
+      title: "네 자릿수의 기록",
+      description: "뽑기 1,000회 달성.",
+      icon: "Ⅳ",
+      type: "count",
+      target: 1000
+    },
+    {
+      id: "five-thousand-draws",
+      title: "숫자에 진심",
+      description: "뽑기 5,000회 달성.",
+      icon: "Ⅴ",
+      type: "count",
+      target: 5000
+    },
+    {
+      id: "fifty-thousand-draws",
+      title: "멈추지 않는 손",
+      description: "뽑기 50,000회 달성.",
+      icon: "✧",
+      type: "count",
+      target: 50000
+    },
+    {
+      id: "five-hundred-thousand-draws",
+      title: "운명의 단골손님",
+      description: "뽑기 500,000회 달성.",
+      icon: "✦",
+      type: "count",
+      target: 500000
+    },
+    {
+      id: "five-million-draws",
+      title: "오백만 번의 운명",
+      description: "뽑기 5,000,000회 달성.",
+      icon: "∞",
+      type: "count",
+      target: 5000000
+    },
+
+    /* =====================================
+       추가 업적 9~20: 새로운 희귀도
+       ===================================== */
+
+    {
+      id: "aurora",
+      title: "오로라를 만나다",
+      description: "Aurora 등급 숫자를 뽑으세요.",
+      icon: "✧",
+      type: "rarity",
+      rarity: "aurora"
+    },
+    {
+      id: "apex",
+      title: "정점에 도달하다",
+      description: "Apex 등급 숫자를 뽑으세요.",
+      icon: "▲",
+      type: "rarity",
+      rarity: "apex"
+    },
+    {
+      id: "divine",
+      title: "신성한 숫자",
+      description: "Divine 등급 숫자를 뽑으세요.",
+      icon: "☼",
+      type: "rarity",
+      rarity: "divine"
+    },
+    {
+      id: "genesis",
+      title: "시작의 숫자",
+      description: "Genesis 등급 숫자를 뽑으세요.",
+      icon: "✦",
+      type: "rarity",
+      rarity: "genesis"
+    },
+    {
+      id: "quantum",
+      title: "양자 도약",
+      description: "Quantum 등급 숫자를 뽑으세요.",
+      icon: "⚛",
+      type: "rarity",
+      rarity: "quantum"
+    },
+    {
+      id: "paradox",
+      title: "역설의 숫자",
+      description: "Paradox 등급 숫자를 뽑으세요.",
+      icon: "⟳",
+      type: "rarity",
+      rarity: "paradox"
+    },
+    {
+      id: "legendary",
+      title: "한 자리의 전설",
+      description: "Legendary 등급 숫자를 뽑으세요.",
+      icon: "★",
+      type: "rarity",
+      rarity: "legendary"
+    },
+    {
+      id: "seraph",
+      title: "천사의 합",
+      description: "Seraph 등급 숫자를 뽑으세요.",
+      icon: "♢",
+      type: "rarity",
+      rarity: "seraph"
+    },
+    {
+      id: "phantom",
+      title: "환영의 반복",
+      description: "Phantom 등급 숫자를 뽑으세요.",
+      icon: "☾",
+      type: "rarity",
+      rarity: "phantom"
+    },
+    {
+      id: "noteworthy",
+      title: "주목할 만한 숫자",
+      description: "Noteworthy 등급 숫자를 뽑으세요.",
+      icon: "◇",
+      type: "rarity",
+      rarity: "noteworthy"
+    },
+    {
+      id: "curious",
+      title: "호기심 자극",
+      description: "Curious 등급 숫자를 뽑으세요.",
+      icon: "?",
+      type: "rarity",
+      rarity: "curious"
+    },
+    {
+      id: "uncommon",
+      title: "흔하지 않은 발견",
+      description: "Uncommon 등급 숫자를 뽑으세요.",
+      icon: "◇",
+      type: "rarity",
+      rarity: "uncommon"
+    },
+
+    /* =====================================
+       추가 업적 21~23: 누적 통계
+       ===================================== */
+
+    {
+      id: "prime-ten",
+      title: "소수 수집가",
+      description: "소수를 총 10번 뽑으세요.",
+      icon: "π",
+      type: "stat",
+      stat: "prime",
+      target: 10
+    },
+    {
+      id: "even-hundred",
+      title: "짝수의 편",
+      description: "짝수를 총 100번 뽑으세요.",
+      icon: "Ⅱ",
+      type: "stat",
+      stat: "even",
+      target: 100
+    },
+    {
+      id: "odd-hundred",
+      title: "홀수의 편",
+      description: "홀수를 총 100번 뽑으세요.",
+      icon: "Ⅲ",
+      type: "stat",
+      stat: "odd",
+      target: 100
+    },
+
+    /* =====================================
+       추가 업적 24~25: 숫자 패턴
+       ===================================== */
+
+    {
+      id: "unique-seven-digits",
+      title: "숫자 중복 금지",
+      description: "모든 자릿수가 서로 다른 7자리 숫자를 뽑으세요.",
+      icon: "⑦",
+      type: "property",
+      property: "unique-seven-digits"
+    },
+    {
+      id: "prime-streak",
+      title: "소수의 행진",
+      description: "소수가 연속으로 3번 나오도록 하세요.",
+      icon: "Ⅲ",
+      type: "property",
+      property: "prime-streak"
     }
   ];
 
@@ -197,7 +420,20 @@
     jackpot: "jackpot",
     special: "special",
     "reverse-special": "reverse-special",
-    ultimate: "ultimate"
+    ultimate: "ultimate",
+
+    aurora: "aurora",
+    apex: "apex",
+    divine: "divine",
+    genesis: "genesis",
+    quantum: "quantum",
+    paradox: "paradox",
+    legendary: "legendary",
+    seraph: "seraph",
+    phantom: "phantom",
+    noteworthy: "noteworthy",
+    curious: "curious",
+    uncommon: "uncommon"
   };
 
   const $ = id => document.getElementById(id);
@@ -270,6 +506,7 @@
   let state = loadState();
   let lastObservedDrawCount = 0;
   let lastRarityCounts = getRarityCounts();
+  let notificationsEnabled = false;
 
   function saveState() {
     try {
@@ -292,6 +529,16 @@
     state.unlocked.push(id);
     saveState();
     renderAchievements();
+
+    if (notificationsEnabled) {
+      const achievement = ACHIEVEMENTS.find(
+        item => item.id === id
+      );
+
+      if (achievement) {
+        showAchievementToast(achievement);
+      }
+    }
   }
 
   function checkCountAchievements(count) {
@@ -321,6 +568,101 @@
     }
   }
 
+  /* =====================================
+     새 업적 조건 검사
+     ===================================== */
+
+  function isPrimeNumber(value) {
+    const number = Number(value);
+
+    if (!Number.isInteger(number) || number < 2) {
+      return false;
+    }
+
+    if (number === 2) return true;
+    if (number % 2 === 0) return false;
+
+    for (
+      let divisor = 3;
+      divisor * divisor <= number;
+      divisor += 2
+    ) {
+      if (number % divisor === 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function propertyAchievementSatisfied(property, rawHistory) {
+    if (!Array.isArray(rawHistory)) return false;
+
+    const values = rawHistory
+      .map(value => Number(value))
+      .filter(value =>
+        Number.isFinite(value) &&
+        value >= 0
+      );
+
+    if (property === "unique-seven-digits") {
+      return values.some(value => {
+        const digits = String(value);
+
+        return (
+          digits.length === 7 &&
+          new Set(digits).size === 7
+        );
+      });
+    }
+
+    if (property === "prime-streak") {
+      for (
+        let index = 0;
+        index <= values.length - 3;
+        index++
+      ) {
+        const threeValues = values.slice(index, index + 3);
+
+        if (threeValues.every(isPrimeNumber)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function checkAdditionalAchievements(progress = readProgress()) {
+    if (!progress || typeof progress !== "object") {
+      return;
+    }
+
+    const statistics = progress.drawStats || {};
+    const history = progress.history;
+
+    ACHIEVEMENTS.forEach(achievement => {
+      if (achievement.type === "stat") {
+        const actual =
+          Number(statistics[achievement.stat]) || 0;
+
+        if (actual >= achievement.target) {
+          unlock(achievement.id);
+        }
+      }
+
+      if (
+        achievement.type === "property" &&
+        propertyAchievementSatisfied(
+          achievement.property,
+          history
+        )
+      ) {
+        unlock(achievement.id);
+      }
+    });
+  }
+
   function seedExistingProgress() {
     const count = getCurrentDrawCount();
     const rarities = getRarityCounts();
@@ -336,25 +678,207 @@
 
   function ensureStylesheet() {
     if (
-      document.querySelector(
+      !document.querySelector(
         'link[data-achievements-stylesheet="true"]'
       )
     ) {
-      return;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "achievements.css";
+      link.dataset.achievementsStylesheet = "true";
+
+      document.head.appendChild(link);
     }
-
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "achievements.css";
-    link.dataset.achievementsStylesheet = "true";
-
-    document.head.appendChild(link);
   }
 
-  /* =========================================
-     업적 버튼 생성 및 위치 변경
-     버튼 순서: 업적 → 설정 → 초기화
-     ========================================= */
+  /* =====================================
+     업적 달성 알림
+     오른쪽 위에 잠시 표시
+     ===================================== */
+
+  function ensureToastStyles() {
+    if ($("vr-achievement-toast-styles")) return;
+
+    const style = document.createElement("style");
+    style.id = "vr-achievement-toast-styles";
+
+    style.textContent = `
+      #vr-achievement-toast-container {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 100000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: min(370px, calc(100vw - 28px));
+        pointer-events: none;
+      }
+
+      .vr-achievement-toast {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 14px 16px;
+        overflow: hidden;
+        border: 1px solid rgba(190, 133, 255, 0.58);
+        border-radius: 15px;
+        background: linear-gradient(
+          135deg,
+          rgba(39, 24, 57, 0.97),
+          rgba(14, 10, 22, 0.98)
+        );
+        box-shadow:
+          0 12px 36px rgba(0, 0, 0, 0.38),
+          0 0 24px rgba(151, 82, 235, 0.22),
+          inset 0 0 18px rgba(155, 93, 229, 0.08);
+        color: #f4edff;
+        animation:
+          vr-achievement-toast-in
+          260ms cubic-bezier(.2, .8, .2, 1) both;
+      }
+
+      .vr-achievement-toast.is-leaving {
+        animation: vr-achievement-toast-out 240ms ease-in both;
+      }
+
+      .vr-achievement-toast-icon {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        border: 1px solid rgba(195, 151, 255, 0.48);
+        border-radius: 12px;
+        background: rgba(147, 82, 226, 0.18);
+        color: #e8d4ff;
+        font-size: 21px;
+        text-shadow: 0 0 15px rgba(185, 125, 255, 0.6);
+      }
+
+      .vr-achievement-toast-copy {
+        min-width: 0;
+      }
+
+      .vr-achievement-toast-label {
+        display: block;
+        margin-bottom: 4px;
+        color: #bd8cff;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+      }
+
+      .vr-achievement-toast-title {
+        display: block;
+        overflow-wrap: anywhere;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .vr-achievement-toast-description {
+        display: block;
+        margin-top: 3px;
+        color: #b7a6cc;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      @keyframes vr-achievement-toast-in {
+        from {
+          opacity: 0;
+          transform: translateX(22px) scale(.97);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+        }
+      }
+
+      @keyframes vr-achievement-toast-out {
+        from {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+        }
+
+        to {
+          opacity: 0;
+          transform: translateX(18px) scale(.98);
+        }
+      }
+
+      @media (max-width: 520px) {
+        #vr-achievement-toast-container {
+          top: 10px;
+          right: 10px;
+          width: calc(100vw - 20px);
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function showAchievementToast(achievement) {
+    let container = $("vr-achievement-toast-container");
+
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "vr-achievement-toast-container";
+      container.setAttribute("aria-live", "polite");
+      container.setAttribute("aria-atomic", "false");
+
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "vr-achievement-toast";
+
+    const icon = document.createElement("div");
+    icon.className = "vr-achievement-toast-icon";
+    icon.textContent = achievement.icon;
+
+    const copy = document.createElement("div");
+    copy.className = "vr-achievement-toast-copy";
+
+    const label = document.createElement("span");
+    label.className = "vr-achievement-toast-label";
+    label.textContent = "ACHIEVEMENT UNLOCKED";
+
+    const title = document.createElement("strong");
+    title.className = "vr-achievement-toast-title";
+    title.textContent = achievement.title;
+
+    const description = document.createElement("span");
+    description.className = "vr-achievement-toast-description";
+    description.textContent = achievement.description;
+
+    copy.append(label, title, description);
+    toast.append(icon, copy);
+    container.appendChild(toast);
+
+    window.setTimeout(() => {
+      toast.classList.add("is-leaving");
+
+      window.setTimeout(() => {
+        toast.remove();
+
+        if (
+          container.isConnected &&
+          container.childElementCount === 0
+        ) {
+          container.remove();
+        }
+      }, 260);
+    }, 4200);
+  }
+
+  /* =====================================
+     업적 버튼
+     순서: 업적 → 설정 → 초기화
+     ===================================== */
 
   function createAchievementsButton() {
     const topActions = document.querySelector(".top-actions");
@@ -381,10 +905,8 @@
       button.textContent = "🏆 업적";
     }
 
-    // 설정 버튼을 초기화 버튼 앞으로 배치한다.
+    // 버튼 순서: 업적 → 설정 → 초기화
     topActions.insertBefore(settingsButton, resetButton);
-
-    // 업적 버튼을 설정 버튼 앞으로 배치한다.
     topActions.insertBefore(button, settingsButton);
   }
 
@@ -446,7 +968,7 @@
 
     const progressCount = document.createElement("span");
     progressCount.id = "achievements-progress-count";
-    progressCount.textContent = "0 / 21";
+    progressCount.textContent = "0 / 46";
 
     progressText.append(progressLabel, progressCount);
 
@@ -680,6 +1202,9 @@
 
     lastRarityCounts = currentRarityCounts;
     saveState();
+
+    // 소수·짝수·홀수 누적 통계와 숫자 패턴 업적 검사
+    checkAdditionalAchievements(readProgress());
   }
 
   function isRarityPreviouslyDrawn(rarity, rarityCounts) {
@@ -753,6 +1278,7 @@
 
   function initialize() {
     ensureStylesheet();
+    ensureToastStyles();
     createAchievementsButton();
     createAchievementsModal();
     createAchievementResetButton();
@@ -766,10 +1292,16 @@
       checkRarityAchievements(lastRarityCounts);
     }
 
+    // 과거에 달성한 업적은 조용히 반영하고,
+    // 이제부터 새로 달성하는 업적에만 알림을 표시한다.
+    checkAdditionalAchievements(readProgress());
+
     lastObservedDrawCount = getCurrentDrawCount();
 
     setupObservers();
     renderAchievements();
+
+    notificationsEnabled = true;
   }
 
   initialize();
