@@ -1,9 +1,5 @@
 "use strict";
 
-/* ========================================
-   Violet Random — 설정 및 초기화
-======================================== */
-
 const DIGITS = 7;
 const HISTORY_LIMIT = 10;
 
@@ -103,6 +99,27 @@ const saveSettingsButton = $("save-settings");
 const resetSettingsButton = $("reset-settings");
 const settingsMessage = $("settings-message");
 
+const dataResetButton = $("reset-button");
+const dataResetOverlay = $("reset-overlay");
+const closeDataResetButton = $("close-reset");
+const dataResetMessage = $("reset-message");
+
+const dataResetConfirmOverlay = $("reset-confirm-overlay");
+const closeDataResetConfirmButton = $("close-reset-confirm");
+const cancelDataResetConfirmButton = $("cancel-reset-confirm");
+const applyDataResetConfirmButton = $("apply-reset-confirm");
+const dataResetConfirmDescription = $("reset-confirm-description");
+const dataResetConfirmInput = $("reset-confirm-input");
+const dataResetConfirmMessage = $("reset-confirm-message");
+
+const dataResetActionButtons = {
+  totalDraws: $("reset-total-draws"),
+  minNumber: $("reset-min-number"),
+  maxNumber: $("reset-max-number"),
+  history: $("reset-history"),
+  rareHistory: $("reset-rare-history")
+};
+
 const particleSetting = $("particle-setting");
 const speedSetting = $("speed-setting");
 const effectSetting = $("effect-setting");
@@ -130,10 +147,6 @@ const digitElements = Array.from(
   numberElement.querySelectorAll("span")
 );
 
-/*
- * 새 희귀도 순서.
- * 앞쪽에 있을수록 높은 등급이야.
- */
 const RARITY_ORDER = [
   "ultimate",
   "reverse-special",
@@ -145,28 +158,23 @@ const RARITY_ORDER = [
   "golden-light",
   "aurora",
   "hallow",
-
   "apex",
   "omniversal",
   "divine",
   "genesis",
-
   "celestial",
   "quantum",
   "paradox",
   "prismatic",
-
   "legendary",
   "mythic",
   "seraph",
   "phantom",
   "glorious",
   "rare",
-
   "noteworthy",
   "curious",
   "oddity",
-
   "uncommon",
   "common"
 ];
@@ -182,28 +190,23 @@ const RARITY_LABELS = {
   "golden-light": "황금빛 · 황금비",
   aurora: "Aurora",
   hallow: "Hallow",
-
   apex: "Apex",
   omniversal: "Omniversal",
   divine: "Divine",
   genesis: "Genesis",
-
   celestial: "Celestial",
   quantum: "Quantum",
   paradox: "Paradox",
   prismatic: "Prismatic",
-
   legendary: "Legendary",
   mythic: "Mythic",
   seraph: "Seraph",
   phantom: "Phantom",
   glorious: "Glorious",
   rare: "Rare",
-
   noteworthy: "Noteworthy",
   curious: "Curious",
   oddity: "Oddity",
-
   uncommon: "Uncommon",
   common: "Common"
 };
@@ -269,10 +272,6 @@ const drawStats = {
   )
 };
 
-/* ========================================
-   공통 유틸리티
-======================================== */
-
 function clamp(value, min, max, fallback) {
   const number = Number(value);
 
@@ -314,10 +313,6 @@ function sortRareResults(entries) {
 function getRarityTitle(level) {
   return RARITY_LABELS[level] || "Common";
 }
-
-/* ========================================
-   설정 저장 및 복원
-======================================== */
 
 function loadSettings() {
   try {
@@ -406,7 +401,7 @@ function saveSettings() {
     console.warn("설정 저장 실패:", error);
 
     settingsMessage.textContent =
-      "설정 저장에 실패했어. 브라우저 저장 공간을 확인해 줐.";
+      "설정 저장에 실패했어. 브라우저 저장 공간을 확인해 줘.";
 
     return false;
   }
@@ -484,9 +479,205 @@ resetSettingsButton.addEventListener("click", () => {
     "기본값으로 바꿨어. 저장 버튼을 눌러 적용해 줘.";
 });
 
-/* ========================================
-   희귀 기록 필터
-======================================== */
+let pendingDataResetAction = null;
+
+const DATA_RESET_LABELS = {
+  totalDraws: "전체 추첨 횟수",
+  minNumber: "최솟값",
+  maxNumber: "최댓값",
+  history: "최근 숫자 10개",
+  rareHistory: "최근 희귀 숫자 10개"
+};
+
+function openDataReset() {
+  dataResetOverlay.hidden = false;
+  dataResetButton.setAttribute("aria-expanded", "true");
+  dataResetMessage.textContent = "초기화할 항목을 선택해 줘.";
+  closeDataResetButton.focus();
+}
+
+function closeDataReset() {
+  if (!dataResetConfirmOverlay.hidden) {
+    closeDataResetConfirm();
+  }
+
+  dataResetOverlay.hidden = true;
+  dataResetButton.setAttribute("aria-expanded", "false");
+  dataResetButton.focus();
+}
+
+function requestDataReset(action) {
+  if (!Object.prototype.hasOwnProperty.call(DATA_RESET_LABELS, action)) {
+    return;
+  }
+
+  pendingDataResetAction = action;
+
+  dataResetConfirmDescription.textContent =
+    `「${DATA_RESET_LABELS[action]}」 항목만 초기화할 거야. 계속하려면 아래에 초기화라고 정확히 입력해 줘.`;
+
+  dataResetConfirmInput.value = "";
+  dataResetConfirmMessage.textContent =
+    "'초기화'를 입력해야 진행할 수 있어.";
+
+  dataResetConfirmOverlay.hidden = false;
+  dataResetConfirmInput.focus();
+}
+
+function closeDataResetConfirm() {
+  dataResetConfirmOverlay.hidden = true;
+  dataResetConfirmInput.value = "";
+  pendingDataResetAction = null;
+
+  if (!dataResetOverlay.hidden && dataResetButton) {
+    closeDataResetButton.focus();
+  } else if (dataResetButton) {
+    dataResetButton.focus();
+  }
+}
+
+function executeDataReset(action) {
+  switch (action) {
+    case "totalDraws":
+      totalDraws = 0;
+      updateStatistics();
+      renderStatistics();
+
+      dataResetMessage.textContent =
+        "전체 추첨 횟수를 초기화했어. 다른 기록은 유지돼. 💜";
+
+      statusElement.textContent =
+        "전체 추첨 횟수 기록을 초기화했어.";
+      break;
+
+    case "minNumber":
+      lowestNumber = null;
+      updateStatistics();
+      renderStatistics();
+
+      dataResetMessage.textContent =
+        "최솟값 기록을 초기화했어. 다른 기록은 유지돼. 💜";
+
+      statusElement.textContent =
+        "최솟값 기록을 초기화했어.";
+      break;
+
+    case "maxNumber":
+      highestNumber = null;
+      updateStatistics();
+      renderStatistics();
+
+      dataResetMessage.textContent =
+        "최댓값 기록을 초기화했어. 다른 기록은 유지돼. 💜";
+
+      statusElement.textContent =
+        "최댓값 기록을 초기화했어.";
+      break;
+
+    case "history":
+      history = [];
+      renderHistory();
+      updateAverage();
+
+      dataResetMessage.textContent =
+        "최근 숫자 10개 기록을 초기화했어. 다른 기록은 유지돼. 💜";
+
+      statusElement.textContent =
+        "최근 숫자 10개 기록을 초기화했어.";
+      break;
+
+    case "rareHistory":
+      rareHistory = [];
+      renderRareHistory();
+
+      dataResetMessage.textContent =
+        "최근 희귀 숫자 10개 기록을 초기화했어. 다른 기록은 유지돼. 💜";
+
+      statusElement.textContent =
+        "최근 희귀 숫자 10개 기록을 초기화했어.";
+      break;
+
+    default:
+      return false;
+  }
+
+  saveProgress();
+  return true;
+}
+
+function confirmDataReset() {
+  if (!pendingDataResetAction) {
+    dataResetConfirmMessage.textContent =
+      "먼저 초기화할 항목을 선택해 줘.";
+
+    return;
+  }
+
+  if (dataResetConfirmInput.value.trim() !== "초기화") {
+    dataResetConfirmMessage.textContent =
+      "입력 내용이 달라. '초기화'라고 정확히 입력해 줘.";
+
+    dataResetConfirmInput.focus();
+    return;
+  }
+
+  const action = pendingDataResetAction;
+  const succeeded = executeDataReset(action);
+
+  if (!succeeded) return;
+
+  dataResetConfirmOverlay.hidden = true;
+  dataResetConfirmInput.value = "";
+  pendingDataResetAction = null;
+
+  dataResetConfirmMessage.textContent = "초기화가 완료됐어.";
+  closeDataResetButton.focus();
+}
+
+dataResetButton.addEventListener("click", openDataReset);
+closeDataResetButton.addEventListener("click", closeDataReset);
+
+dataResetOverlay.addEventListener("click", event => {
+  if (event.target === dataResetOverlay) {
+    closeDataReset();
+  }
+});
+
+Object.entries(dataResetActionButtons).forEach(([action, button]) => {
+  if (!button) return;
+
+  button.addEventListener("click", () => {
+    requestDataReset(action);
+  });
+});
+
+closeDataResetConfirmButton.addEventListener(
+  "click",
+  closeDataResetConfirm
+);
+
+cancelDataResetConfirmButton.addEventListener(
+  "click",
+  closeDataResetConfirm
+);
+
+applyDataResetConfirmButton.addEventListener(
+  "click",
+  confirmDataReset
+);
+
+dataResetConfirmInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    confirmDataReset();
+  }
+});
+
+dataResetConfirmOverlay.addEventListener("click", event => {
+  if (event.target === dataResetConfirmOverlay) {
+    closeDataResetConfirm();
+  }
+});
 
 function migrateLegacyRarity(level, hasLegacyLevels) {
   if (level === "transcendent") return "pi";
@@ -498,7 +689,6 @@ function migrateLegacyRarity(level, hasLegacyLevels) {
     return "golden-light";
   }
 
-  // 삭제된 기존 등급은 새 희귀도 목록으로 가져오지 않아.
   if (
     level === "infinity" ||
     level === "ethereal" ||
@@ -541,7 +731,6 @@ function loadRareHistoryLevels() {
 
     const levels = new Set(migrated);
 
-    // 기존 저장 데이터에 새 등급이 없다면 한 번만 기본 선택으로 추가해.
     const version = localStorage.getItem(
       RARE_HISTORY_FILTER_VERSION_KEY
     );
@@ -663,10 +852,6 @@ rareHistoryFilterPanel.addEventListener("click", event => {
   }
 });
 
-/* ========================================
-   효과음
-======================================== */
-
 function getAudioContext() {
   const AudioCtor = window.AudioContext || window.webkitAudioContext;
 
@@ -703,7 +888,6 @@ function playTone(
 
   gain.gain.setValueAtTime(0.0001, start);
 
-  // 기존보다 효과음 볼륨을 높여.
   const louderVolume = Math.min(
     0.5,
     Math.max(0.0002, volume * 5.8)
@@ -828,24 +1012,29 @@ function playRaritySound(level) {
     ],
 
     "golden-light": [
-      [740, 0.13, "triangle"],
-      [494, 0.17, "sine", 0.045, 0.06],
-      [831, 0.18, "triangle", 0.045, 0.13],
-      [554, 0.28, "sine", 0.04, 0.21]
+      [740, 0.18, "triangle", 0.05],
+      [988, 0.2, "sine", 0.055, 0.07],
+      [1245, 0.22, "triangle", 0.055, 0.15],
+      [1480, 0.24, "sine", 0.055, 0.23],
+      [1976, 0.46, "triangle", 0.06, 0.34]
     ],
 
     euler: [
-      [110, 0.28, "sine", 0.05],
-      [220, 0.3, "triangle", 0.045, 0.09],
-      [440, 0.32, "sawtooth", 0.035, 0.2],
-      [880, 0.4, "sine", 0.05, 0.31]
+      [110, 0.3, "sine", 0.05],
+      [220, 0.32, "triangle", 0.05, 0.08],
+      [330, 0.3, "sine", 0.045, 0.16],
+      [440, 0.34, "sawtooth", 0.045, 0.24],
+      [660, 0.36, "triangle", 0.05, 0.32],
+      [880, 0.48, "sine", 0.055, 0.42]
     ],
 
     pi: [
-      [523, 0.18, "sine"],
-      [784, 0.2, "triangle", 0.05, 0.08],
-      [1047, 0.24, "sine", 0.05, 0.17],
-      [1568, 0.38, "triangle", 0.045, 0.27]
+      [523, 0.18, "sine", 0.05],
+      [784, 0.2, "triangle", 0.055, 0.07],
+      [1047, 0.23, "sine", 0.055, 0.14],
+      [1319, 0.28, "triangle", 0.055, 0.22],
+      [1568, 0.42, "sine", 0.06, 0.32],
+      [2093, 0.48, "triangle", 0.055, 0.44]
     ],
 
     eclipse: [
@@ -917,10 +1106,6 @@ document.addEventListener("click", event => {
   }
 });
 
-/* ========================================
-   난수 생성
-======================================== */
-
 function secureRandomNumber() {
   const range = 10_000_000;
 
@@ -957,23 +1142,6 @@ function getNextResult() {
   lastDrawWasCheat = false;
   return secureRandomNumber();
 }
-
-/* ========================================
-   희귀도 판별
-======================================== */
-
-/*
- * 새 희귀도 조건은 기존 등급 조건과 겹치지 않게
- * 상위 등급부터 먼저 검사해.
- *
- * Apex: 9090909
- * Omniversal: 좌우 대칭 패턴 2개
- * Divine: 6회 반복 후 끝 숫자가 다른 패턴 4개
- * Genesis: 두 자리씩 반복되는 패턴 8개
- * Prismatic: 숫자 묶음이 반복되는 패턴 6개
- *
- * Noteworthy / Curious / Oddity는 숫자 구조 조건으로 판별해.
- */
 
 const EXACT_RARITY_PATTERNS = {
   apex: [
@@ -1128,7 +1296,6 @@ function getRarePattern(value) {
   const uniqueDigits = new Set(digits).size;
   const longestRun = getLongestRun(digits);
 
-  // 최상위 특별 조건부터 확인해.
   if (normalized === "0") {
     return makePattern("ultimate");
   }
@@ -1270,7 +1437,6 @@ function getRarePattern(value) {
     return makePattern("uncommon");
   }
 
-  // 나머지 숫자는 Common이야.
   return null;
 }
 
@@ -1284,10 +1450,6 @@ function getDigitCountLabel(value) {
     ? `${countText} · ${pattern.detail}`
     : `${countText} · Common`;
 }
-
-/* ========================================
-   소수 판별과 숫자 정보
-======================================== */
 
 function isPrime(number) {
   if (!Number.isInteger(number) || number < 2) {
@@ -1332,10 +1494,6 @@ function updateNumberInfo(value) {
   }
 }
 
-/* ========================================
-   숫자 표시와 연출 초기화
-======================================== */
-
 function clearRollTimers() {
   rollTimeouts.forEach(id => clearTimeout(id));
   rollIntervals.forEach(id => clearInterval(id));
@@ -1376,22 +1534,26 @@ function resetNumberEffects() {
   rareLabel.textContent = "";
 
   digitElements.forEach(digit => {
-    digit.classList.remove("rolling");
+    digit.classList.remove("rolling", "leading-zero");
     digit.style.display = "inline-block";
   });
 }
 
 function setDisplayedNumber(value, hideLeadingZeros = false) {
+  const normalized = String(value).padStart(DIGITS, "0").slice(-DIGITS);
+
   digitElements.forEach((digit, index) => {
-    digit.textContent = value[index];
+    digit.textContent = normalized[index];
 
     const isLeadingZero =
       hideLeadingZeros &&
       index < DIGITS - 1 &&
-      value
+      normalized
         .slice(0, index + 1)
         .split("")
         .every(char => char === "0");
+
+    digit.classList.toggle("leading-zero", isLeadingZero);
 
     digit.style.display = isLeadingZero
       ? "none"
@@ -1400,10 +1562,6 @@ function setDisplayedNumber(value, hideLeadingZeros = false) {
     digit.classList.remove("rolling");
   });
 }
-
-/* ========================================
-   파티클 및 숫자 임팩트
-======================================== */
 
 function createBurst(
   x,
@@ -1416,7 +1574,6 @@ function createBurst(
 
   const multiplier = settings.effect / 2;
 
-  // 지나치게 많은 파티클이 한 번에 생성돼 프레임이 떨어지지 않도록 제한해.
   const actualCount = Math.max(
     1,
     Math.min(300, Math.round(count * multiplier))
@@ -1438,17 +1595,53 @@ function createBurst(
       : "burst-particle";
 
     if (isStar) {
-      particle.textContent = Math.random() < 0.5 ? "✦" : "✧";
-
-      if (kind === "legendary" || kind === "divine") {
-        particle.classList.add("gold-star");
-      } else if (
-        kind !== "normal" &&
-        kind !== "uncommon" &&
-        kind !== "oddity"
-      ) {
+      if (kind === "pi") {
+        particle.textContent = Math.random() < 0.55 ? "π" : "✦";
         particle.classList.add("rare-star");
+        particle.style.color = "#f0d9ff";
+        particle.style.textShadow =
+          "0 0 10px #fff, 0 0 22px #d8a3ff, 0 0 38px #a64bff";
+      } else if (kind === "euler") {
+        particle.textContent = Math.random() < 0.55 ? "e" : "✧";
+        particle.classList.add("rare-star");
+        particle.style.color = "#d5e7ff";
+        particle.style.textShadow =
+          "0 0 10px #fff, 0 0 22px #91aaff, 0 0 38px #6388ff";
+      } else if (kind === "golden-light") {
+        particle.textContent = Math.random() < 0.55 ? "φ" : "✦";
+        particle.classList.add("gold-star");
+        particle.style.color = "#fff0bd";
+        particle.style.textShadow =
+          "0 0 10px #fff, 0 0 22px #ffe29a, 0 0 38px #ffc34d";
+      } else {
+        particle.textContent = Math.random() < 0.5 ? "✦" : "✧";
+
+        if (
+          kind === "legendary" ||
+          kind === "divine" ||
+          kind === "seraph"
+        ) {
+          particle.classList.add("gold-star");
+        } else if (
+          kind !== "normal" &&
+          kind !== "uncommon" &&
+          kind !== "oddity"
+        ) {
+          particle.classList.add("rare-star");
+        }
       }
+    } else if (kind === "pi") {
+      particle.style.background = "#d8a3ff";
+      particle.style.boxShadow =
+        "0 0 10px #d8a3ff, 0 0 20px rgba(166, 75, 255, .85)";
+    } else if (kind === "euler") {
+      particle.style.background = "#91aaff";
+      particle.style.boxShadow =
+        "0 0 10px #91aaff, 0 0 20px rgba(99, 136, 255, .85)";
+    } else if (kind === "golden-light") {
+      particle.style.background = "#ffe29a";
+      particle.style.boxShadow =
+        "0 0 10px #ffe29a, 0 0 20px rgba(255, 195, 77, .85)";
     }
 
     const angle = Math.random() * Math.PI * 2;
@@ -1497,7 +1690,6 @@ function triggerButtonImpact(button) {
 
   button.classList.remove("button-impact");
 
-  // 같은 클래스를 연속으로 적용해도 애니메이션이 다시 시작되도록 해.
   void button.offsetWidth;
 
   button.classList.add("button-impact");
@@ -1566,19 +1758,15 @@ function createCoinBurst(x, y) {
 function triggerResultImpact(pattern = null, result = "0000000") {
   resetNumberEffects();
 
-  /*
-   * CSS 애니메이션 누락 방지:
-   * 클래스 제거 → 레이아웃 재계산 → 새 클래스 추가 순서로 처리해.
-   */
+  setDisplayedNumber(result, true);
+
   void numberBox.offsetWidth;
   void numberElement.offsetWidth;
 
   numberElement.classList.add("finished");
 
   const rect = numberBox.getBoundingClientRect();
-
   const rareActive = Boolean(pattern && settings.rareEffects);
-
   const normalized = String(Number(result));
   const visibleDigits = normalized === "0" ? 0 : normalized.length;
 
@@ -1607,9 +1795,9 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     special: 4.1,
     jackpot: 4.0,
     eclipse: 3.9,
-    pi: 3.8,
-    euler: 3.7,
-    "golden-light": 3.6,
+    pi: 5.0,
+    euler: 4.9,
+    "golden-light": 4.8,
     aurora: 3.4,
     hallow: 3.3,
 
@@ -1677,15 +1865,16 @@ function triggerResultImpact(pattern = null, result = "0000000") {
 
     effectsLayer.appendChild(flash);
 
-    setTimeout(() => flash.remove(), 1600);
+    const flashDuration =
+      ["pi", "euler", "golden-light"].includes(pattern.level)
+        ? 2400
+        : 1600;
+
+    setTimeout(() => flash.remove(), flashDuration);
   } else {
     rareLabel.textContent = "";
   }
 
-  /*
-   * 새 연출 클래스를 적용한 직후 강제로 레이아웃을 계산해.
-   * 같은 희귀도가 연속으로 나와도 해당 연출을 다시 재생할 수 있어.
-   */
   void numberBox.offsetWidth;
 
   const burstCounts = {
@@ -1694,9 +1883,9 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     special: 135,
     jackpot: 145,
     eclipse: 145,
-    pi: 130,
-    euler: 125,
-    "golden-light": 125,
+    pi: 220,
+    euler: 215,
+    "golden-light": 210,
     aurora: 115,
     hallow: 110,
 
@@ -1740,6 +1929,20 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     rareActive ? pattern.level : "normal"
   );
 
+  if (
+    rareActive &&
+    settings.effect > 0 &&
+    ["pi", "euler", "golden-light"].includes(pattern.level)
+  ) {
+    createBurst(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      Math.round(38 * (settings.effect / 2)),
+      Math.min(rect.width * 0.75, 280),
+      pattern.level
+    );
+  }
+
   if (settings.effect > 0 && visibleDigits <= 6) {
     createBurst(
       rect.left + rect.width / 2,
@@ -1761,14 +1964,17 @@ function triggerResultImpact(pattern = null, result = "0000000") {
     clearTimeout(effectCleanupTimeout);
   }
 
-  /*
-   * 연출이 끝난 뒤 임시 색상 클래스를 제거해.
-   * 따라서 희귀 연출의 색이 다음 추첨까지 남지 않아.
-   */
+  const temporaryEffectDuration =
+    rareActive && ["pi", "euler", "golden-light"].includes(pattern.level)
+      ? 2350
+      : rareActive
+        ? 1900
+        : 850;
+
   effectCleanupTimeout = window.setTimeout(() => {
     clearTemporaryResultClasses();
     effectCleanupTimeout = null;
-  }, rareActive ? 1900 : 850);
+  }, temporaryEffectDuration);
 }
 
 function takeEffectPattern(actualPattern) {
@@ -1800,10 +2006,6 @@ function triggerNextResultEffect(actualPattern, result) {
 
   return effectPattern;
 }
-
-/* ========================================
-   기록 및 통계
-======================================== */
 
 function saveProgress() {
   const snapshot = {
@@ -2009,10 +2211,6 @@ function renderStatistics() {
   );
 }
 
-/* ========================================
-   DRAW HISTORY
-======================================== */
-
 function addToHistory(result) {
   const value = Number(result);
   const pattern = getRarePattern(String(value));
@@ -2166,10 +2364,6 @@ function updateStatistics() {
   totalDrawsElement.textContent = formatNumber(totalDraws);
 }
 
-/* ========================================
-   일반 추첨 완료
-======================================== */
-
 function finishDraw(result) {
   clearRollTimers();
 
@@ -2222,10 +2416,6 @@ function finishDraw(result) {
   }
 }
 
-/* ========================================
-   즉각 뽑기
-======================================== */
-
 function drawInstantly() {
   if (isDrawing) return;
 
@@ -2243,10 +2433,6 @@ function drawInstantly() {
   finishDraw(result);
 }
 
-/* ========================================
-   일반 숫자 롤링
-======================================== */
-
 function drawWithAnimation() {
   if (isDrawing) return;
 
@@ -2262,6 +2448,7 @@ function drawWithAnimation() {
   statusElement.textContent = "숫자를 추첨하는 중...";
 
   digitElements.forEach(digit => {
+    digit.classList.remove("leading-zero");
     digit.style.display = "inline-block";
     digit.classList.add("rolling");
   });
@@ -2319,16 +2506,7 @@ function drawWithAnimation() {
 }
 
 drawButton.addEventListener("click", drawWithAnimation);
-
-/*
- * 즉각 뽑기에는 비밀번호 검사를 하지 않아.
- * 클릭하면 바로 추첨이 실행돼.
- */
 instantButton.addEventListener("click", drawInstantly);
-
-/* ========================================
-   자동 뽑기
-======================================== */
 
 function openAutoSettings() {
   if (autoRunning) {
@@ -2549,10 +2727,6 @@ autoOverlay.addEventListener("click", event => {
   }
 });
 
-/* ========================================
-   자동 추첨 결과 요약
-======================================== */
-
 function showAutoSummary(reason) {
   if (autoCompletedCount <= 0 || autoResults.length === 0) {
     return;
@@ -2631,10 +2805,6 @@ autoSummaryOverlay.addEventListener("click", event => {
   }
 });
 
-/* ========================================
-   통계 창
-======================================== */
-
 function openStatistics() {
   renderStatistics();
 
@@ -2660,11 +2830,46 @@ statisticsOverlay.addEventListener("click", event => {
   }
 });
 
-/* ========================================
-   희귀도 표
-======================================== */
+const RARITY_CONDITION_DESCRIPTIONS = {
+  apex: "9090909 · AB 반복형 최고 패턴",
+  omniversal: "1234321 · 7654567 · 대칭형 숫자 배열",
+  divine: "8888887 · 7777778 · 9999998 · 4444449",
+  genesis: "1122334 · 2233445 · 3344556 · 4455667 · 5566778 · 6677889 · 7788990 · 9988776",
+  prismatic: "1231234 · 2342345 · 3453456 · 4564567 · 5675678 · 6786789",
+  noteworthy: "7자리 · 첫/끝 숫자 동일 · 서로 다른 숫자 5종 이상 · 숫자 합이 7의 배수",
+  curious: "7자리 · 서로 다른 숫자 5종 · 숫자 합이 5의 배수",
+  oddity: "7자리 · 서로 다른 숫자 3~4종 · 숫자 합이 홀수 · 연속 반복 최대 2자리"
+};
+
+function syncRarityTableConditions() {
+  const table = document.querySelector(".rarity-table");
+  if (!table) return;
+
+  Object.entries(RARITY_CONDITION_DESCRIPTIONS).forEach(([level, description]) => {
+    const badge = table.querySelector(`.rarity-badge.${level}`);
+    const row = badge?.closest("tr");
+
+    if (!row || !row.cells.length) return;
+
+    const conditionCell = row.cells[0];
+    const orderElement = conditionCell.querySelector(".rarity-order");
+    const orderText = orderElement ? orderElement.textContent : "";
+
+    conditionCell.replaceChildren();
+
+    if (orderText) {
+      const order = document.createElement("span");
+      order.className = "rarity-order";
+      order.textContent = orderText;
+      conditionCell.appendChild(order);
+    }
+
+    conditionCell.appendChild(document.createTextNode(` ${description}`));
+  });
+}
 
 function openRarity() {
+  syncRarityTableConditions();
   rarityOverlay.hidden = false;
 
   rarityButton.setAttribute("aria-expanded", "true");
@@ -2688,10 +2893,6 @@ rarityOverlay.addEventListener("click", event => {
     closeRarity();
   }
 });
-
-/* ========================================
-   치트
-======================================== */
 
 function openCheatPanel() {
   cheatOverlay.hidden = false;
@@ -2757,10 +2958,6 @@ clearCheatButton.addEventListener("click", () => {
     "치트를 해제했어. 이제 무작위 숫자가 나와.";
 });
 
-/* ========================================
-   비밀번호 보호
-======================================== */
-
 function requestProtectedAccess(action) {
   if (
     sessionUnlocked &&
@@ -2808,7 +3005,6 @@ function submitPassword() {
 
   const action = pendingProtectedAction;
 
-  // 페이지가 새로 로드되면 이 값은 다시 false가 돼.
   sessionUnlocked = true;
 
   closePassword();
@@ -2838,10 +3034,6 @@ passwordOverlay.addEventListener("click", event => {
     closePassword();
   }
 });
-
-/* ========================================
-   연출 다시 보기
-======================================== */
 
 function openReplay() {
   replayOverlay.hidden = false;
@@ -2901,10 +3093,6 @@ document.querySelectorAll("[data-preview-rarity]").forEach(button => {
       `다음 추첨에 ${label} 연출이 예약됐어.`;
   });
 });
-
-/* ========================================
-   초고속 추첨
-======================================== */
 
 function openTurboPanel() {
   turboOverlay.hidden = false;
@@ -3066,10 +3254,6 @@ function runTurboDraw() {
 
 startTurboButton.addEventListener("click", runTurboDraw);
 
-/* ========================================
-   배경 파티클
-======================================== */
-
 const canvas = $("particles");
 const ctx = canvas.getContext("2d");
 
@@ -3148,10 +3332,6 @@ function animateParticles() {
 }
 
 window.addEventListener("resize", resizeCanvas);
-
-/* ========================================
-   기존 추첨 기록 복원
-======================================== */
 
 function restoreProgress() {
   try {
@@ -3237,10 +3417,6 @@ function restoreProgress() {
         }
       });
 
-      /*
-       * 이전 희귀도 통계를 새 이름으로 이전해.
-       * 기존 Paradox는 황금비, Astral은 새 Paradox가 돼.
-       */
       if (
         Object.prototype.hasOwnProperty.call(
           previousRarities,
@@ -3281,12 +3457,18 @@ function restoreProgress() {
   }
 }
 
-/* ========================================
-   키보드 및 모달 닫기
-======================================== */
-
 document.addEventListener("keydown", event => {
   if (event.key !== "Escape") return;
+
+  if (!dataResetConfirmOverlay.hidden) {
+    closeDataResetConfirm();
+    return;
+  }
+
+  if (!dataResetOverlay.hidden) {
+    closeDataReset();
+    return;
+  }
 
   if (!rareHistoryFilterPanel.hidden) {
     closeRareHistoryFilter();
@@ -3329,10 +3511,6 @@ document.addEventListener("keydown", event => {
   }
 });
 
-/* ========================================
-   초기 화면
-======================================== */
-
 restoreProgress();
 
 populateSettingsControls();
@@ -3355,6 +3533,7 @@ renderRareHistory();
 updateAverage();
 updateStatistics();
 renderStatistics();
+syncRarityTableConditions();
 
 resizeCanvas();
 animateParticles();
