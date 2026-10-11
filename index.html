@@ -48,19 +48,14 @@
 
     <main class="container">
       <div class="top-actions">
-        <button id="settings-button" class="settings-button" type="button"
-          aria-expanded="false" aria-controls="settings-overlay">
-          ⚙ 설정
-        </button>
-
-        <button id="achievements-button" class="settings-button achievements-open-button"
-          type="button" aria-expanded="false" aria-controls="achievements-overlay">
-          🏆 업적
-        </button>
-
         <button id="reset-button" class="settings-button reset-open-button"
           type="button" aria-expanded="false" aria-controls="reset-overlay">
           ↺ 초기화
+        </button>
+
+        <button id="settings-button" class="settings-button" type="button"
+          aria-expanded="false" aria-controls="settings-overlay">
+          ⚙ 설정
         </button>
 
         <button id="cheat-button" class="settings-button cheat-open-button"
@@ -840,31 +835,6 @@
       <div class="settings-actions">
         <button id="cancel-turbo" class="secondary-button" type="button">취소</button>
         <button id="start-turbo" class="primary-button" type="button">초고속 추첨 시작</button>
-      </div>
-    </section>
-  </div>
-
-  <!-- 업적 -->
-  <div id="achievements-overlay" class="settings-overlay achievements-overlay" hidden>
-    <section class="settings-panel achievements-panel" role="dialog"
-      aria-modal="true" aria-labelledby="achievements-title">
-
-      <div class="settings-header">
-        <div>
-          <p class="settings-eyebrow">YOUR ACHIEVEMENTS</p>
-          <h2 id="achievements-title">🏆 업적</h2>
-        </div>
-
-        <button id="close-achievements" class="close-settings"
-          type="button" aria-label="업적 창 닫기">✕</button>
-      </div>
-
-      <div id="achievements-content" class="achievements-content">
-        <div class="achievements-empty">
-          <div class="achievements-empty-icon" aria-hidden="true">🏆</div>
-          <h3>아직 업적이 없어</h3>
-          <p>숫자를 뽑고 다양한 기록을 세워서 업적을 모아 봐!</p>
-        </div>
       </div>
     </section>
   </div>
