@@ -15,24 +15,30 @@
     <aside class="history-panel">
       <h2>DRAW HISTORY</h2>
       <p class="panel-subtitle">최근 10회 추첨 결과</p>
+
       <ol id="history-list">
         <li class="empty-history">아직 추첨 기록이 없어!</li>
       </ol>
+
       <div class="average-panel">
         <p>최근 10회 평균</p>
         <strong id="average">—</strong>
         <span id="average-status">10회 추첨 후 표시</span>
       </div>
+
       <div class="stats-panel">
         <h3>NUMBER STATISTICS</h3>
+
         <div class="stat-row">
           <span>최댓값</span>
           <strong id="max-number">—</strong>
         </div>
+
         <div class="stat-row">
           <span>최솟값</span>
           <strong id="min-number">—</strong>
         </div>
+
         <div class="stat-row">
           <span>전체 추첨 횟수</span>
           <strong id="total-draws">0</strong>
@@ -42,19 +48,14 @@
 
     <main class="container">
       <div class="top-actions">
-        <button id="settings-button" class="settings-button" type="button"
-          aria-expanded="false" aria-controls="settings-overlay">
-          ⚙ 설정
-        </button>
-
-        <button id="achievements-button" class="settings-button achievements-open-button"
-          type="button" aria-expanded="false" aria-controls="achievements-overlay">
-          🏆 업적
-        </button>
-
         <button id="reset-button" class="settings-button reset-open-button"
           type="button" aria-expanded="false" aria-controls="reset-overlay">
           ↺ 초기화
+        </button>
+
+        <button id="settings-button" class="settings-button" type="button"
+          aria-expanded="false" aria-controls="settings-overlay">
+          ⚙ 설정
         </button>
 
         <button id="cheat-button" class="settings-button cheat-open-button"
@@ -177,6 +178,7 @@
       <div class="rare-history-filter-actions">
         <button id="rare-history-filter-all"
           class="secondary-button" type="button">전체 선택</button>
+
         <button id="rare-history-filter-none"
           class="secondary-button" type="button">전체 해제</button>
       </div>
@@ -192,10 +194,12 @@
         <label><input type="checkbox" name="rare-history-rarity" value="golden-light" checked><span class="rarity-badge golden-light">황금빛 (φ)</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="aurora" checked><span class="rarity-badge aurora">Aurora</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="hallow" checked><span class="rarity-badge hallow">Hallow</span></label>
+
         <label><input type="checkbox" name="rare-history-rarity" value="apex" checked><span class="rarity-badge apex">Apex</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="omniversal" checked><span class="rarity-badge omniversal">Omniversal</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="divine" checked><span class="rarity-badge divine">Divine</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="genesis" checked><span class="rarity-badge genesis">Genesis</span></label>
+
         <label><input type="checkbox" name="rare-history-rarity" value="celestial" checked><span class="rarity-badge celestial">Celestial</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="quantum" checked><span class="rarity-badge quantum">Quantum</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="paradox" checked><span class="rarity-badge paradox">Paradox</span></label>
@@ -206,6 +210,7 @@
         <label><input type="checkbox" name="rare-history-rarity" value="phantom" checked><span class="rarity-badge phantom">Phantom</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="glorious" checked><span class="rarity-badge glorious">Glorious</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="rare" checked><span class="rarity-badge rare">Rare</span></label>
+
         <label><input type="checkbox" name="rare-history-rarity" value="noteworthy" checked><span class="rarity-badge noteworthy">Noteworthy</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="curious" checked><span class="rarity-badge curious">Curious</span></label>
         <label><input type="checkbox" name="rare-history-rarity" value="oddity" checked><span class="rarity-badge oddity">Oddity</span></label>
@@ -214,223 +219,6 @@
 
       <p class="settings-message">
         선택한 등급만 오른쪽 기록 목록에 표시돼.
-      </p>
-    </section>
-  </div>
-
-  <!-- 업적 메뉴 -->
-  <div id="achievements-overlay" class="settings-overlay achievements-overlay" hidden>
-    <section class="settings-panel achievements-panel" role="dialog"
-      aria-modal="true" aria-labelledby="achievements-title">
-
-      <div class="settings-header">
-        <div>
-          <p class="settings-eyebrow">ACHIEVEMENTS</p>
-          <h2 id="achievements-title">업적</h2>
-        </div>
-
-        <button id="close-achievements" class="close-settings"
-          type="button" aria-label="업적 창 닫기">✕</button>
-      </div>
-
-      <div class="achievements-summary">
-        <strong id="achievements-count">0 / 21</strong>
-        <span>업적 달성</span>
-      </div>
-
-      <div id="achievements-list" class="achievements-grid">
-        <article class="achievement-card" data-achievement="first-draw">
-          <span class="achievement-icon">✦</span>
-          <div class="achievement-copy">
-            <h3>첫 뽑기를 하세요.</h3>
-            <p>뽑기 수 1회 달성.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="oddity">
-          <span class="achievement-icon">◇</span>
-          <div class="achievement-copy">
-            <h3>Oddity 를 뽑으세요.</h3>
-            <p>Oddity 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="rare">
-          <span class="achievement-icon">✧</span>
-          <div class="achievement-copy">
-            <h3>숫자의 특이함을 느껴보세요.</h3>
-            <p>Rare 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="draw-100">
-          <span class="achievement-icon">Ⅰ</span>
-          <div class="achievement-copy">
-            <h3>이제 시작입니다.</h3>
-            <p>뽑기 수 100회 달성.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="glorious">
-          <span class="achievement-icon">✹</span>
-          <div class="achievement-copy">
-            <h3>좀 하시네요.</h3>
-            <p>Glorious 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="mythic">
-          <span class="achievement-icon">∞</span>
-          <div class="achievement-copy">
-            <h3>대칭대칭</h3>
-            <p>Mythic 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="draw-10000">
-          <span class="achievement-icon">Ⅱ</span>
-          <div class="achievement-copy">
-            <h3>님아 그 강을 건너지 마세요.</h3>
-            <p>1만 번 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="prismatic">
-          <span class="achievement-icon">✧</span>
-          <div class="achievement-copy">
-            <h3>운이 좋군요.</h3>
-            <p>Prismatic 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="celestial">
-          <span class="achievement-icon">☾</span>
-          <div class="achievement-copy">
-            <h3>홀수 밖에.</h3>
-            <p>Celestial 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="draw-100000">
-          <span class="achievement-icon">Ⅲ</span>
-          <div class="achievement-copy">
-            <h3>아니요, 강을 넘었어요.</h3>
-            <p>10만 번 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="omniversal">
-          <span class="achievement-icon">◎</span>
-          <div class="achievement-copy">
-            <h3>대칭대칭대칭대칭</h3>
-            <p>Omniversal 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="draw-1000000">
-          <span class="achievement-icon">Ⅳ</span>
-          <div class="achievement-copy">
-            <h3>흠.. 난 몰라.</h3>
-            <p>100만 번 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="hallow">
-          <span class="achievement-icon">☼</span>
-          <div class="achievement-copy">
-            <h3>없어요.</h3>
-            <p>Hallow 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="math-lovers">
-          <span class="achievement-icon">π</span>
-          <div class="achievement-copy">
-            <h3>나는 수학이 좋아.</h3>
-            <p>원주율, e, 황금비 등급 전부 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="eclipse">
-          <span class="achievement-icon">☯</span>
-          <div class="achievement-copy">
-            <h3>같다.</h3>
-            <p>Eclipse 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="jackpot">
-          <span class="achievement-icon">🎰</span>
-          <div class="achievement-copy">
-            <h3>I just hit the Jackpot!</h3>
-            <p>Jackpot 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="draw-10000000">
-          <span class="achievement-icon">Ⅴ</span>
-          <div class="achievement-copy">
-            <h3>와.</h3>
-            <p>1000만 번 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="special">
-          <span class="achievement-icon">✹</span>
-          <div class="achievement-copy">
-            <h3>어케 뽑았노.</h3>
-            <p>Special 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="reverse-special">
-          <span class="achievement-icon">⟲</span>
-          <div class="achievement-copy">
-            <h3>아니, 이건 또 어케.</h3>
-            <p>Reverse Special 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="ultimate">
-          <span class="achievement-icon">👑</span>
-          <div class="achievement-copy">
-            <h3>? 왓더.</h3>
-            <p>Ultimate 등급 뽑기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-
-        <article class="achievement-card" data-achievement="password">
-          <span class="achievement-icon">🔐</span>
-          <div class="achievement-copy">
-            <h3>아니, 어케 알았지?</h3>
-            <p>비밀번호 맞추기.</p>
-          </div>
-          <span class="achievement-status">미달성</span>
-        </article>
-      </div>
-
-      <p id="achievements-message" class="settings-message" aria-live="polite">
-        업적을 달성하면 해당 칸이 초록색으로 바뀌어.
       </p>
     </section>
   </div>
@@ -478,11 +266,6 @@
       <div class="settings-actions reset-action-row">
         <button id="reset-rare-history" class="secondary-button reset-action-button"
           type="button">최근 희귀 숫자 10개 초기화</button>
-      </div>
-
-      <div class="settings-actions reset-action-row">
-        <button id="reset-achievements" class="secondary-button reset-action-button"
-          type="button">업적 초기화</button>
       </div>
 
       <p id="reset-message" class="settings-message" aria-live="polite">
@@ -619,10 +402,12 @@
           <label><input type="checkbox" name="auto-stop-rarity" value="golden-light"><span class="rarity-badge golden-light">황금빛 (φ)</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="aurora"><span class="rarity-badge aurora">Aurora</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="hallow"><span class="rarity-badge hallow">Hallow</span></label>
+
           <label><input type="checkbox" name="auto-stop-rarity" value="apex"><span class="rarity-badge apex">Apex</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="omniversal"><span class="rarity-badge omniversal">Omniversal</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="divine"><span class="rarity-badge divine">Divine</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="genesis"><span class="rarity-badge genesis">Genesis</span></label>
+
           <label><input type="checkbox" name="auto-stop-rarity" value="celestial"><span class="rarity-badge celestial">Celestial</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="quantum"><span class="rarity-badge quantum">Quantum</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="paradox"><span class="rarity-badge paradox">Paradox</span></label>
@@ -633,6 +418,7 @@
           <label><input type="checkbox" name="auto-stop-rarity" value="phantom"><span class="rarity-badge phantom">Phantom</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="glorious"><span class="rarity-badge glorious">Glorious</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="rare"><span class="rarity-badge rare">Rare</span></label>
+
           <label><input type="checkbox" name="auto-stop-rarity" value="noteworthy"><span class="rarity-badge noteworthy">Noteworthy</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="curious"><span class="rarity-badge curious">Curious</span></label>
           <label><input type="checkbox" name="auto-stop-rarity" value="oddity"><span class="rarity-badge oddity">Oddity</span></label>
@@ -787,6 +573,7 @@
               <th>설명</th>
             </tr>
           </thead>
+
           <tbody>
             <tr><td><span class="rarity-order">01</span> 0</td><td><span class="rarity-badge ultimate">Ultimate</span></td><td>숫자 0</td></tr>
             <tr><td><span class="rarity-order">02</span> 7654321</td><td><span class="rarity-badge reverse-special">Reverse Special</span></td><td>역순으로 이어지는 숫자</td></tr>
@@ -798,20 +585,24 @@
             <tr><td><span class="rarity-order">08</span> 1618033</td><td><span class="rarity-badge golden-light">황금빛 (φ)</span></td><td>황금비 숫자 배열</td></tr>
             <tr><td><span class="rarity-order">09</span> 2345678 · 3456789 · 8765432 · 9876543</td><td><span class="rarity-badge aurora">Aurora</span></td><td>연속 증가·감소 숫자</td></tr>
             <tr><td><span class="rarity-order">10</span> 1020304</td><td><span class="rarity-badge hallow">Hallow</span></td><td>0이 일정 간격으로 배치된 숫자</td></tr>
+
             <tr><td><span class="rarity-order">11</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge apex">Apex</span></td><td>상급 희귀도 · 최고 단계의 특별 패턴</td></tr>
             <tr><td><span class="rarity-order">12</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge omniversal">Omniversal</span></td><td>상급 희귀도 · 극도로 드문 패턴</td></tr>
             <tr><td><span class="rarity-order">13</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge divine">Divine</span></td><td>상급 희귀도 · 특별한 숫자 구조</td></tr>
             <tr><td><span class="rarity-order">14</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge genesis">Genesis</span></td><td>상급 희귀도 · 독특한 숫자 배열</td></tr>
+
             <tr><td><span class="rarity-order">15</span> 1357924</td><td><span class="rarity-badge celestial">Celestial</span></td><td>홀수 중심의 고유 조합</td></tr>
             <tr><td><span class="rarity-order">16</span> 2468135</td><td><span class="rarity-badge quantum">Quantum</span></td><td>짝수와 홀수가 교차하는 배열</td></tr>
             <tr><td><span class="rarity-order">17</span> 3142314</td><td><span class="rarity-badge paradox">Paradox</span></td><td>반복 구조가 있는 고유 배열</td></tr>
             <tr><td><span class="rarity-order">18</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge prismatic">Prismatic</span></td><td>중급 희귀도 · 여러 패턴이 조합된 숫자</td></tr>
+
             <tr><td><span class="rarity-order">19</span> 한 자리 숫자 · 7자리 반복</td><td><span class="rarity-badge legendary">Legendary</span></td><td>특별한 단일 숫자 및 반복</td></tr>
             <tr><td><span class="rarity-order">20</span> 좌우가 같은 7자리 수</td><td><span class="rarity-badge mythic">Mythic</span></td><td>7자리 좌우 대칭 숫자</td></tr>
             <tr><td><span class="rarity-order">21</span> 모든 숫자가 다르고 합이 35 또는 42</td><td><span class="rarity-badge seraph">Seraph</span></td><td>균형 잡힌 숫자 조합</td></tr>
             <tr><td><span class="rarity-order">22</span> ABABABA 형태</td><td><span class="rarity-badge phantom">Phantom</span></td><td>두 숫자가 번갈아 반복되는 패턴</td></tr>
             <tr><td><span class="rarity-order">23</span> 반복 구조 · 6회 연속 반복</td><td><span class="rarity-badge glorious">Glorious</span></td><td>뚜렷한 반복 패턴</td></tr>
             <tr><td><span class="rarity-order">24</span> 여러 숫자 길이 · 연속 반복</td><td><span class="rarity-badge rare">Rare</span></td><td>일반적이지 않은 숫자 조합</td></tr>
+
             <tr><td><span class="rarity-order">25</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge noteworthy">Noteworthy</span></td><td>하급 희귀도 · 눈에 띄는 숫자</td></tr>
             <tr><td><span class="rarity-order">26</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge curious">Curious</span></td><td>하급 희귀도 · 흥미로운 숫자 조합</td></tr>
             <tr><td><span class="rarity-order">27</span> 추후 JS 판정 조건 연결</td><td><span class="rarity-badge oddity">Oddity</span></td><td>하급 희귀도 · 가벼운 특이 패턴</td></tr>
@@ -975,10 +766,12 @@
         <button type="button" class="replay-rarity-button" data-preview-rarity="golden-light"><span class="rarity-badge golden-light">황금빛 (φ)</span><small>황금비 광휘</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="aurora"><span class="rarity-badge aurora">Aurora</span><small>오로라 파동</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="hallow"><span class="rarity-badge hallow">Hallow</span><small>신비로운 광휘</small></button>
+
         <button type="button" class="replay-rarity-button" data-preview-rarity="apex"><span class="rarity-badge apex">Apex</span><small>상급 티어 · 정점의 섬광</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="omniversal"><span class="rarity-badge omniversal">Omniversal</span><small>상급 티어 · 우주적 파동</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="divine"><span class="rarity-badge divine">Divine</span><small>상급 티어 · 신성한 빛</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="genesis"><span class="rarity-badge genesis">Genesis</span><small>상급 티어 · 탄생의 섬광</small></button>
+
         <button type="button" class="replay-rarity-button" data-preview-rarity="celestial"><span class="rarity-badge celestial">Celestial</span><small>천체의 광휘</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="quantum"><span class="rarity-badge quantum">Quantum</span><small>양자 섬광</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="paradox"><span class="rarity-badge paradox">Paradox</span><small>역설적인 파동</small></button>
@@ -989,6 +782,7 @@
         <button type="button" class="replay-rarity-button" data-preview-rarity="phantom"><span class="rarity-badge phantom">Phantom</span><small>환영의 잔상</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="glorious"><span class="rarity-badge glorious">Glorious</span><small>청록색 플래시</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="rare"><span class="rarity-badge rare">Rare</span><small>파티클 버스트</small></button>
+
         <button type="button" class="replay-rarity-button" data-preview-rarity="noteworthy"><span class="rarity-badge noteworthy">Noteworthy</span><small>하급 티어 · 눈에 띄는 빛</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="curious"><span class="rarity-badge curious">Curious</span><small>하급 티어 · 호기심의 반짝임</small></button>
         <button type="button" class="replay-rarity-button" data-preview-rarity="oddity"><span class="rarity-badge oddity">Oddity</span><small>하급 티어 · 작은 파동</small></button>
