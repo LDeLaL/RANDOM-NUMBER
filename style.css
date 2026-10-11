@@ -3939,3 +3939,109 @@ body.light-mode .digit-count-label {
 .number-box[class*="rarity-"][class*="-impact"] {
   will-change: transform, filter, box-shadow;
 }
+
+/* ================================
+   업적 창
+   기존 Violet Random 테마 유지
+================================ */
+
+.achievements-panel {
+  width: min(100%, 680px);
+  min-height: 380px;
+  max-height: min(88vh, 780px);
+  padding: 30px;
+}
+
+.achievements-panel .settings-header {
+  margin-bottom: 25px;
+}
+
+.achievements-panel .settings-header h2 {
+  color: #f4eaff;
+}
+
+.achievements-content {
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px 15px;
+  border: 1px solid rgba(181, 135, 241, 0.14);
+  border-radius: 15px;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(132, 72, 202, 0.12),
+      transparent 72%
+    ),
+    rgba(12, 9, 19, 0.55);
+}
+
+.achievements-empty {
+  width: 100%;
+  text-align: center;
+  padding: 25px 10px;
+}
+
+.achievements-empty-icon {
+  margin-bottom: 20px;
+  font-size: 54px;
+  line-height: 1.2;
+  filter: drop-shadow(0 0 15px rgba(180, 122, 255, 0.4));
+}
+
+.achievements-empty h3 {
+  margin: 0 0 12px;
+  color: #e8d7ff;
+  font-size: 21px;
+  font-weight: 750;
+  text-shadow: 0 0 15px rgba(163, 95, 255, 0.2);
+}
+
+.achievements-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* 업적 창의 모바일 화면 대응 */
+@media (max-width: 640px) {
+  .achievements-panel {
+    width: 100%;
+    min-height: 340px;
+    max-height: 90vh;
+    padding: 22px;
+  }
+
+  .achievements-content {
+    min-height: 230px;
+    padding: 20px 12px;
+  }
+
+  .achievements-empty-icon {
+    font-size: 46px;
+  }
+
+  .achievements-empty h3 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .achievements-panel {
+    padding: 18px;
+  }
+
+  .achievements-panel .settings-header h2 {
+    font-size: 23px;
+  }
+
+  .achievements-content {
+    min-height: 210px;
+  }
+
+  .achievements-empty p {
+    font-size: 11px;
+  }
+}
