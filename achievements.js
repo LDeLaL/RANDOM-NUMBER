@@ -1,7 +1,9 @@
+```javascript
 /* =========================================
    VIOLET RANDOM - ACHIEVEMENTS SYSTEM
+   업적 분류 / 희귀도 업적 확장 / 저장 / 알림
    기존 script.js와 style.css는 수정하지 않음
-   ========================================= */
+========================================= */
 
 (() => {
   "use strict";
@@ -9,7 +11,13 @@
   const STORAGE_KEY = "violetRandomAchievementsV1";
   const PROGRESS_KEY = "violetRandomProgress";
 
+  /* =========================================
+     1. 업적 목록
+  ========================================= */
+
   const ACHIEVEMENTS = [
+    /* 기본 업적 */
+
     {
       id: "first-draw",
       title: "첫 뽑기를 하세요.",
@@ -117,7 +125,7 @@
     {
       id: "math",
       title: "나는 수학이 좋아.",
-      description: "원주율, e, 황금비 등급 전부 뽑기.",
+      description: "원주율, e, 황금비 등급을 전부 발견하세요.",
       icon: "π",
       type: "math"
     },
@@ -178,8 +186,37 @@
     },
 
     /* =====================================
-       추가 업적 1~8: 뽑기 횟수
-       ===================================== */
+       수학 관련 희귀도 업적
+    ===================================== */
+
+    {
+      id: "pi",
+      title: "원주율의 흔적",
+      description: "π · 원주율 배열을 발견하세요.",
+      icon: "π",
+      type: "rarity",
+      rarity: "pi"
+    },
+    {
+      id: "euler",
+      title: "자연상수의 발견",
+      description: "e · 자연상수 배열을 발견하세요.",
+      icon: "e",
+      type: "rarity",
+      rarity: "euler"
+    },
+    {
+      id: "golden-light",
+      title: "황금비의 조화",
+      description: "황금비 배열을 발견하세요.",
+      icon: "φ",
+      type: "rarity",
+      rarity: "golden-light"
+    },
+
+    /* =====================================
+       뽑기 횟수 업적
+    ===================================== */
 
     {
       id: "ten-draws",
@@ -247,8 +284,8 @@
     },
 
     /* =====================================
-       추가 업적 9~20: 새로운 희귀도
-       ===================================== */
+       기존 추가 희귀도 업적
+    ===================================== */
 
     {
       id: "aurora",
@@ -348,8 +385,93 @@
     },
 
     /* =====================================
-       추가 업적 21~23: 누적 통계
-       ===================================== */
+       새로운 희귀도 업적 10종
+    ===================================== */
+
+    {
+      id: "luminous",
+      title: "빛의 파동",
+      description: "Luminous 등급을 발견하세요.",
+      icon: "✧",
+      type: "rarity",
+      rarity: "luminous"
+    },
+    {
+      id: "starlight",
+      title: "별빛의 흔적",
+      description: "Starlight 등급을 발견하세요.",
+      icon: "✦",
+      type: "rarity",
+      rarity: "starlight"
+    },
+    {
+      id: "crystal",
+      title: "수정 공명",
+      description: "Crystal 등급을 발견하세요.",
+      icon: "◇",
+      type: "rarity",
+      rarity: "crystal"
+    },
+    {
+      id: "orbit",
+      title: "궤도의 조화",
+      description: "Orbit 등급을 발견하세요.",
+      icon: "◎",
+      type: "rarity",
+      rarity: "orbit"
+    },
+    {
+      id: "spectrum",
+      title: "일곱 빛의 파장",
+      description: "Spectrum 등급을 발견하세요.",
+      icon: "◇",
+      type: "rarity",
+      rarity: "spectrum"
+    },
+    {
+      id: "nebula",
+      title: "성운의 파편",
+      description: "Nebula 등급을 발견하세요.",
+      icon: "☄",
+      type: "rarity",
+      rarity: "nebula"
+    },
+    {
+      id: "nova",
+      title: "별의 섬광",
+      description: "Nova 등급을 발견하세요.",
+      icon: "✹",
+      type: "rarity",
+      rarity: "nova"
+    },
+    {
+      id: "astral",
+      title: "성계의 각성",
+      description: "Astral 등급을 발견하세요.",
+      icon: "✦",
+      type: "rarity",
+      rarity: "astral"
+    },
+    {
+      id: "infinity",
+      title: "무한의 경계",
+      description: "Infinity 등급을 발견하세요.",
+      icon: "∞",
+      type: "rarity",
+      rarity: "infinity"
+    },
+    {
+      id: "singularity",
+      title: "특이점의 도래",
+      description: "Singularity 등급을 발견하세요.",
+      icon: "⟡",
+      type: "rarity",
+      rarity: "singularity"
+    },
+
+    /* =====================================
+       누적 통계 업적
+    ===================================== */
 
     {
       id: "prime-ten",
@@ -380,8 +502,8 @@
     },
 
     /* =====================================
-       추가 업적 24~25: 숫자 패턴
-       ===================================== */
+       숫자 패턴 업적
+    ===================================== */
 
     {
       id: "unique-seven-digits",
@@ -400,6 +522,10 @@
       property: "prime-streak"
     }
   ];
+
+  /* =========================================
+     2. 희귀도와 업적 연결
+  ========================================= */
 
   const MATH_RARITIES = [
     "pi",
@@ -422,6 +548,10 @@
     "reverse-special": "reverse-special",
     ultimate: "ultimate",
 
+    pi: "pi",
+    euler: "euler",
+    "golden-light": "golden-light",
+
     aurora: "aurora",
     apex: "apex",
     divine: "divine",
@@ -433,10 +563,74 @@
     phantom: "phantom",
     noteworthy: "noteworthy",
     curious: "curious",
-    uncommon: "uncommon"
+    uncommon: "uncommon",
+
+    luminous: "luminous",
+    starlight: "starlight",
+    crystal: "crystal",
+    orbit: "orbit",
+    spectrum: "spectrum",
+    nebula: "nebula",
+    nova: "nova",
+    astral: "astral",
+    infinity: "infinity",
+    singularity: "singularity"
   };
 
   const $ = id => document.getElementById(id);
+
+  /* =========================================
+     3. 업적 분류
+  ========================================= */
+
+  const ACHIEVEMENT_CATEGORIES = [
+    {
+      id: "rarity",
+      title: "✦ 희귀도 발견",
+      description: "특별한 등급의 숫자를 발견하는 업적",
+      types: ["rarity"]
+    },
+    {
+      id: "count",
+      title: "🎲 뽑기 횟수",
+      description: "누적 추첨 횟수를 달성하는 업적",
+      types: ["count"]
+    },
+    {
+      id: "stat",
+      title: "📊 누적 통계",
+      description: "소수와 짝수, 홀수 기록을 쌓는 업적",
+      types: ["stat"]
+    },
+    {
+      id: "property",
+      title: "🔢 숫자 패턴",
+      description: "숫자의 배열과 연속 패턴을 발견하는 업적",
+      types: ["property"]
+    },
+    {
+      id: "math",
+      title: "∑ 수학 수집",
+      description: "수학적 상징을 가진 숫자를 모으는 업적",
+      types: ["math"]
+    },
+    {
+      id: "password",
+      title: "🔐 비밀 업적",
+      description: "숨겨진 조건을 찾아 달성하는 업적",
+      types: ["password"]
+    }
+  ];
+
+  function getAchievementCategory(achievement) {
+    return ACHIEVEMENT_CATEGORIES.find(category =>
+      category.types.includes(achievement.type)
+    );
+  }
+
+  /* =========================================
+     4. 진행 상황 읽기
+  ========================================= */
 
   function readProgress() {
     try {
@@ -468,16 +662,20 @@
       : {};
   }
 
+  function createDefaultState() {
+    return {
+      initialized: false,
+      unlocked: [],
+      drawsSinceReset: 0
+    };
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
 
       if (!raw) {
-        return {
-          initialized: false,
-          unlocked: [],
-          drawsSinceReset: 0
-        };
+        return createDefaultState();
       }
 
       const saved = JSON.parse(raw);
@@ -485,21 +683,20 @@
       return {
         initialized: true,
         unlocked: Array.isArray(saved?.unlocked)
-          ? saved.unlocked.filter(id =>
-              ACHIEVEMENTS.some(item => item.id === id)
-            )
+          ? [...new Set(
+              saved.unlocked.filter(id =>
+                ACHIEVEMENTS.some(item => item.id === id)
+              )
+            )]
           : [],
         drawsSinceReset:
           Number.isFinite(saved?.drawsSinceReset)
             ? Math.max(0, saved.drawsSinceReset)
             : 0
       };
-    } catch {
-      return {
-        initialized: true,
-        unlocked: [],
-        drawsSinceReset: 0
-      };
+    } catch (error) {
+      console.warn("업적 기록을 불러오지 못했어:", error);
+      return createDefaultState();
     }
   }
 
@@ -514,8 +711,11 @@
         STORAGE_KEY,
         JSON.stringify(state)
       );
+
+      return true;
     } catch (error) {
       console.warn("업적 기록 저장 실패:", error);
+      return false;
     }
   }
 
@@ -526,20 +726,26 @@
   function unlock(id) {
     if (isUnlocked(id)) return;
 
+    // 정의되어 있는 업적만 해금한다.
+    const achievement = ACHIEVEMENTS.find(
+      item => item.id === id
+    );
+
+    if (!achievement) return;
+
     state.unlocked.push(id);
+
     saveState();
     renderAchievements();
 
     if (notificationsEnabled) {
-      const achievement = ACHIEVEMENTS.find(
-        item => item.id === id
-      );
-
-      if (achievement) {
-        showAchievementToast(achievement);
-      }
+      showAchievementToast(achievement);
     }
   }
+
+  /* =========================================
+     5. 업적 조건 검사
+  ========================================= */
 
   function checkCountAchievements(count) {
     ACHIEVEMENTS
@@ -567,10 +773,6 @@
       unlock("math");
     }
   }
-
-  /* =====================================
-     새 업적 조건 검사
-     ===================================== */
 
   function isPrimeNumber(value) {
     const number = Number(value);
@@ -676,6 +878,10 @@
     saveState();
   }
 
+  /* =========================================
+     6. 업적 창 스타일
+  ========================================= */
+
   function ensureStylesheet() {
     if (
       !document.querySelector(
@@ -683,6 +889,7 @@
       )
     ) {
       const link = document.createElement("link");
+
       link.rel = "stylesheet";
       link.href = "achievements.css";
       link.dataset.achievementsStylesheet = "true";
@@ -691,10 +898,78 @@
     }
   }
 
-  /* =====================================
-     업적 달성 알림
-     오른쪽 위에 잠시 표시
-     ===================================== */
+  function ensureCategoryStyles() {
+    if ($("vr-achievement-category-styles")) return;
+
+    const style = document.createElement("style");
+
+    style.id = "vr-achievement-category-styles";
+
+    style.textContent = `
+      .achievement-category-heading {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 24px 0 2px;
+        padding: 13px 15px;
+        border: 1px solid rgba(179, 125, 255, 0.28);
+        border-radius: 12px;
+        background:
+          linear-gradient(
+            100deg,
+            rgba(107, 55, 165, 0.22),
+            rgba(32, 22, 46, 0.28)
+          );
+        color: #eee1ff;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: .15px;
+      }
+
+      .achievement-category-heading:first-child {
+        margin-top: 0;
+      }
+
+      .achievement-category-heading .category-progress {
+        margin-left: auto;
+        color: #cbb1ee;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .achievement-category-description {
+        grid-column: 1 / -1;
+        margin: -3px 2px 5px;
+        color: #ab9abf;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .achievement-card {
+        min-width: 0;
+      }
+
+      @media (max-width: 520px) {
+        .achievement-category-heading {
+          margin-top: 15px;
+          padding: 11px 12px;
+          font-size: 12px;
+        }
+
+        .achievement-category-heading .category-progress {
+          font-size: 10px;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  /* =========================================
+     7. 업적 달성 알림
+     ========================================= */
 
   function ensureToastStyles() {
     if ($("vr-achievement-toast-styles")) return;
@@ -875,10 +1150,9 @@
     }, 4200);
   }
 
-  /* =====================================
-     업적 버튼
-     순서: 업적 → 설정 → 초기화
-     ===================================== */
+  /* =========================================
+     8. 업적 버튼 생성
+     ========================================= */
 
   function createAchievementsButton() {
     const topActions = document.querySelector(".top-actions");
@@ -894,14 +1168,18 @@
 
     if (!button) {
       button = document.createElement("button");
+
       button.id = "achievements-button";
-      button.className = "settings-button achievements-open-button";
+      button.className =
+        "settings-button achievements-open-button";
       button.type = "button";
+
       button.setAttribute("aria-expanded", "false");
       button.setAttribute(
         "aria-controls",
         "achievements-overlay"
       );
+
       button.textContent = "🏆 업적";
     }
 
@@ -910,14 +1188,20 @@
     topActions.insertBefore(button, settingsButton);
   }
 
+  /* =========================================
+     9. 업적 창 생성
+  ========================================= */
+
   function createAchievementsModal() {
     if ($("achievements-overlay")) return;
 
     const overlay = document.createElement("div");
+
     overlay.id = "achievements-overlay";
     overlay.setAttribute("aria-hidden", "true");
 
     const panel = document.createElement("section");
+
     panel.className = "achievements-panel";
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
@@ -936,6 +1220,7 @@
     eyebrow.textContent = "VIOLET RANDOM · ACHIEVEMENTS";
 
     const title = document.createElement("h2");
+
     title.id = "achievements-title";
     title.className = "achievements-title";
     title.textContent = "업적";
@@ -943,6 +1228,7 @@
     heading.append(eyebrow, title);
 
     const closeButton = document.createElement("button");
+
     closeButton.id = "close-achievements";
     closeButton.className = "achievements-close";
     closeButton.type = "button";
@@ -952,10 +1238,10 @@
     header.append(heading, closeButton);
 
     const description = document.createElement("p");
+
     description.className = "achievements-description";
     description.textContent =
-      "Violet Random에서 다양한 업적을 달성해 봐. " +
-      "달성한 업적은 초록색으로 표시돼.";
+      "업적을 종류별로 모아봤어. 새로운 숫자와 기록에 도전해 봐!";
 
     const progress = document.createElement("div");
     progress.className = "achievements-progress";
@@ -967,8 +1253,9 @@
     progressLabel.textContent = "업적 달성률";
 
     const progressCount = document.createElement("span");
+
     progressCount.id = "achievements-progress-count";
-    progressCount.textContent = "0 / 46";
+    progressCount.textContent = `0 / ${ACHIEVEMENTS.length}`;
 
     progressText.append(progressLabel, progressCount);
 
@@ -976,6 +1263,7 @@
     progressTrack.className = "achievements-progress-track";
 
     const progressFill = document.createElement("div");
+
     progressFill.id = "achievements-progress-fill";
     progressFill.className = "achievements-progress-fill";
 
@@ -983,6 +1271,7 @@
     progress.append(progressText, progressTrack);
 
     const grid = document.createElement("div");
+
     grid.id = "achievements-grid";
     grid.className = "achievements-grid";
 
@@ -1013,48 +1302,121 @@
     });
   }
 
+  /* =========================================
+     10. 업적 카드 생성
+  ========================================= */
+
+  function createAchievementCard(achievement) {
+    const unlocked = isUnlocked(achievement.id);
+
+    const card = document.createElement("article");
+
+    card.className = "achievement-card";
+    card.dataset.achievementId = achievement.id;
+    card.dataset.achievementType = achievement.type;
+
+    if (unlocked) {
+      card.classList.add("unlocked");
+    }
+
+    const icon = document.createElement("div");
+
+    icon.className = "achievement-icon";
+    icon.textContent = achievement.icon;
+
+    const name = document.createElement("h3");
+
+    name.className = "achievement-name";
+    name.textContent = achievement.title;
+
+    const description = document.createElement("p");
+
+    description.className = "achievement-description";
+    description.textContent = achievement.description;
+
+    const status = document.createElement("span");
+
+    status.className = "achievement-status";
+    status.textContent = unlocked
+      ? "달성 완료"
+      : "미달성";
+
+    card.append(icon, name, description, status);
+
+    return card;
+  }
+
+  /* =========================================
+     11. 분류별 업적 렌더링
+  ========================================= */
+
   function renderAchievements() {
     const grid = $("achievements-grid");
+
     if (!grid) return;
 
     grid.replaceChildren();
 
-    ACHIEVEMENTS.forEach(achievement => {
-      const unlocked = isUnlocked(achievement.id);
+    ACHIEVEMENT_CATEGORIES.forEach(category => {
+      const categoryAchievements = ACHIEVEMENTS.filter(
+        achievement =>
+          category.types.includes(achievement.type)
+      );
 
-      const card = document.createElement("article");
-      card.className = "achievement-card";
-
-      if (unlocked) {
-        card.classList.add("unlocked");
+      if (categoryAchievements.length === 0) {
+        return;
       }
 
-      const icon = document.createElement("div");
-      icon.className = "achievement-icon";
-      icon.textContent = achievement.icon;
+      const categoryUnlocked = categoryAchievements.filter(
+        achievement => isUnlocked(achievement.id)
+      ).length;
 
-      const name = document.createElement("h3");
-      name.className = "achievement-name";
-      name.textContent = achievement.title;
+      const categoryHeading = document.createElement("h3");
 
-      const description = document.createElement("p");
-      description.className = "achievement-description";
-      description.textContent = achievement.description;
+      categoryHeading.className = "achievement-category-heading";
+      categoryHeading.dataset.category = category.id;
 
-      const status = document.createElement("span");
-      status.className = "achievement-status";
-      status.textContent = unlocked
-        ? "달성 완료"
-        : "미달성";
+      const categoryTitle = document.createElement("span");
+      categoryTitle.textContent = category.title;
 
-      card.append(icon, name, description, status);
-      grid.appendChild(card);
+      const categoryProgress = document.createElement("span");
+
+      categoryProgress.className = "category-progress";
+      categoryProgress.textContent =
+        `${categoryUnlocked} / ${categoryAchievements.length}`;
+
+      categoryHeading.append(
+        categoryTitle,
+        categoryProgress
+      );
+
+      const categoryDescription = document.createElement("p");
+
+      categoryDescription.className =
+        "achievement-category-description";
+      categoryDescription.textContent = category.description;
+
+      grid.append(
+        categoryHeading,
+        categoryDescription
+      );
+
+      categoryAchievements.forEach(achievement => {
+        grid.appendChild(
+          createAchievementCard(achievement)
+        );
+      });
     });
 
-    const unlockedCount = state.unlocked.length;
+    const unlockedCount = ACHIEVEMENTS.filter(
+      achievement => isUnlocked(achievement.id)
+    ).length;
+
     const totalCount = ACHIEVEMENTS.length;
-    const percentage =
-      (unlockedCount / totalCount) * 100;
+
+    const percentage = totalCount > 0
+      ? (unlockedCount / totalCount) * 100
+      : 0;
 
     const count = $("achievements-progress-count");
     const fill = $("achievements-progress-fill");
@@ -1068,6 +1430,10 @@
       fill.style.width = `${percentage}%`;
     }
   }
+
+  /* =========================================
+     12. 업적 창 열기 / 닫기
+  ========================================= */
 
   function openAchievements() {
     const overlay = $("achievements-overlay");
@@ -1097,6 +1463,10 @@
     button?.focus();
   }
 
+  /* =========================================
+     13. 업적 초기화 버튼
+  ========================================= */
+
   function createAchievementResetButton() {
     const resetPanel = document.querySelector(
       "#reset-overlay .reset-panel"
@@ -1112,6 +1482,7 @@
     row.className = "settings-actions reset-action-row";
 
     const button = document.createElement("button");
+
     button.id = "reset-achievements";
     button.className =
       "secondary-button reset-action-button";
@@ -1146,12 +1517,17 @@
     resetPanel.insertBefore(row, resetMessage);
   }
 
+  /* =========================================
+     14. 추첨 진행 상황 감시
+  ========================================= */
+
   function processProgressChange() {
     const currentCount = getCurrentDrawCount();
 
     if (currentCount < lastObservedDrawCount) {
       lastObservedDrawCount = currentCount;
       lastRarityCounts = getRarityCounts();
+
       return;
     }
 
@@ -1182,8 +1558,11 @@
 
     Object.entries(RARITY_ACHIEVEMENT_MAP).forEach(
       ([rarity, achievementId]) => {
-        const previous = Number(lastRarityCounts[rarity]) || 0;
-        const current = Number(currentRarityCounts[rarity]) || 0;
+        const previous =
+          Number(lastRarityCounts[rarity]) || 0;
+
+        const current =
+          Number(currentRarityCounts[rarity]) || 0;
 
         if (current > previous) {
           unlock(achievementId);
@@ -1193,7 +1572,10 @@
 
     const allMathRaritiesUnlocked =
       MATH_RARITIES.every(rarity =>
-        isRarityPreviouslyDrawn(rarity, currentRarityCounts)
+        isRarityPreviouslyDrawn(
+          rarity,
+          currentRarityCounts
+        )
       );
 
     if (allMathRaritiesUnlocked) {
@@ -1201,6 +1583,7 @@
     }
 
     lastRarityCounts = currentRarityCounts;
+
     saveState();
 
     // 소수·짝수·홀수 누적 통계와 숫자 패턴 업적 검사
@@ -1210,6 +1593,10 @@
   function isRarityPreviouslyDrawn(rarity, rarityCounts) {
     return Number(rarityCounts[rarity]) > 0;
   }
+
+  /* =========================================
+     15. 비밀번호 업적
+  ========================================= */
 
   function handleCorrectPasswordAttempt(event) {
     const target = event.target;
@@ -1235,6 +1622,10 @@
     }
   }
 
+  /* =========================================
+     16. 감시자 등록 및 키보드 단축키
+  ========================================= */
+
   function setupObservers() {
     const totalDraws = $("total-draws");
 
@@ -1250,13 +1641,13 @@
       });
     }
 
-    const passwordInput = $("password-input");
-
     document.addEventListener(
       "click",
       handleCorrectPasswordAttempt,
       true
     );
+
+    const passwordInput = $("password-input");
 
     if (passwordInput) {
       passwordInput.addEventListener(
@@ -1276,9 +1667,15 @@
     });
   }
 
+  /* =========================================
+     17. 초기화
+  ========================================= */
+
   function initialize() {
     ensureStylesheet();
+    ensureCategoryStyles();
     ensureToastStyles();
+
     createAchievementsButton();
     createAchievementsModal();
     createAchievementResetButton();
@@ -1292,17 +1689,30 @@
       checkRarityAchievements(lastRarityCounts);
     }
 
-    // 과거에 달성한 업적은 조용히 반영하고,
-    // 이제부터 새로 달성하는 업적에만 알림을 표시한다.
+    /*
+      과거에 달성한 업적은 조용히 반영하고,
+      이제부터 새로 달성하는 업적에만 알림을 표시한다.
+    */
+
     checkAdditionalAchievements(readProgress());
 
     lastObservedDrawCount = getCurrentDrawCount();
 
     setupObservers();
+
     renderAchievements();
 
     notificationsEnabled = true;
   }
 
-  initialize();
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initialize,
+      { once: true }
+    );
+  } else {
+    initialize();
+  }
 })();
+```
