@@ -1,4 +1,3 @@
-```javascript
 /* =========================================
    VIOLET RANDOM - EXTRA FEATURES
    개별 도감 삭제 / 도감 전체 삭제
@@ -458,6 +457,30 @@
     overlay.setAttribute("aria-hidden", "true");
   }
 
+  /*
+    같은 페이지에서 도감 저장 데이터를 변경한 경우,
+    codex.js가 가지고 있는 메모리 상태도 다시 불러오도록 알린다.
+  */
+
+  function notifyCodexStorageChanged() {
+    try {
+      const event = new StorageEvent("storage", {
+        key: CODEX_KEY,
+        newValue: localStorage.getItem(CODEX_KEY),
+        storageArea: localStorage
+      });
+
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.warn(
+        "도감 상태를 동기화하지 못했어. 페이지를 새로고침할게.",
+        error
+      );
+
+      window.location.reload();
+    }
+  }
+
   /* =========================================
      3. 도감 카드 개별 삭제 버튼
   ========================================= */
@@ -506,7 +529,7 @@
     const overlay = $("codex-overlay");
     const grid = $("codex-grid");
 
-    if (!overlay || !grid) return;
+    if (!overlay || !grid || !grid.parentElement) return;
 
     let row = $("codex-delete-all-row");
 
@@ -665,6 +688,9 @@
       message.textContent =
         `${value.toLocaleString("en-US")} 기록을 삭제했어. 💜`;
     }
+
+    // 도감 JS의 메모리에 남은 과거 기록을 다시 불러온다.
+    notifyCodexStorageChanged();
   }
 
   /* =========================================
@@ -718,6 +744,9 @@
         ? `도감 기록 ${deletedCount.toLocaleString("en-US")}개를 모두 삭제했어. 💜`
         : "도감에 삭제할 기록이 없었어.";
     }
+
+    // 전체 삭제 후에도 메모리 상태와 저장 상태가 일치하도록 한다.
+    notifyCodexStorageChanged();
   }
 
   function confirmDeleteAction() {
@@ -965,7 +994,7 @@
 
     if (input.value.trim() !== "초기화") {
       message.textContent =
-        "입력 내용이 달라. '초기화'라고 정확히 입력해 줊.";
+        "입력 내용이 달라. '초기화'라고 정확히 입력해 줘.";
       input.focus();
       return;
     }
@@ -1037,8 +1066,10 @@
 
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") {
-        if (pendingDeleteValue !== null ||
-            pendingExtraAction === "delete-codex") {
+        if (
+          pendingDeleteValue !== null ||
+          pendingExtraAction === "delete-codex"
+        ) {
           closeDeleteConfirm();
         } else {
           cancelExtraConfirmation();
