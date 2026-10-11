@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#08070c">
   <title>Violet Random</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/RANDOM-NUMBER/style.css?v=2">
 </head>
 <body>
   <canvas id="particles"></canvas>
@@ -296,20 +296,13 @@
 
   <!-- 기본 설정 -->
   <div id="settings-overlay" class="settings-overlay" hidden>
-    <section
-      class="settings-panel"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-    >
+    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CUSTOMIZE YOUR EXPERIENCE</p>
           <h2 id="settings-title">설정</h2>
         </div>
-        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">
-          ✕
-        </button>
+        <button id="close-settings" class="close-settings" type="button" aria-label="설정 닫기">✕</button>
       </div>
 
       <div class="setting-item">
@@ -359,12 +352,8 @@
       </label>
 
       <div class="settings-actions">
-        <button id="reset-settings" class="secondary-button" type="button">
-          기본값
-        </button>
-        <button id="save-settings" class="primary-button" type="button">
-          설정 저장
-        </button>
+        <button id="reset-settings" class="secondary-button" type="button">기본값</button>
+        <button id="save-settings" class="primary-button" type="button">설정 저장</button>
       </div>
 
       <p id="settings-message" class="settings-message" aria-live="polite">
@@ -375,12 +364,7 @@
 
   <!-- 치트 설정 -->
   <div id="cheat-overlay" class="settings-overlay" hidden>
-    <section
-      class="settings-panel cheat-panel"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="cheat-title"
-    >
+    <section class="settings-panel cheat-panel" role="dialog" aria-modal="true" aria-labelledby="cheat-title">
       <div class="settings-header">
         <div>
           <p class="settings-eyebrow">CHOOSE YOUR NUMBER</p>
@@ -636,7 +620,7 @@
     </section>
   </div>
 
-  <!-- RARE HISTORY 기록 등급 설정: 화면 중앙 모달 -->
+  <!-- RARE HISTORY 기록 등급 설정 -->
   <div id="rare-history-filter" class="settings-overlay rare-history-filter-overlay" hidden>
     <section class="settings-panel rare-history-filter-panel" role="dialog" aria-modal="true" aria-labelledby="rare-history-filter-title">
       <div class="settings-header">
@@ -748,7 +732,7 @@
     </section>
   </div>
 
-  <!-- 초기화 확인: '초기화' 입력 시 해당 항목만 초기화 -->
+  <!-- 초기화 확인 -->
   <div id="reset-confirm-overlay" class="settings-overlay" hidden>
     <section class="settings-panel reset-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="reset-confirm-title">
       <div class="settings-header">
