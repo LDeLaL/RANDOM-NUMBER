@@ -1,8 +1,7 @@
-```javascript
 /* =========================================
    VIOLET RANDOM — RARITY EXTRA
    추가 희귀도 10종 / 전용 임팩트 / 효과음
-   기존 script.js 및 style.css 수정 없이 확장
+   기존 테마와 추첨 로직 유지
 ========================================= */
 
 (() => {
@@ -11,191 +10,169 @@
   if (window.__violetRarityExtraLoaded) return;
   window.__violetRarityExtraLoaded = true;
 
-  /* =========================================
-     1. 추가 희귀도 설정
-  ========================================= */
-
   const CUSTOM_RARITIES = {
     luminous: {
       label: "Luminous",
-      title: "✦ LUMINOUS · 빛의 파동 ✦",
       detail: "Luminous · 빛의 파동",
-      symbol: "✧",
+      title: "✦ LUMINOUS · 빛의 파동 ✦",
       color: "#c6a5ff",
+      symbol: "✧",
       power: 1,
       sound: 660
     },
-
     starlight: {
       label: "Starlight",
-      title: "✦ STARLIGHT · 별빛의 흔적 ✦",
       detail: "Starlight · 별빛의 흔적",
-      symbol: "✦",
+      title: "✦ STARLIGHT · 별빛의 흔적 ✦",
       color: "#b7c9ff",
+      symbol: "✦",
       power: 1,
       sound: 720
     },
-
     crystal: {
       label: "Crystal",
-      title: "✧ CRYSTAL · 수정 공명 ✧",
       detail: "Crystal · 수정 공명",
-      symbol: "◇",
+      title: "✧ CRYSTAL · 수정 공명 ✧",
       color: "#8de8ff",
+      symbol: "◇",
       power: 1,
       sound: 780
     },
-
     orbit: {
       label: "Orbit",
-      title: "◎ ORBIT · 궤도의 조화 ◎",
       detail: "Orbit · 궤도의 조화",
-      symbol: "◎",
+      title: "◎ ORBIT · 궤도의 조화 ◎",
       color: "#8ca7ff",
+      symbol: "◎",
       power: 1,
       sound: 620
     },
-
     spectrum: {
       label: "Spectrum",
-      title: "✧ SPECTRUM · 빛의 스펙트럼 ✧",
       detail: "Spectrum · 빛의 스펙트럼",
-      symbol: "◇",
+      title: "✧ SPECTRUM · 빛의 스펙트럼 ✧",
       color: "#ffb6ef",
+      symbol: "◇",
       power: 1,
       sound: 840
     },
-
     nebula: {
       label: "Nebula",
-      title: "☄ NEBULA · 성운의 파편 ☄",
       detail: "Nebula · 성운의 파편",
-      symbol: "☄",
+      title: "☄ NEBULA · 성운의 파편 ☄",
       color: "#d6a2ff",
+      symbol: "☄",
       power: 1,
       sound: 700
     },
-
     nova: {
       label: "Nova",
-      title: "✹ NOVA · 별의 섬광 ✹",
       detail: "Nova · 별의 섬광",
-      symbol: "✹",
+      title: "✹ NOVA · 별의 섬광 ✹",
       color: "#ffe0a6",
+      symbol: "✹",
       power: 1,
       sound: 880
     },
-
     astral: {
       label: "Astral",
-      title: "✦ ASTRAL · 성계의 각성 ✦",
       detail: "Astral · 성계의 각성",
-      symbol: "✦",
+      title: "✦ ASTRAL · 성계의 각성 ✦",
       color: "#73f0e8",
+      symbol: "✦",
       power: 2,
       sound: 960
     },
-
     infinity: {
       label: "Infinity",
-      title: "∞ INFINITY · 무한의 경계 ∞",
       detail: "Infinity · 무한의 경계",
-      symbol: "∞",
+      title: "∞ INFINITY · 무한의 경계 ∞",
       color: "#ff9fe9",
+      symbol: "∞",
       power: 3,
       sound: 1080
     },
-
     singularity: {
       label: "Singularity",
-      title: "⟡ SINGULARITY · 특이점의 도래 ⟡",
       detail: "Singularity · 특이점의 도래",
-      symbol: "⟡",
+      title: "⟡ SINGULARITY · 특이점의 도래 ⟡",
       color: "#fff0ad",
+      symbol: "⟡",
       power: 4,
       sound: 1320
     }
   };
 
-  /*
-    일반 희귀도 7종:
-    Luminous, Starlight, Crystal, Orbit,
-    Spectrum, Nebula, Nova
+  const CUSTOM_LEVELS = Object.keys(CUSTOM_RARITIES);
 
-    상위 희귀도 2종:
-    Astral, Infinity
+  const SUM_TO_LEVEL = {
+    25: "luminous",
+    26: "starlight",
+    27: "crystal",
+    28: "orbit",
+    29: "spectrum",
+    30: "nebula",
+    31: "nova",
+    33: "astral",
+    34: "infinity"
+  };
 
-    초희귀도 1종:
-    Singularity
-  */
+  const $ = id => document.getElementById(id);
 
   /* =========================================
-     2. 숫자 희귀도 판정 확장
+     1. 새 희귀도 판정
   ========================================= */
 
-  const originalGetRarePattern = window.getRarePattern;
-
   function getCustomPattern(value) {
-    const normalized = String(Number(value));
+    const number = Number(value);
 
-    // 특이점: 지정된 단 하나의 숫자
+    if (
+      !Number.isInteger(number) ||
+      number < 0 ||
+      number > 9999999
+    ) {
+      return null;
+    }
+
+    const normalized = String(number);
+
+    // 지정된 단 하나의 숫자
     if (normalized === "1029384") {
+      const rarity = CUSTOM_RARITIES.singularity;
+
       return {
         level: "singularity",
-        title: CUSTOM_RARITIES.singularity.title,
-        detail: CUSTOM_RARITIES.singularity.detail
+        title: rarity.title,
+        detail: rarity.detail
       };
     }
 
-    // 추가 등급은 7자리 숫자에서만 판정
+    // 그 밖의 추가 등급은 7자리 숫자에서만 판정
     if (!/^\d{7}$/.test(normalized)) {
       return null;
     }
 
     const digits = normalized.split("").map(Number);
-    const uniqueDigits = new Set(digits).size;
 
-    // 기존 등급과의 충돌을 줄이기 위해 모든 숫자가 달라야 함
-    if (uniqueDigits !== 7) {
+    // 모든 숫자가 서로 달라야 한다.
+    if (new Set(digits).size !== 7) {
       return null;
     }
 
-    // 앞뒤 숫자가 같으면 기존 대칭 패턴을 우선함
-    if (digits[0] === digits[6]) {
-      return null;
-    }
-
-    // 이미 존재하는 오름차순·내림차순 패턴은 제외
-    const ascending = "0123456789";
-    const descending = "9876543210";
-
+    // 기존의 오름차순·내림차순 패턴을 제외한다.
     if (
-      ascending.includes(normalized) ||
-      descending.includes(normalized)
+      "0123456789".includes(normalized) ||
+      "9876543210".includes(normalized)
     ) {
       return null;
     }
 
-    const sum = digits.reduce((total, digit) => total + digit, 0);
+    const sum = digits.reduce(
+      (total, digit) => total + digit,
+      0
+    );
 
-    /*
-      기존 희귀도 판정 이후에만 추가 등급을 적용한다.
-      각 조건은 숫자 7개의 합으로 구분한다.
-    */
-
-    const sumToLevel = {
-      25: "luminous",
-      26: "starlight",
-      27: "crystal",
-      28: "orbit",
-      29: "spectrum",
-      30: "nebula",
-      31: "nova",
-      33: "astral",
-      34: "infinity"
-    };
-
-    const level = sumToLevel[sum];
+    const level = SUM_TO_LEVEL[sum];
 
     if (!level) {
       return null;
@@ -211,13 +188,16 @@
   }
 
   /*
-    기존 판정 결과가 있으면 그대로 사용한다.
-    기존 등급을 새 등급이 덮어쓰지 않도록 한다.
+    기존 희귀도 판정을 먼저 실행한다.
+    기존 판정 결과가 있으면 그 결과를 우선한다.
   */
+
+  const originalGetRarePattern = window.getRarePattern;
 
   if (typeof originalGetRarePattern === "function") {
     window.getRarePattern = function (value) {
-      const originalPattern = originalGetRarePattern(value);
+      const originalPattern =
+        originalGetRarePattern.apply(this, arguments);
 
       if (originalPattern) {
         return originalPattern;
@@ -226,117 +206,268 @@
       return getCustomPattern(value);
     };
   } else {
-    console.warn(
-      "[Violet Random] 기존 getRarePattern 함수를 찾지 못했어."
+    console.error(
+      "[Violet Random] 기존 getRarePattern 함수를 찾지 못했어. " +
+      "script.js 경로와 실행 오류를 확인해 줘."
     );
   }
 
   /* =========================================
-     3. 전용 효과 CSS 추가
-     style.css 파일은 수정하지 않는다.
+     2. 희귀도 순서·이름·통계 연결
   ========================================= */
 
-  const effectStyle = document.createElement("style");
-
-  effectStyle.id = "violet-rarity-extra-style";
-
-  effectStyle.textContent = `
-    .vrx-particle {
-      position: fixed;
-      z-index: 99999;
-      pointer-events: none;
-      user-select: none;
-      font-family: Georgia, serif;
-      font-weight: 700;
-      line-height: 1;
-      text-shadow: 0 0 9px currentColor,
-                   0 0 20px currentColor;
-      animation: vrx-particle-flight var(--vrx-duration, 1500ms)
-                 cubic-bezier(.12,.65,.25,1) forwards;
-      will-change: transform, opacity;
+  function insertLevelsBefore(anchor, levels) {
+    if (
+      typeof RARITY_ORDER === "undefined" ||
+      !Array.isArray(RARITY_ORDER)
+    ) {
+      return;
     }
 
-    @keyframes vrx-particle-flight {
-      0% {
-        opacity: 0;
-        transform:
-          translate(-50%, -50%)
-          scale(.25)
-          rotate(0deg);
-      }
+    let index = RARITY_ORDER.indexOf(anchor);
 
-      12% {
-        opacity: 1;
-      }
-
-      75% {
-        opacity: .9;
-      }
-
-      100% {
-        opacity: 0;
-        transform:
-          translate(
-            calc(-50% + var(--vrx-x)),
-            calc(-50% + var(--vrx-y))
-          )
-          scale(var(--vrx-scale, 1))
-          rotate(var(--vrx-rotation, 180deg));
-      }
+    if (index < 0) {
+      index = RARITY_ORDER.length - 1;
     }
 
-    .vrx-screen-flash {
-      position: fixed;
-      inset: 0;
-      z-index: 99990;
-      pointer-events: none;
-      opacity: 0;
-      animation: vrx-screen-flash 900ms ease-out forwards;
-    }
-
-    @keyframes vrx-screen-flash {
-      0% { opacity: 0; }
-      15% { opacity: .2; }
-      100% { opacity: 0; }
-    }
-
-    .vrx-ring {
-      position: fixed;
-      z-index: 99991;
-      width: 30px;
-      height: 30px;
-      border: 2px solid var(--vrx-color);
-      border-radius: 50%;
-      pointer-events: none;
-      box-shadow: 0 0 18px var(--vrx-color);
-      animation: vrx-ring-expand 1000ms ease-out forwards;
-    }
-
-    @keyframes vrx-ring-expand {
-      from {
-        opacity: .95;
-        transform: translate(-50%, -50%) scale(.2);
+    levels.forEach(level => {
+      if (RARITY_ORDER.includes(level)) {
+        return;
       }
-      to {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(12);
-      }
+
+      RARITY_ORDER.splice(index, 0, level);
+      index++;
+    });
+  }
+
+  function installRarityMetadata() {
+    if (typeof RARITY_ORDER === "undefined") {
+      console.error(
+        "[Violet Random] RARITY_ORDER를 찾지 못했어."
+      );
+      return false;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .vrx-particle,
-      .vrx-screen-flash,
-      .vrx-ring {
-        animation-duration: 250ms !important;
-      }
-    }
-  `;
+    // 최상위 추가 희귀도
+    insertLevelsBefore(
+      "reverse-special",
+      ["singularity"]
+    );
 
-  document.head.appendChild(effectStyle);
+    // 상위 추가 희귀도
+    insertLevelsBefore(
+      "celestial",
+      ["infinity", "astral"]
+    );
+
+    // 중간 추가 희귀도
+    insertLevelsBefore(
+      "legendary",
+      [
+        "nova",
+        "nebula",
+        "spectrum",
+        "orbit",
+        "crystal",
+        "starlight",
+        "luminous"
+      ]
+    );
+
+    if (typeof RARITY_LABELS !== "undefined") {
+      Object.entries(CUSTOM_RARITIES).forEach(
+        ([level, rarity]) => {
+          RARITY_LABELS[level] = rarity.label;
+        }
+      );
+    }
+
+    if (
+      typeof DEFAULT_RARE_HISTORY_LEVELS !== "undefined"
+    ) {
+      CUSTOM_LEVELS.forEach(level => {
+        DEFAULT_RARE_HISTORY_LEVELS.add(level);
+      });
+    }
+
+    /*
+      기존에 저장된 통계가 있으면 새 희귀도 항목도 복구한다.
+      기존 통계와 다른 저장 데이터는 삭제하지 않는다.
+    */
+
+    if (
+      typeof drawStats !== "undefined" &&
+      drawStats.rarities
+    ) {
+      let savedProgress = null;
+
+      try {
+        savedProgress = JSON.parse(
+          localStorage.getItem("violetRandomProgress") || "null"
+        );
+      } catch (error) {
+        console.warn(
+          "[Violet Random] 기존 통계를 읽지 못했어.",
+          error
+        );
+      }
+
+      const savedRarities =
+        savedProgress?.drawStats?.rarities || {};
+
+      CUSTOM_LEVELS.forEach(level => {
+        if (
+          !Number.isFinite(drawStats.rarities[level])
+        ) {
+          drawStats.rarities[level] = 0;
+        }
+
+        const savedValue = Number(savedRarities[level]);
+
+        if (
+          Number.isFinite(savedValue) &&
+          savedValue >= 0
+        ) {
+          drawStats.rarities[level] = savedValue;
+        }
+      });
+    }
+
+    return true;
+  }
 
   /* =========================================
-     4. 효과음
-     Web Audio API로 소리를 생성한다.
+     3. 새 희귀도 전용 CSS
+  ========================================= */
+
+  function installStyles() {
+    if ($("violet-rarity-extra-style")) {
+      return;
+    }
+
+    const style = document.createElement("style");
+
+    style.id = "violet-rarity-extra-style";
+
+    style.textContent = `
+      .vrx-particle {
+        position: fixed;
+        z-index: 99999;
+        pointer-events: none;
+        user-select: none;
+        font-family: Georgia, serif;
+        font-weight: 700;
+        line-height: 1;
+        text-shadow:
+          0 0 9px currentColor,
+          0 0 20px currentColor;
+        animation:
+          vrx-particle-flight
+          var(--vrx-duration, 1500ms)
+          cubic-bezier(.12,.65,.25,1)
+          forwards;
+        will-change: transform, opacity;
+      }
+
+      @keyframes vrx-particle-flight {
+        0% {
+          opacity: 0;
+          transform:
+            translate(-50%, -50%)
+            scale(.25)
+            rotate(0deg);
+        }
+
+        12% {
+          opacity: 1;
+        }
+
+        75% {
+          opacity: .9;
+        }
+
+        100% {
+          opacity: 0;
+          transform:
+            translate(
+              calc(-50% + var(--vrx-x)),
+              calc(-50% + var(--vrx-y))
+            )
+            scale(var(--vrx-scale, 1))
+            rotate(var(--vrx-rotation, 180deg));
+        }
+      }
+
+      .vrx-screen-flash {
+        position: fixed;
+        inset: 0;
+        z-index: 99990;
+        pointer-events: none;
+        opacity: 0;
+        animation: vrx-screen-flash 900ms ease-out forwards;
+      }
+
+      @keyframes vrx-screen-flash {
+        0% { opacity: 0; }
+        15% { opacity: .2; }
+        100% { opacity: 0; }
+      }
+
+      .vrx-ring {
+        position: fixed;
+        z-index: 99991;
+        width: 30px;
+        height: 30px;
+        border: 2px solid var(--vrx-color);
+        border-radius: 50%;
+        pointer-events: none;
+        box-shadow: 0 0 18px var(--vrx-color);
+        animation: vrx-ring-expand 1000ms ease-out forwards;
+      }
+
+      @keyframes vrx-ring-expand {
+        from {
+          opacity: .95;
+          transform: translate(-50%, -50%) scale(.2);
+        }
+
+        to {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(12);
+        }
+      }
+
+      ${Object.entries(CUSTOM_RARITIES).map(
+        ([level, rarity]) => `
+          .rarity-badge.${level} {
+            color: ${rarity.color};
+            border-color: ${rarity.color}99;
+            background: rgba(125, 78, 170, 0.12);
+          }
+
+          .number-box.rare-${level} {
+            border-color: ${rarity.color}bb;
+            box-shadow:
+              0 0 30px ${rarity.color}35,
+              inset 0 0 28px ${rarity.color}12;
+          }
+        `
+      ).join("")}
+
+      @media (prefers-reduced-motion: reduce) {
+        .vrx-particle,
+        .vrx-screen-flash,
+        .vrx-ring {
+          animation-duration: 250ms !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  /* =========================================
+     4. 새 희귀도 효과음
   ========================================= */
 
   let audioContext = null;
@@ -366,8 +497,7 @@
       const oscillator = audioContext.createOscillator();
       const gain = audioContext.createGain();
 
-      oscillator.type =
-        power >= 3 ? "sine" : "triangle";
+      oscillator.type = power >= 3 ? "sine" : "triangle";
 
       oscillator.frequency.setValueAtTime(
         rarity.sound,
@@ -379,10 +509,7 @@
         now + 0.32
       );
 
-      gain.gain.setValueAtTime(
-        0.0001,
-        now
-      );
+      gain.gain.setValueAtTime(0.0001, now);
 
       gain.gain.exponentialRampToValueAtTime(
         0.12 + power * 0.025,
@@ -400,7 +527,6 @@
       oscillator.start(now);
       oscillator.stop(now + 0.6 + power * 0.08);
 
-      // 상위 등급은 한 음을 추가해 더 풍성하게 만든다.
       if (power >= 2) {
         const second = audioContext.createOscillator();
         const secondGain = audioContext.createGain();
@@ -412,10 +538,7 @@
           now + 0.04
         );
 
-        secondGain.gain.setValueAtTime(
-          0.0001,
-          now
-        );
+        secondGain.gain.setValueAtTime(0.0001, now);
 
         secondGain.gain.exponentialRampToValueAtTime(
           0.07,
@@ -442,11 +565,11 @@
   }
 
   /* =========================================
-     5. 전용 시각 효과
+     5. 새 희귀도 전용 시각 효과
   ========================================= */
 
   function getResultPosition() {
-    const numberBox = document.getElementById("number-box");
+    const numberBox = $("number-box");
 
     if (numberBox) {
       const rect = numberBox.getBoundingClientRect();
@@ -470,14 +593,14 @@
 
     const position = getResultPosition();
 
-    const countByPower = {
+    const counts = {
       1: 18,
       2: 32,
       3: 48,
       4: 70
     };
 
-    const particleCount = countByPower[rarity.power] || 18;
+    const count = counts[rarity.power] || 18;
 
     const symbols = [
       rarity.symbol,
@@ -488,7 +611,7 @@
       "∴"
     ];
 
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < count; i++) {
       const particle = document.createElement("span");
 
       particle.className = "vrx-particle";
@@ -501,9 +624,6 @@
       const distance =
         75 + Math.random() * (100 + rarity.power * 65);
 
-      const x = Math.cos(angle) * distance;
-      const y = Math.sin(angle) * distance;
-
       particle.style.left = `${position.x}px`;
       particle.style.top = `${position.y}px`;
       particle.style.color = rarity.color;
@@ -511,8 +631,15 @@
       particle.style.fontSize =
         `${12 + Math.random() * (10 + rarity.power * 5)}px`;
 
-      particle.style.setProperty("--vrx-x", `${x}px`);
-      particle.style.setProperty("--vrx-y", `${y}px`);
+      particle.style.setProperty(
+        "--vrx-x",
+        `${Math.cos(angle) * distance}px`
+      );
+
+      particle.style.setProperty(
+        "--vrx-y",
+        `${Math.sin(angle) * distance}px`
+      );
 
       particle.style.setProperty(
         "--vrx-scale",
@@ -545,17 +672,19 @@
     if (!rarity) return;
 
     const position = getResultPosition();
+    const count = rarity.power >= 3 ? 3 : 1;
 
-    const ringCount = rarity.power >= 3 ? 3 : 1;
-
-    for (let i = 0; i < ringCount; i++) {
+    for (let i = 0; i < count; i++) {
       const ring = document.createElement("div");
 
       ring.className = "vrx-ring";
-
       ring.style.left = `${position.x}px`;
       ring.style.top = `${position.y}px`;
-      ring.style.setProperty("--vrx-color", rarity.color);
+
+      ring.style.setProperty(
+        "--vrx-color",
+        rarity.color
+      );
 
       ring.style.animationDelay = `${i * 140}ms`;
 
@@ -602,20 +731,14 @@
 
     if (!rarity) return;
 
-    // 상위 등급일수록 시각 효과를 더 강하게 적용한다.
     createCustomParticles(level);
     createCustomRing(level);
     createCustomFlash(level);
     playCustomSound(level);
 
-    const numberBox = document.getElementById("number-box");
+    const numberBox = $("number-box");
 
     if (numberBox) {
-      numberBox.style.setProperty(
-        "--vrx-rarity-color",
-        rarity.color
-      );
-
       numberBox.animate(
         [
           {
@@ -637,16 +760,10 @@
         }
       );
     }
-
-    console.info(
-      `[Violet Random] ${rarity.label} 등급 효과 실행`,
-      level
-    );
   }
 
   /* =========================================
-     6. 기존 임팩트 함수와 연결
-     기존 함수를 제거하거나 새로 대체하지 않는다.
+     6. 기존 추첨 연출과 연결
   ========================================= */
 
   const originalTriggerNextResultEffect =
@@ -657,19 +774,21 @@
       actualPattern,
       result
     ) {
-      // 미리 보기 효과는 설정과 관계없이 한 번 실행한다.
-      const hadPreviewOverride =
+      const previewWasSelected =
         typeof pendingEffectOverride !== "undefined" &&
         Boolean(pendingEffectOverride);
 
       const returnedPattern =
-        originalTriggerNextResultEffect.apply(this, arguments);
+        originalTriggerNextResultEffect.apply(
+          this,
+          arguments
+        );
 
       const effectPattern =
         returnedPattern || actualPattern;
 
       const effectsAllowed =
-        hadPreviewOverride ||
+        previewWasSelected ||
         typeof settings === "undefined" ||
         settings.rareEffects !== false;
 
@@ -685,268 +804,21 @@
     };
   } else {
     console.warn(
-      "[Violet Random] 기존 임팩트 함수를 찾지 못했어. " +
-      "추가 효과 연결은 확인이 필요해."
+      "[Violet Random] 기존 임팩트 함수를 찾지 못했어."
     );
   }
 
   /* =========================================
-     7. 기존 희귀도 목록·통계·필터와 연결
-     기존 script.js의 추첨 로직을 대체하지 않는다.
+     7. 희귀 숫자 기록 필터에 추가
   ========================================= */
 
-  const EXTRA_HISTORY_FILTER_KEY =
-    "violetRandomExtraRareHistoryFilterV1";
+  const EXTRA_FILTER_MIGRATION_KEY =
+    "violetRandomExtraRarityFiltersAddedV1";
 
-  function restoreExtendedRareHistory() {
-    // 메인 JS가 먼저 읽다가 놓친 확장 희귀도 기록을 다시 판정한다.
-    try {
-      const rawProgress = localStorage.getItem("violetRandomProgress");
-      const savedProgress = rawProgress
-        ? JSON.parse(rawProgress)
-        : null;
-
-      const savedRareHistory = savedProgress?.rareHistory;
-
-      if (
-        !Array.isArray(savedRareHistory) ||
-        typeof rareHistory === "undefined" ||
-        typeof renderRareHistory !== "function"
-      ) {
-        return;
-      }
-
-      const rebuilt = savedRareHistory
-        .filter(entry =>
-          entry &&
-          Number.isFinite(Number(entry.value)) &&
-          Number(entry.value) >= 0 &&
-          Number(entry.value) <= 9999999
-        )
-        .map(entry => {
-          const value = Number(entry.value);
-          const pattern = window.getRarePattern(String(value));
-
-          if (!pattern || pattern.level === "common") {
-            return null;
-          }
-
-          return { value, pattern };
-        })
-        .filter(Boolean)
-        .slice(0, 10);
-
-      rareHistory = rebuilt;
-
-      renderRareHistory();
-
-      if (typeof saveProgress === "function") {
-        saveProgress();
-      }
-    } catch (error) {
-      console.warn(
-        "[Violet Random] 희귀 기록을 다시 판정하지 못했어.",
-        error
-      );
-    }
-  }
-
-  function installRarityDataIntegration() {
-    // 메인 JS가 관리하는 등급 배열에 확장 등급을 추가한다.
-    if (
-      typeof RARITY_ORDER !== "undefined" &&
-      Array.isArray(RARITY_ORDER)
-    ) {
-      const highRarities = [
-        "singularity",
-        "infinity",
-        "astral"
-      ];
-
-      const middleRarities = [
-        "nova",
-        "nebula",
-        "spectrum",
-        "orbit",
-        "crystal",
-        "starlight",
-        "luminous"
-      ];
-
-      const highMissing = highRarities.filter(
-        level => !RARITY_ORDER.includes(level)
-      );
-
-      if (highMissing.length > 0) {
-        RARITY_ORDER.splice(0, 0, ...highMissing);
-      }
-
-      const middleMissing = middleRarities.filter(
-        level => !RARITY_ORDER.includes(level)
-      );
-
-      if (middleMissing.length > 0) {
-        let insertAt = RARITY_ORDER.indexOf("seraph");
-
-        if (insertAt < 0) {
-          insertAt = Math.max(0, RARITY_ORDER.length - 1);
-        }
-
-        RARITY_ORDER.splice(insertAt, 0, ...middleMissing);
-      }
-    }
-
-    // 통계 객체에도 모든 추가 등급의 항목을 만든다.
-    if (
-      typeof drawStats !== "undefined" &&
-      drawStats &&
-      drawStats.rarities &&
-      typeof drawStats.rarities === "object"
-    ) {
-      Object.keys(CUSTOM_RARITIES).forEach(level => {
-        if (!Number.isFinite(drawStats.rarities[level])) {
-          drawStats.rarities[level] = 0;
-        }
-      });
-    }
-
-    // 새 등급의 이름이 Common으로 표시되는 것을 방지한다.
-    if (
-      typeof RARITY_LABELS !== "undefined" &&
-      RARITY_LABELS &&
-      typeof RARITY_LABELS === "object"
-    ) {
-      Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
-        RARITY_LABELS[level] = rarity.label;
-      });
-    }
-
-    // 저장된 확장 희귀도 통계가 있다면 복구한다.
-    try {
-      const rawProgress = localStorage.getItem("violetRandomProgress");
-      const savedProgress = rawProgress
-        ? JSON.parse(rawProgress)
-        : null;
-
-      const savedRarities = savedProgress?.drawStats?.rarities;
-
-      if (
-        savedRarities &&
-        typeof savedRarities === "object" &&
-        typeof drawStats !== "undefined" &&
-        drawStats.rarities
-      ) {
-        Object.keys(CUSTOM_RARITIES).forEach(level => {
-          const savedValue = Number(savedRarities[level]);
-
-          if (Number.isFinite(savedValue) && savedValue >= 0) {
-            drawStats.rarities[level] = savedValue;
-          }
-        });
-      }
-    } catch (error) {
-      console.warn(
-        "[Violet Random] 확장 희귀도 통계를 복구하지 못했어.",
-        error
-      );
-    }
-
-    restoreExtendedRareHistory();
-
-    // 확장 등급이 통계 화면에 표시되도록 갱신한다.
-    if (typeof renderStatistics === "function") {
-      try {
-        renderStatistics();
-      } catch (error) {
-        console.warn(
-          "[Violet Random] 확장 희귀도 통계 갱신을 건너뛰었어.",
-          error
-        );
-      }
-    }
-
-    if (typeof syncRarityTableConditions === "function") {
-      try {
-        syncRarityTableConditions();
-      } catch (error) {
-        console.warn(
-          "[Violet Random] 희귀도 표 동기화를 건너뛰었어.",
-          error
-        );
-      }
-    }
-  }
-
-  function getStoredExtraHistorySelection() {
-    try {
-      const raw = localStorage.getItem(EXTRA_HISTORY_FILTER_KEY);
-
-      if (raw === null) return null;
-
-      const parsed = JSON.parse(raw);
-
-      if (!Array.isArray(parsed)) return null;
-
-      return parsed.filter(level =>
-        Object.prototype.hasOwnProperty.call(CUSTOM_RARITIES, level)
-      );
-    } catch (error) {
-      console.warn(
-        "[Violet Random] 추가 희귀 기록 설정을 읽지 못했어.",
-        error
-      );
-
-      return null;
-    }
-  }
-
-  function saveExtraHistorySelection() {
-    const grid = document.querySelector(".rare-history-filter-grid");
-
-    if (!grid) return;
-
-    const selected = Array.from(
-      grid.querySelectorAll(
-        'input[name="rare-history-rarity"]:checked'
-      )
-    )
-      .map(input => input.value)
-      .filter(level =>
-        Object.prototype.hasOwnProperty.call(CUSTOM_RARITIES, level)
-      );
-
-    try {
-      localStorage.setItem(
-        EXTRA_HISTORY_FILTER_KEY,
-        JSON.stringify(selected)
-      );
-    } catch (error) {
-      console.warn(
-        "[Violet Random] 추가 희귀 기록 설정을 저장하지 못했어.",
-        error
-      );
-    }
-  }
-
-  function createRarityBadgeLabel(level, title) {
-    const label = document.createElement("label");
-    const input = document.createElement("input");
-    const badge = document.createElement("span");
-
-    input.type = "checkbox";
-    input.name = "rare-history-rarity";
-    input.value = level;
-
-    badge.className = `rarity-badge ${level}`;
-    badge.textContent = title;
-
-    label.append(input, badge);
-
-    return { label, input };
-  }
-
-  function installRareHistoryFilterOptions() {
-    const grid = document.querySelector(".rare-history-filter-grid");
+  function installRareHistoryFilters() {
+    const grid = document.querySelector(
+      ".rare-history-filter-grid"
+    );
 
     if (
       !grid ||
@@ -956,73 +828,118 @@
       return;
     }
 
-    const storedSelection = getStoredExtraHistorySelection();
-    const isFirstSetup = storedSelection === null;
+    let savedLevels = null;
 
-    Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
+    try {
+      savedLevels = JSON.parse(
+        localStorage.getItem(RARE_HISTORY_FILTER_KEY) || "null"
+      );
+    } catch {
+      savedLevels = null;
+    }
+
+    const firstMigration =
+      localStorage.getItem(EXTRA_FILTER_MIGRATION_KEY) !== "1";
+
+    let selectedLevels;
+
+    if (Array.isArray(savedLevels)) {
+      selectedLevels = savedLevels.filter(level =>
+        RARITY_ORDER.includes(level) &&
+        level !== "common"
+      );
+    } else {
+      selectedLevels = RARITY_ORDER.filter(
+        level => level !== "common"
+      );
+    }
+
+    // 처음 설치할 때는 신규 등급들을 기본 선택한다.
+    if (firstMigration) {
+      CUSTOM_LEVELS.forEach(level => {
+        if (!selectedLevels.includes(level)) {
+          selectedLevels.push(level);
+        }
+      });
+    }
+
+    rareHistoryLevels = new Set(selectedLevels);
+
+    CUSTOM_LEVELS.forEach(level => {
+      const rarity = CUSTOM_RARITIES[level];
+
       let input = grid.querySelector(
         `input[name="rare-history-rarity"][value="${level}"]`
       );
 
       if (!input) {
-        const created = createRarityBadgeLabel(
-          level,
-          rarity.label
-        );
+        const label = document.createElement("label");
+        input = document.createElement("input");
 
-        input = created.input;
-        grid.appendChild(created.label);
+        const badge = document.createElement("span");
+
+        input.type = "checkbox";
+        input.name = "rare-history-rarity";
+        input.value = level;
+
+        badge.className = `rarity-badge ${level}`;
+        badge.textContent = rarity.label;
+
+        label.append(input, badge);
+        grid.appendChild(label);
       }
 
-      // 기존 메인 JS의 배열에도 포함시킨다.
       if (!rareHistoryFilterInputs.includes(input)) {
         rareHistoryFilterInputs.push(input);
       }
 
-      input.checked = isFirstSetup
-        ? true
-        : storedSelection.includes(level);
+      input.checked = rareHistoryLevels.has(level);
 
-      // 새 입력 요소에는 직접 이벤트를 연결한다.
-      input.addEventListener("change", () => {
-        if (typeof saveRareHistoryLevels === "function") {
-          saveRareHistoryLevels();
-        }
+      if (input.dataset.violetExtraBound !== "true") {
+        input.dataset.violetExtraBound = "true";
 
-        saveExtraHistorySelection();
-      });
+        input.addEventListener("change", () => {
+          if (typeof saveRareHistoryLevels === "function") {
+            saveRareHistoryLevels();
+          }
+        });
+      }
     });
 
-    // 전체 선택 / 전체 해제 이후 확장 등급 설정도 저장한다.
-    const saveAfterBulkChange = () => {
-      window.setTimeout(saveExtraHistorySelection, 0);
-    };
+    applyRareHistoryFilterControls();
 
-    document
-      .getElementById("rare-history-filter-all")
-      ?.addEventListener("click", saveAfterBulkChange);
+    try {
+      localStorage.setItem(
+        RARE_HISTORY_FILTER_KEY,
+        JSON.stringify([...rareHistoryLevels])
+      );
 
-    document
-      .getElementById("rare-history-filter-none")
-      ?.addEventListener("click", saveAfterBulkChange);
-
-    // 필터 내부 상태와 저장 데이터를 동기화한다.
-    if (typeof saveRareHistoryLevels === "function") {
-      saveRareHistoryLevels();
+      localStorage.setItem(
+        EXTRA_FILTER_MIGRATION_KEY,
+        "1"
+      );
+    } catch (error) {
+      console.warn(
+        "[Violet Random] 희귀 기록 필터 저장 실패:",
+        error
+      );
     }
 
-    // 확장 기능을 처음 설치한 경우 새 등급은 기본 선택한다.
-    if (isFirstSetup) {
-      saveExtraHistorySelection();
+    if (typeof renderRareHistory === "function") {
+      renderRareHistory();
     }
   }
+
+  /* =========================================
+     8. 자동 추첨 중지 조건에 추가
+  ========================================= */
 
   function installAutoStopOptions() {
     const grid = document.querySelector(".auto-rarity-grid");
 
     if (!grid) return;
 
-    Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
+    CUSTOM_LEVELS.forEach(level => {
       if (
         grid.querySelector(
           `input[name="auto-stop-rarity"][value="${level}"]`
@@ -1030,6 +947,8 @@
       ) {
         return;
       }
+
+      const rarity = CUSTOM_RARITIES[level];
 
       const label = document.createElement("label");
       const input = document.createElement("input");
@@ -1047,70 +966,76 @@
     });
   }
 
-  function installReplayPreviewOptions() {
+  /* =========================================
+     9. 연출 미리보기에 추가
+  ========================================= */
+
+  function installReplayOptions() {
     const grid = document.querySelector(".replay-grid");
 
     if (!grid) return;
 
-    Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
+    CUSTOM_LEVELS.forEach(level => {
       if (
-        grid.querySelector(`[data-preview-rarity="${level}"]`)
+        grid.querySelector(
+          `[data-preview-rarity="${level}"]`
+        )
       ) {
         return;
       }
 
-      const button = document.createElement("button");
+      const rarity = CUSTOM_RARITIES[level];
 
+      const button = document.createElement("button");
       button.type = "button";
       button.className = "replay-rarity-button";
       button.dataset.previewRarity = level;
 
       const badge = document.createElement("span");
-
       badge.className = `rarity-badge ${level}`;
       badge.textContent = rarity.label;
 
-      const description = document.createElement("small");
+      const detail = document.createElement("small");
+      detail.textContent = rarity.detail;
 
-      description.textContent = rarity.detail;
+      button.append(badge, detail);
 
-      button.append(badge, description);
-
-      // 동적으로 추가한 버튼에도 기존과 같은 미리보기 동작을 연결한다.
       button.addEventListener("click", () => {
         if (
-          typeof RARITY_ORDER !== "undefined" &&
-          !RARITY_ORDER.includes(level)
+          typeof pendingEffectOverride === "undefined" ||
+          typeof RARITY_ORDER === "undefined"
         ) {
           return;
         }
 
-        if (typeof pendingEffectOverride !== "undefined") {
-          pendingEffectOverride = {
-            title: `✦ ${rarity.label.toUpperCase()} EFFECT ✦`,
-            level,
-            detail: rarity.detail
-          };
-        }
+        pendingEffectOverride = {
+          title: rarity.title,
+          level,
+          detail: rarity.detail
+        };
 
-        document
-          .querySelectorAll("[data-preview-rarity]")
-          .forEach(item => {
-            item.classList.toggle("selected", item === button);
-          });
+        document.querySelectorAll(
+          "[data-preview-rarity]"
+        ).forEach(item => {
+          item.classList.toggle(
+            "selected",
+            item === button
+          );
+        });
 
-        const message = document.getElementById("replay-message");
+        const message = $("replay-message");
 
         if (message) {
           message.textContent =
-            `${rarity.label} 연출을 선택했어. 창을 닫고 다음 숫자를 뽑으면 적용돼!`;
+            `${rarity.label} 연출을 선택했어. ` +
+            "창을 닫고 다음 숫자를 뽑으면 적용돼!";
         }
 
         if (typeof closeReplay === "function") {
           closeReplay();
         }
 
-        const status = document.getElementById("status");
+        const status = $("status");
 
         if (status) {
           status.textContent =
@@ -1122,35 +1047,233 @@
     });
   }
 
-  function installExtendedRarityIntegrations() {
-    try {
-      installRarityDataIntegration();
-      installRareHistoryFilterOptions();
-      installAutoStopOptions();
-      installReplayPreviewOptions();
-    } catch (error) {
-      console.error(
-        "[Violet Random] 추가 희귀도 연동 중 오류가 발생했어.",
-        error
+  /* =========================================
+     10. 희귀도 표에 추가
+  ========================================= */
+
+  const TABLE_ROWS = [
+    {
+      level: "singularity",
+      before: "reverse-special",
+      condition: "1029384",
+      description: "지정된 단 하나의 숫자 · 초희귀"
+    },
+    {
+      level: "infinity",
+      before: "celestial",
+      condition: "서로 다른 7자리 숫자 · 합 34",
+      description: "상위 희귀도 · 무한의 경계"
+    },
+    {
+      level: "astral",
+      before: "celestial",
+      condition: "서로 다른 7자리 숫자 · 합 33",
+      description: "상위 희귀도 · 성계의 각성"
+    },
+    {
+      level: "nova",
+      before: "legendary",
+      condition: "서로 다른 7자리 숫자 · 합 31",
+      description: "중간 희귀도 · 별의 섬광"
+    },
+    {
+      level: "nebula",
+      before: "legendary",
+      condition: "서로 다른 7자리 숫자 · 합 30",
+      description: "중간 희귀도 · 성운의 파편"
+    },
+    {
+      level: "spectrum",
+      before: "legendary",
+      condition: "서로 다른 7자리 숫자 · 합 29",
+      description: "중간 희귀도 · 빛의 스펙트럼"
+    },
+    {
+      level: "orbit",
+      before: "legendary",
+      condition: "서로 다른 7자리 숫자 · 합 28",
+      description: "중간 희귀도 · 궤도의 조화"
+    },
+    {
+      level: "crystal",
+      before: "legendary",
+      condition: "서로 다른 7자리 숫자 · 합 27",
+      description: "중간 희귀도 · 수정 공명"
+    },
+    {
+      level: "starlight",
+      before: "legendary",
+      condition: "서로 다른 7자리 숫자 · 합 26",
+      description: "중간 희귀도 · 별빛의 흔적"
+    },
+    {
+      level: "luminous",
+      before: "legendary",
+      condition: "서로 다른 7자리 숫자 · 합 25",
+      description: "중간 희귀도 · 빛의 파동"
+    }
+  ];
+
+  function createTableRow(item) {
+    const rarity = CUSTOM_RARITIES[item.level];
+
+    const row = document.createElement("tr");
+    row.dataset.extraRarityRow = item.level;
+
+    const conditionCell = document.createElement("td");
+
+    const order = document.createElement("span");
+    order.className = "rarity-order";
+    order.textContent = "—";
+
+    conditionCell.append(order);
+    conditionCell.append(
+      document.createTextNode(` ${item.condition}`)
+    );
+
+    const rarityCell = document.createElement("td");
+
+    const badge = document.createElement("span");
+    badge.className = `rarity-badge ${item.level}`;
+    badge.textContent = rarity.label;
+
+    rarityCell.appendChild(badge);
+
+    const descriptionCell = document.createElement("td");
+    descriptionCell.textContent = item.description;
+
+    row.append(
+      conditionCell,
+      rarityCell,
+      descriptionCell
+    );
+
+    return row;
+  }
+
+  function installRarityTableRows() {
+    const tableBody = document.querySelector(
+      "#rarity-overlay .rarity-table tbody"
+    );
+
+    if (!tableBody) return;
+
+    TABLE_ROWS.forEach(item => {
+      if (
+        tableBody.querySelector(
+          `[data-extra-rarity-row="${item.level}"]`
+        )
+      ) {
+        return;
+      }
+
+      const row = createTableRow(item);
+
+      const anchorBadge = tableBody.querySelector(
+        `.rarity-badge.${item.before}`
       );
+
+      const anchorRow = anchorBadge?.closest("tr");
+
+      if (anchorRow) {
+        tableBody.insertBefore(row, anchorRow);
+      } else {
+        tableBody.appendChild(row);
+      }
+    });
+
+    // 기존 표와 추가된 행의 순서 번호를 다시 맞춘다.
+    tableBody.querySelectorAll("tr").forEach((row, index) => {
+      const order = row.querySelector(".rarity-order");
+
+      if (order) {
+        order.textContent =
+          String(index + 1).padStart(2, "0");
+      }
+    });
+
+    const note = document.querySelector(
+      "#rarity-overlay .settings-message"
+    );
+
+    if (note) {
+      note.textContent =
+        "새 희귀도 10종은 지정된 숫자와 자릿수 조건으로 판정돼. " +
+        "기존 희귀도 조건에 해당하면 기존 등급이 우선 적용돼.";
     }
   }
 
-  installExtendedRarityIntegrations();
-
   /* =========================================
-     8. 외부 파일에서 사용할 수 있는 정보
+     11. 현재 통계와 기록 갱신
   ========================================= */
 
-  window.VioletRandomExtraRarities = {
-    rarities: CUSTOM_RARITIES,
-    getCustomPattern,
-    playCustomImpact,
-    version: "1.0.0"
-  };
+  function refreshCurrentRarityData() {
+    // 복원되어 있던 최근 희귀 기록의 등급 표시를 갱신한다.
+    if (
+      typeof rareHistory !== "undefined" &&
+      Array.isArray(rareHistory)
+    ) {
+      rareHistory = rareHistory.map(entry => {
+        const value = Number(entry.value);
 
-  console.info(
-    "[Violet Random] 추가 희귀도 모듈이 준비됐어."
-  );
+        const updatedPattern =
+          window.getRarePattern(String(value)) ||
+          entry.pattern;
+
+        return {
+          ...entry,
+          value,
+          pattern: updatedPattern
+        };
+      });
+    }
+
+    if (typeof renderRareHistory === "function") {
+      renderRareHistory();
+    }
+
+    if (typeof renderStatistics === "function") {
+      renderStatistics();
+    }
+
+    if (typeof saveProgress === "function") {
+      saveProgress();
+    }
+  }
+
+  /* =========================================
+     12. 모듈 초기화
+  ========================================= */
+
+  function initializeExtraRarities() {
+    const metadataInstalled = installRarityMetadata();
+
+    installStyles();
+
+    if (!metadataInstalled) {
+      console.error(
+        "[Violet Random] 추가 희귀도 목록을 연결하지 못했어."
+      );
+      return;
+    }
+
+    installRareHistoryFilters();
+    installAutoStopOptions();
+    installReplayOptions();
+    installRarityTableRows();
+    refreshCurrentRarityData();
+
+    window.VioletRandomExtraRarities = {
+      rarities: CUSTOM_RARITIES,
+      getCustomPattern,
+      playCustomImpact,
+      version: "2.0.0"
+    };
+
+    console.info(
+      "[Violet Random] 추가 희귀도 10종 연결 완료."
+    );
+  }
+
+  initializeExtraRarities();
 })();
-```
