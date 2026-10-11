@@ -1,8 +1,9 @@
+
 /* =========================================
    VIOLET RANDOM - EXTRA FEATURES
    개별 도감 삭제 / 전체 초기화 / 통계 초기화
    기존 파일과 테마를 최대한 그대로 유지
-   ========================================= */
+========================================= */
 
 (() => {
   "use strict";
@@ -14,11 +15,12 @@
   const $ = id => document.getElementById(id);
 
   let pendingExtraAction = null;
+  let pendingDeleteValue = null;
   let codexObserver = null;
 
   /* =========================================
-     숨김 처리 문제 수정 + 추가 스타일
-     ========================================= */
+     스타일
+  ========================================= */
 
   function installExtraStyles() {
     if ($("codex-extras-styles")) return;
@@ -27,7 +29,6 @@
     style.id = "codex-extras-styles";
 
     style.textContent = `
-      /* hidden 속성이 CSS에 의해 무시되는 문제 방지 */
       [hidden] {
         display: none !important;
       }
@@ -45,8 +46,9 @@
         font: inherit;
         font-size: 10px;
         cursor: pointer;
-        transition: background 0.15s ease,
-                    border-color 0.15s ease;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease;
       }
 
       .codex-delete-entry:hover {
@@ -73,14 +75,291 @@
         border-color: rgba(171, 112, 255, 0.35);
         color: #d3b5ff;
       }
+
+      /* =====================================
+         도감 숫자 삭제 확인 창
+      ===================================== */
+
+      .codex-delete-confirm-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 12000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(5, 3, 10, 0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .codex-delete-confirm-overlay.is-open {
+        display: flex;
+        animation: codex-delete-overlay-in 180ms ease-out both;
+      }
+
+      .codex-delete-confirm-panel {
+        width: min(100%, 390px);
+        padding: 25px;
+        border: 1px solid rgba(190, 133, 255, 0.38);
+        border-radius: 19px;
+        background:
+          radial-gradient(
+            ellipse at 85% 0%,
+            rgba(116, 60, 175, 0.17),
+            transparent 48%
+          ),
+          linear-gradient(
+            145deg,
+            #21152e 0%,
+            #130e1b 55%,
+            #0c0912 100%
+          );
+        box-shadow:
+          0 25px 80px rgba(0, 0, 0, 0.5),
+          0 0 40px rgba(128, 59, 199, 0.17);
+        color: #f4edff;
+        animation: codex-delete-panel-in 230ms cubic-bezier(.2, .8, .2, 1) both;
+      }
+
+      .codex-delete-confirm-eyebrow {
+        margin: 0 0 9px;
+        color: #bc8aff;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 2px;
+      }
+
+      .codex-delete-confirm-title {
+        margin: 0;
+        color: #f4edff;
+        font-size: 23px;
+        font-weight: 800;
+      }
+
+      .codex-delete-confirm-description {
+        margin: 14px 0 0;
+        color: #b3a2c8;
+        font-size: 12px;
+        line-height: 1.8;
+        overflow-wrap: anywhere;
+      }
+
+      .codex-delete-confirm-number {
+        display: block;
+        margin-top: 15px;
+        padding: 13px;
+        border: 1px solid rgba(181, 135, 241, 0.19);
+        border-radius: 10px;
+        background: rgba(155, 93, 229, 0.08);
+        color: #e4ccff;
+        font-size: 25px;
+        font-weight: 850;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .codex-delete-confirm-actions {
+        display: flex;
+        gap: 9px;
+        margin-top: 21px;
+      }
+
+      .codex-delete-confirm-actions button {
+        min-height: 42px;
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 9px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 750;
+        cursor: pointer;
+        transition:
+          filter 140ms ease,
+          transform 140ms ease;
+      }
+
+      .codex-delete-confirm-actions button:hover {
+        filter: brightness(1.13);
+      }
+
+      .codex-delete-confirm-actions button:active {
+        transform: translateY(1px);
+      }
+
+      .codex-delete-cancel {
+        border: 1px solid rgba(181, 135, 241, 0.22);
+        background: rgba(155, 93, 229, 0.08);
+        color: #d4c1ea;
+      }
+
+      .codex-delete-approve {
+        border: 1px solid rgba(225, 135, 159, 0.4);
+        background: linear-gradient(
+          110deg,
+          #682b49,
+          #9d4267
+        );
+        color: #fff1f5;
+      }
+
+      @keyframes codex-delete-overlay-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes codex-delete-panel-in {
+        from {
+          opacity: 0;
+          transform: translateY(12px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* =====================================
+         업적 창 열기 애니메이션
+      ===================================== */
+
+      #achievements-overlay.is-open {
+        animation: violet-achievements-overlay-in 200ms ease-out both;
+      }
+
+      #achievements-overlay.is-open .achievements-panel {
+        animation: violet-achievements-panel-in 260ms cubic-bezier(.2, .8, .2, 1) both;
+      }
+
+      @keyframes violet-achievements-overlay-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes violet-achievements-panel-in {
+        from {
+          opacity: 0;
+          transform: translateY(12px) scale(0.975);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .codex-delete-confirm-overlay.is-open,
+        .codex-delete-confirm-panel,
+        #achievements-overlay.is-open,
+        #achievements-overlay.is-open .achievements-panel {
+          animation-duration: 0.01ms !important;
+        }
+      }
     `;
 
     document.head.appendChild(style);
   }
 
   /* =========================================
-     1. 도감 숫자별 삭제 버튼
-     ========================================= */
+     도감 삭제 확인 창 생성
+  ========================================= */
+
+  function createDeleteConfirmModal() {
+    if ($("codex-delete-confirm-overlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "codex-delete-confirm-overlay";
+    overlay.className = "codex-delete-confirm-overlay";
+    overlay.setAttribute("aria-hidden", "true");
+
+    const panel = document.createElement("section");
+    panel.className = "codex-delete-confirm-panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute(
+      "aria-labelledby",
+      "codex-delete-confirm-title"
+    );
+
+    const eyebrow = document.createElement("p");
+    eyebrow.className = "codex-delete-confirm-eyebrow";
+    eyebrow.textContent = "VIOLET RANDOM · CODEX";
+
+    const title = document.createElement("h2");
+    title.id = "codex-delete-confirm-title";
+    title.className = "codex-delete-confirm-title";
+    title.textContent = "숫자 기록 삭제";
+
+    const description = document.createElement("p");
+    description.id = "codex-delete-confirm-description";
+    description.className = "codex-delete-confirm-description";
+    description.textContent =
+      "이 숫자의 도감 기록을 삭제할까? 삭제한 기록은 복구할 수 없어.";
+
+    const number = document.createElement("strong");
+    number.id = "codex-delete-confirm-number";
+    number.className = "codex-delete-confirm-number";
+
+    const actions = document.createElement("div");
+    actions.className = "codex-delete-confirm-actions";
+
+    const cancel = document.createElement("button");
+    cancel.id = "codex-delete-cancel";
+    cancel.type = "button";
+    cancel.className = "codex-delete-cancel";
+    cancel.textContent = "취소";
+
+    const approve = document.createElement("button");
+    approve.id = "codex-delete-approve";
+    approve.type = "button";
+    approve.className = "codex-delete-approve";
+    approve.textContent = "삭제하기";
+
+    actions.append(cancel, approve);
+    panel.append(eyebrow, title, description, number, actions);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    cancel.addEventListener("click", closeDeleteConfirm);
+    approve.addEventListener("click", confirmDeleteEntry);
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) {
+        closeDeleteConfirm();
+      }
+    });
+  }
+
+  function openDeleteConfirm(value) {
+    pendingDeleteValue = value;
+
+    const overlay = $("codex-delete-confirm-overlay");
+    const number = $("codex-delete-confirm-number");
+
+    if (!overlay || !number) return;
+
+    number.textContent = value.toLocaleString("en-US");
+
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
+
+    $("codex-delete-approve")?.focus();
+  }
+
+  function closeDeleteConfirm() {
+    const overlay = $("codex-delete-confirm-overlay");
+
+    pendingDeleteValue = null;
+
+    if (!overlay) return;
+
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  /* =========================================
+     도감 숫자별 삭제 버튼
+  ========================================= */
 
   function addDeleteButtons() {
     const grid = $("codex-grid");
@@ -88,9 +367,7 @@
     if (!grid) return;
 
     grid.querySelectorAll(".codex-entry").forEach(card => {
-      if (card.querySelector(".codex-delete-entry")) {
-        return;
-      }
+      if (card.querySelector(".codex-delete-entry")) return;
 
       const numberElement = card.querySelector(
         ".codex-entry-number"
@@ -107,14 +384,13 @@
       const value = Number(rawValue);
 
       const button = document.createElement("button");
-
       button.type = "button";
       button.className = "codex-delete-entry";
       button.dataset.codexDeleteValue = String(value);
       button.textContent = "🗑 이 숫자 삭제";
       button.setAttribute(
         "aria-label",
-        `${value} 도감 기록 삭제`
+        `${value.toLocaleString("en-US")} 도감 기록 삭제`
       );
 
       card.appendChild(button);
@@ -138,10 +414,11 @@
     });
 
     document.addEventListener("click", event => {
-      const button = event.target.closest(
-        ".codex-delete-entry"
-      );
+      const target = event.target;
 
+      if (!(target instanceof Element)) return;
+
+      const button = target.closest(".codex-delete-entry");
       if (!button) return;
 
       const value = Number(button.dataset.codexDeleteValue);
@@ -154,86 +431,138 @@
         return;
       }
 
-      const confirmed = window.confirm(
-        `${value.toLocaleString("en-US")} 숫자를 도감에서 삭제할까?\n\n` +
-        "이 숫자의 수집 기록만 삭제돼."
-      );
-
-      if (!confirmed) return;
-
-      try {
-        const raw = localStorage.getItem(CODEX_KEY);
-        const saved = raw ? JSON.parse(raw) : null;
-
-        if (!saved || !Array.isArray(saved.entries)) {
-          window.alert("도감 기록을 찾지 못했어.");
-          return;
-        }
-
-        const previousLength = saved.entries.length;
-
-        saved.entries = saved.entries.filter(
-          entry => Number(entry.value) !== value
-        );
-
-        if (saved.entries.length === previousLength) {
-          window.alert("해당 숫자의 기록이 이미 없어.");
-          return;
-        }
-
-        localStorage.setItem(
-          CODEX_KEY,
-          JSON.stringify(saved)
-        );
-
-        /*
-          도감의 내부 메모리에도 이전 기록이 남지 않도록
-          저장 후 페이지를 다시 불러온다.
-        */
-        window.location.reload();
-      } catch (error) {
-        console.error("도감 숫자 삭제 실패:", error);
-
-        window.alert(
-          "도감 기록을 삭제하지 못했어. 다시 시도해 줘."
-        );
-      }
+      openDeleteConfirm(value);
     });
   }
 
+  function confirmDeleteEntry() {
+    const value = pendingDeleteValue;
+
+    if (
+      !Number.isInteger(value) ||
+      value < 0 ||
+      value > 9999999
+    ) {
+      closeDeleteConfirm();
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(CODEX_KEY);
+      const saved = raw ? JSON.parse(raw) : null;
+
+      if (!saved || !Array.isArray(saved.entries)) {
+        alert("도감 기록을 찾지 못했어.");
+        closeDeleteConfirm();
+        return;
+      }
+
+      const previousLength = saved.entries.length;
+
+      saved.entries = saved.entries.filter(
+        entry => Number(entry.value) !== value
+      );
+
+      if (saved.entries.length === previousLength) {
+        alert("해당 숫자의 기록이 이미 없어.");
+        closeDeleteConfirm();
+        return;
+      }
+
+      localStorage.setItem(
+        CODEX_KEY,
+        JSON.stringify(saved)
+      );
+
+      /*
+        페이지를 새로고침하지 않고 화면에서 해당 카드만 제거한다.
+        따라서 도감 창은 열린 상태로 유지된다.
+      */
+
+      const grid = $("codex-grid");
+
+      if (grid) {
+        grid.querySelectorAll(".codex-entry").forEach(card => {
+          const numberElement = card.querySelector(
+            ".codex-entry-number"
+          );
+
+          if (!numberElement) return;
+
+          const cardValue = Number(
+            numberElement.textContent.replace(/,/g, "").trim()
+          );
+
+          if (cardValue === value) {
+            card.remove();
+          }
+        });
+      }
+
+      updateCodexVisibleCount();
+      updateCodexTotalCount(saved.entries.length);
+
+      closeDeleteConfirm();
+
+      const message = document.querySelector(".codex-message");
+
+      if (message) {
+        message.textContent =
+          `${value.toLocaleString("en-US")} 기록을 삭제했어. 💜`;
+      }
+    } catch (error) {
+      console.error("도감 숫자 삭제 실패:", error);
+
+      alert("도감 기록을 삭제하지 못했어. 다시 시도해 줘.");
+      closeDeleteConfirm();
+    }
+  }
+
+  function updateCodexVisibleCount() {
+    const grid = $("codex-grid");
+    if (!grid) return;
+
+    const count = grid.querySelectorAll(".codex-entry").length;
+    const resultCount = document.querySelector(".codex-result-count");
+
+    if (resultCount) {
+      resultCount.textContent = `${count.toLocaleString("en-US")}개 표시`;
+    }
+  }
+
+  function updateCodexTotalCount(total) {
+    const statValues = document.querySelectorAll(
+      "#codex-overlay .codex-stat-value"
+    );
+
+    /*
+      첫 번째 요약 숫자를 전체 수집 숫자와 동기화한다.
+      다른 요약 통계의 의미는 임의로 바꾸지 않는다.
+    */
+
+    if (statValues.length > 0) {
+      statValues[0].textContent = total.toLocaleString("en-US");
+    }
+  }
+
   /* =========================================
-     2. 초기화 메뉴에 버튼 두 개 추가
-     ========================================= */
+     초기화 메뉴 버튼
+     통계 초기화가 위, 전체 초기화가 맨 아래
+  ========================================= */
 
   function addResetButtons() {
     const overlay = $("reset-overlay");
     const message = $("reset-message");
+    const panel = overlay?.querySelector(".reset-panel");
 
-    if (!overlay || !message) return;
+    if (!overlay || !message || !panel) return;
 
-    if (!$("reset-all-data")) {
-      const row = document.createElement("div");
-      row.className = "settings-actions reset-action-row";
-
-      const button = document.createElement("button");
-
-      button.id = "reset-all-data";
-      button.type = "button";
-      button.className =
-        "secondary-button reset-action-button reset-extra-action reset-all-button";
-      button.textContent = "⚠ 전체 초기화";
-
-      row.appendChild(button);
-      overlay.querySelector(".reset-panel")
-        ?.insertBefore(row, message);
-    }
-
+    /* 통계 초기화 버튼을 먼저 추가 */
     if (!$("reset-statistics-data")) {
       const row = document.createElement("div");
       row.className = "settings-actions reset-action-row";
 
       const button = document.createElement("button");
-
       button.id = "reset-statistics-data";
       button.type = "button";
       button.className =
@@ -241,8 +570,23 @@
       button.textContent = "▤ 통계 초기화";
 
       row.appendChild(button);
-      overlay.querySelector(".reset-panel")
-        ?.insertBefore(row, message);
+      panel.insertBefore(row, message);
+    }
+
+    /* 전체 초기화 버튼을 나중에 추가해 맨 아래 배치 */
+    if (!$("reset-all-data")) {
+      const row = document.createElement("div");
+      row.className = "settings-actions reset-action-row";
+
+      const button = document.createElement("button");
+      button.id = "reset-all-data";
+      button.type = "button";
+      button.className =
+        "secondary-button reset-action-button reset-extra-action reset-all-button";
+      button.textContent = "⚠ 전체 초기화";
+
+      row.appendChild(button);
+      panel.insertBefore(row, message);
     }
 
     $("reset-all-data")?.addEventListener(
@@ -257,9 +601,9 @@
   }
 
   /* =========================================
-     확인 창
+     초기화 확인 창
      정확히 '초기화'를 입력해야 실행
-     ========================================= */
+  ========================================= */
 
   function requestExtraReset(action) {
     const confirmOverlay = $("reset-confirm-overlay");
@@ -268,7 +612,7 @@
     const message = $("reset-confirm-message");
 
     if (!confirmOverlay || !description || !input || !message) {
-      window.alert(
+      alert(
         "초기화 확인 창을 찾지 못했어. index.html을 확인해 줘."
       );
       return;
@@ -287,8 +631,7 @@
     }
 
     input.value = "";
-    message.textContent =
-      "'초기화'를 입력해야 진행할 수 있어.";
+    message.textContent = "'초기화'를 입력해야 진행할 수 있어.";
 
     confirmOverlay.hidden = false;
     input.focus();
@@ -362,20 +705,16 @@
 
         설정은 유지한다.
       */
+
       localStorage.removeItem(PROGRESS_KEY);
       localStorage.removeItem(CODEX_KEY);
       localStorage.removeItem(ACHIEVEMENTS_KEY);
-      return;
     }
   }
 
   function handleExtraConfirmation(event) {
     if (!pendingExtraAction) return;
 
-    /*
-      기존 script.js의 확인 버튼 처리보다 먼저 실행해
-      새 초기화 항목을 정확히 처리한다.
-    */
     event.preventDefault();
     event.stopImmediatePropagation();
 
@@ -386,7 +725,7 @@
 
     if (input.value.trim() !== "초기화") {
       message.textContent =
-        "입력 내용이 달라. '초기화'라고 정확히 입력해 줡.";
+        "입력 내용이 달라. '초기화'라고 정확히 입력해 줘.";
       input.focus();
       return;
     }
@@ -395,9 +734,7 @@
 
     try {
       executeExtraReset(action);
-
       pendingExtraAction = null;
-
       window.location.reload();
     } catch (error) {
       console.error("초기화 실패:", error);
@@ -413,17 +750,14 @@
 
   /* =========================================
      초기화
-     ========================================= */
+  ========================================= */
 
   function initialize() {
     installExtraStyles();
+    createDeleteConfirmModal();
     installCodexDelete();
     addResetButtons();
 
-    /*
-      capture 단계에서 기존 확인 처리보다 먼저 검사한다.
-      새로 추가한 초기화 버튼만 이 처리에서 담당한다.
-    */
     $("apply-reset-confirm")?.addEventListener(
       "click",
       handleExtraConfirmation,
@@ -443,15 +777,27 @@
     $("reset-confirm-input")?.addEventListener(
       "keydown",
       event => {
-        if (event.key !== "Enter" || !pendingExtraAction) {
+        if (
+          event.key !== "Enter" ||
+          !pendingExtraAction
+        ) {
           return;
         }
 
         event.preventDefault();
-
-        $("apply-reset-confirm")?.click();
-      }
+        event.stopImmediatePropagation();
+        handleExtraConfirmation(event);
+      },
+      true
     );
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        if (pendingDeleteValue !== null) {
+          closeDeleteConfirm();
+        }
+      }
+    });
   }
 
   if (document.readyState === "loading") {
