@@ -48,6 +48,11 @@
 
     <main class="container">
       <div class="top-actions">
+        <button id="reset-button" class="settings-button reset-open-button"
+          type="button" aria-expanded="false" aria-controls="reset-overlay">
+          ↺ 초기화
+        </button>
+
         <button id="settings-button" class="settings-button" type="button"
           aria-expanded="false" aria-controls="settings-overlay">
           ⚙ 설정
@@ -215,6 +220,95 @@
       <p class="settings-message">
         선택한 등급만 오른쪽 기록 목록에 표시돼.
       </p>
+    </section>
+  </div>
+
+  <!-- 초기화 메뉴 -->
+  <div id="reset-overlay" class="settings-overlay reset-overlay" hidden>
+    <section class="settings-panel reset-panel" role="dialog"
+      aria-modal="true" aria-labelledby="reset-title">
+
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">RESET DATA</p>
+          <h2 id="reset-title">기록 초기화</h2>
+        </div>
+
+        <button id="close-reset" class="close-settings"
+          type="button" aria-label="초기화 메뉴 닫기">✕</button>
+      </div>
+
+      <p class="cheat-description">
+        초기화할 항목을 선택해 줘. 확인 창에 <strong>초기화</strong>라고 정확히 입력해야
+        해당 항목만 초기화돼. 다른 기록은 그대로 유지돼.
+      </p>
+
+      <div class="settings-actions reset-action-row">
+        <button id="reset-total-draws" class="secondary-button reset-action-button"
+          type="button">전체 추첨 횟수 초기화</button>
+      </div>
+
+      <div class="settings-actions reset-action-row">
+        <button id="reset-min-number" class="secondary-button reset-action-button"
+          type="button">최솟값 초기화</button>
+      </div>
+
+      <div class="settings-actions reset-action-row">
+        <button id="reset-max-number" class="secondary-button reset-action-button"
+          type="button">최댓값 초기화</button>
+      </div>
+
+      <div class="settings-actions reset-action-row">
+        <button id="reset-history" class="secondary-button reset-action-button"
+          type="button">최근 숫자 10개 초기화</button>
+      </div>
+
+      <div class="settings-actions reset-action-row">
+        <button id="reset-rare-history" class="secondary-button reset-action-button"
+          type="button">최근 희귀 숫자 10개 초기화</button>
+      </div>
+
+      <p id="reset-message" class="settings-message" aria-live="polite">
+        초기화할 항목을 선택해 줘.
+      </p>
+    </section>
+  </div>
+
+  <!-- 초기화 확인: '초기화'를 정확히 입력해야 진행 -->
+  <div id="reset-confirm-overlay" class="settings-overlay reset-confirm-overlay" hidden>
+    <section class="settings-panel reset-confirm-panel" role="dialog"
+      aria-modal="true" aria-labelledby="reset-confirm-title">
+
+      <div class="settings-header">
+        <div>
+          <p class="settings-eyebrow">CONFIRM RESET</p>
+          <h2 id="reset-confirm-title">초기화 확인</h2>
+        </div>
+
+        <button id="close-reset-confirm" class="close-settings"
+          type="button" aria-label="초기화 확인 창 닫기">✕</button>
+      </div>
+
+      <p id="reset-confirm-description" class="cheat-description">
+        계속하려면 아래 입력창에 초기화라고 입력해 줘.
+      </p>
+
+      <label class="cheat-input-label" for="reset-confirm-input">
+        확인 문구 입력
+      </label>
+
+      <input id="reset-confirm-input" class="cheat-number-input"
+        type="text" autocomplete="off" spellcheck="false"
+        placeholder="초기화 입력">
+
+      <p id="reset-confirm-message" class="settings-message" aria-live="polite">
+        '초기화'를 입력해야 진행할 수 있어.
+      </p>
+
+      <div class="settings-actions">
+        <button id="cancel-reset-confirm" class="secondary-button" type="button">취소</button>
+        <button id="apply-reset-confirm" class="primary-button" type="button">초기화 확인</button>
+      </div>
     </section>
   </div>
 
