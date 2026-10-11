@@ -657,13 +657,24 @@
       actualPattern,
       result
     ) {
+      // 미리 보기 효과는 설정과 관계없이 한 번 실행한다.
+      const hadPreviewOverride =
+        typeof pendingEffectOverride !== "undefined" &&
+        Boolean(pendingEffectOverride);
+
       const returnedPattern =
         originalTriggerNextResultEffect.apply(this, arguments);
 
       const effectPattern =
         returnedPattern || actualPattern;
 
+      const effectsAllowed =
+        hadPreviewOverride ||
+        typeof settings === "undefined" ||
+        settings.rareEffects !== false;
+
       if (
+        effectsAllowed &&
         effectPattern &&
         CUSTOM_RARITIES[effectPattern.level]
       ) {
@@ -680,16 +691,461 @@
   }
 
   /* =========================================
-     7. 외부 파일에서 사용할 수 있는 정보
+     7. 기존 희귀도 목록·통계·필터와 연결
+     기존 script.js의 추첨 로직을 대체하지 않는다.
+  ========================================= */
+
+  const EXTRA_HISTORY_FILTER_KEY =
+    "violetRandomExtraRareHistoryFilterV1";
+
+  function restoreExtendedRareHistory() {
+    // 메인 JS가 먼저 읽다가 놓친 확장 희귀도 기록을 다시 판정한다.
+    try {
+      const rawProgress = localStorage.getItem("violetRandomProgress");
+      const savedProgress = rawProgress
+        ? JSON.parse(rawProgress)
+        : null;
+
+      const savedRareHistory = savedProgress?.rareHistory;
+
+      if (
+        !Array.isArray(savedRareHistory) ||
+        typeof rareHistory === "undefined" ||
+        typeof renderRareHistory !== "function"
+      ) {
+        return;
+      }
+
+      const rebuilt = savedRareHistory
+        .filter(entry =>
+          entry &&
+          Number.isFinite(Number(entry.value)) &&
+          Number(entry.value) >= 0 &&
+          Number(entry.value) <= 9999999
+        )
+        .map(entry => {
+          const value = Number(entry.value);
+          const pattern = window.getRarePattern(String(value));
+
+          if (!pattern || pattern.level === "common") {
+            return null;
+          }
+
+          return { value, pattern };
+        })
+        .filter(Boolean)
+        .slice(0, 10);
+
+      rareHistory = rebuilt;
+
+      renderRareHistory();
+
+      if (typeof saveProgress === "function") {
+        saveProgress();
+      }
+    } catch (error) {
+      console.warn(
+        "[Violet Random] 희귀 기록을 다시 판정하지 못했어.",
+        error
+      );
+    }
+  }
+
+  function installRarityDataIntegration() {
+    // 메인 JS가 관리하는 등급 배열에 확장 등급을 추가한다.
+    if (
+      typeof RARITY_ORDER !== "undefined" &&
+      Array.isArray(RARITY_ORDER)
+    ) {
+      const highRarities = [
+        "singularity",
+        "infinity",
+        "astral"
+      ];
+
+      const middleRarities = [
+        "nova",
+        "nebula",
+        "spectrum",
+        "orbit",
+        "crystal",
+        "starlight",
+        "luminous"
+      ];
+
+      const highMissing = highRarities.filter(
+        level => !RARITY_ORDER.includes(level)
+      );
+
+      if (highMissing.length > 0) {
+        RARITY_ORDER.splice(0, 0, ...highMissing);
+      }
+
+      const middleMissing = middleRarities.filter(
+        level => !RARITY_ORDER.includes(level)
+      );
+
+      if (middleMissing.length > 0) {
+        let insertAt = RARITY_ORDER.indexOf("seraph");
+
+        if (insertAt < 0) {
+          insertAt = Math.max(0, RARITY_ORDER.length - 1);
+        }
+
+        RARITY_ORDER.splice(insertAt, 0, ...middleMissing);
+      }
+    }
+
+    // 통계 객체에도 모든 추가 등급의 항목을 만든다.
+    if (
+      typeof drawStats !== "undefined" &&
+      drawStats &&
+      drawStats.rarities &&
+      typeof drawStats.rarities === "object"
+    ) {
+      Object.keys(CUSTOM_RARITIES).forEach(level => {
+        if (!Number.isFinite(drawStats.rarities[level])) {
+          drawStats.rarities[level] = 0;
+        }
+      });
+    }
+
+    // 새 등급의 이름이 Common으로 표시되는 것을 방지한다.
+    if (
+      typeof RARITY_LABELS !== "undefined" &&
+      RARITY_LABELS &&
+      typeof RARITY_LABELS === "object"
+    ) {
+      Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
+        RARITY_LABELS[level] = rarity.label;
+      });
+    }
+
+    // 저장된 확장 희귀도 통계가 있다면 복구한다.
+    try {
+      const rawProgress = localStorage.getItem("violetRandomProgress");
+      const savedProgress = rawProgress
+        ? JSON.parse(rawProgress)
+        : null;
+
+      const savedRarities = savedProgress?.drawStats?.rarities;
+
+      if (
+        savedRarities &&
+        typeof savedRarities === "object" &&
+        typeof drawStats !== "undefined" &&
+        drawStats.rarities
+      ) {
+        Object.keys(CUSTOM_RARITIES).forEach(level => {
+          const savedValue = Number(savedRarities[level]);
+
+          if (Number.isFinite(savedValue) && savedValue >= 0) {
+            drawStats.rarities[level] = savedValue;
+          }
+        });
+      }
+    } catch (error) {
+      console.warn(
+        "[Violet Random] 확장 희귀도 통계를 복구하지 못했어.",
+        error
+      );
+    }
+
+    restoreExtendedRareHistory();
+
+    // 확장 등급이 통계 화면에 표시되도록 갱신한다.
+    if (typeof renderStatistics === "function") {
+      try {
+        renderStatistics();
+      } catch (error) {
+        console.warn(
+          "[Violet Random] 확장 희귀도 통계 갱신을 건너뛰었어.",
+          error
+        );
+      }
+    }
+
+    if (typeof syncRarityTableConditions === "function") {
+      try {
+        syncRarityTableConditions();
+      } catch (error) {
+        console.warn(
+          "[Violet Random] 희귀도 표 동기화를 건너뛰었어.",
+          error
+        );
+      }
+    }
+  }
+
+  function getStoredExtraHistorySelection() {
+    try {
+      const raw = localStorage.getItem(EXTRA_HISTORY_FILTER_KEY);
+
+      if (raw === null) return null;
+
+      const parsed = JSON.parse(raw);
+
+      if (!Array.isArray(parsed)) return null;
+
+      return parsed.filter(level =>
+        Object.prototype.hasOwnProperty.call(CUSTOM_RARITIES, level)
+      );
+    } catch (error) {
+      console.warn(
+        "[Violet Random] 추가 희귀 기록 설정을 읽지 못했어.",
+        error
+      );
+
+      return null;
+    }
+  }
+
+  function saveExtraHistorySelection() {
+    const grid = document.querySelector(".rare-history-filter-grid");
+
+    if (!grid) return;
+
+    const selected = Array.from(
+      grid.querySelectorAll(
+        'input[name="rare-history-rarity"]:checked'
+      )
+    )
+      .map(input => input.value)
+      .filter(level =>
+        Object.prototype.hasOwnProperty.call(CUSTOM_RARITIES, level)
+      );
+
+    try {
+      localStorage.setItem(
+        EXTRA_HISTORY_FILTER_KEY,
+        JSON.stringify(selected)
+      );
+    } catch (error) {
+      console.warn(
+        "[Violet Random] 추가 희귀 기록 설정을 저장하지 못했어.",
+        error
+      );
+    }
+  }
+
+  function createRarityBadgeLabel(level, title) {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
+    const badge = document.createElement("span");
+
+    input.type = "checkbox";
+    input.name = "rare-history-rarity";
+    input.value = level;
+
+    badge.className = `rarity-badge ${level}`;
+    badge.textContent = title;
+
+    label.append(input, badge);
+
+    return { label, input };
+  }
+
+  function installRareHistoryFilterOptions() {
+    const grid = document.querySelector(".rare-history-filter-grid");
+
+    if (
+      !grid ||
+      typeof rareHistoryFilterInputs === "undefined" ||
+      !Array.isArray(rareHistoryFilterInputs)
+    ) {
+      return;
+    }
+
+    const storedSelection = getStoredExtraHistorySelection();
+    const isFirstSetup = storedSelection === null;
+
+    Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
+      let input = grid.querySelector(
+        `input[name="rare-history-rarity"][value="${level}"]`
+      );
+
+      if (!input) {
+        const created = createRarityBadgeLabel(
+          level,
+          rarity.label
+        );
+
+        input = created.input;
+        grid.appendChild(created.label);
+      }
+
+      // 기존 메인 JS의 배열에도 포함시킨다.
+      if (!rareHistoryFilterInputs.includes(input)) {
+        rareHistoryFilterInputs.push(input);
+      }
+
+      input.checked = isFirstSetup
+        ? true
+        : storedSelection.includes(level);
+
+      // 새 입력 요소에는 직접 이벤트를 연결한다.
+      input.addEventListener("change", () => {
+        if (typeof saveRareHistoryLevels === "function") {
+          saveRareHistoryLevels();
+        }
+
+        saveExtraHistorySelection();
+      });
+    });
+
+    // 전체 선택 / 전체 해제 이후 확장 등급 설정도 저장한다.
+    const saveAfterBulkChange = () => {
+      window.setTimeout(saveExtraHistorySelection, 0);
+    };
+
+    document
+      .getElementById("rare-history-filter-all")
+      ?.addEventListener("click", saveAfterBulkChange);
+
+    document
+      .getElementById("rare-history-filter-none")
+      ?.addEventListener("click", saveAfterBulkChange);
+
+    // 필터 내부 상태와 저장 데이터를 동기화한다.
+    if (typeof saveRareHistoryLevels === "function") {
+      saveRareHistoryLevels();
+    }
+
+    // 확장 기능을 처음 설치한 경우 새 등급은 기본 선택한다.
+    if (isFirstSetup) {
+      saveExtraHistorySelection();
+    }
+  }
+
+  function installAutoStopOptions() {
+    const grid = document.querySelector(".auto-rarity-grid");
+
+    if (!grid) return;
+
+    Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
+      if (
+        grid.querySelector(
+          `input[name="auto-stop-rarity"][value="${level}"]`
+        )
+      ) {
+        return;
+      }
+
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      const badge = document.createElement("span");
+
+      input.type = "checkbox";
+      input.name = "auto-stop-rarity";
+      input.value = level;
+
+      badge.className = `rarity-badge ${level}`;
+      badge.textContent = rarity.label;
+
+      label.append(input, badge);
+      grid.appendChild(label);
+    });
+  }
+
+  function installReplayPreviewOptions() {
+    const grid = document.querySelector(".replay-grid");
+
+    if (!grid) return;
+
+    Object.entries(CUSTOM_RARITIES).forEach(([level, rarity]) => {
+      if (
+        grid.querySelector(`[data-preview-rarity="${level}"]`)
+      ) {
+        return;
+      }
+
+      const button = document.createElement("button");
+
+      button.type = "button";
+      button.className = "replay-rarity-button";
+      button.dataset.previewRarity = level;
+
+      const badge = document.createElement("span");
+
+      badge.className = `rarity-badge ${level}`;
+      badge.textContent = rarity.label;
+
+      const description = document.createElement("small");
+
+      description.textContent = rarity.detail;
+
+      button.append(badge, description);
+
+      // 동적으로 추가한 버튼에도 기존과 같은 미리보기 동작을 연결한다.
+      button.addEventListener("click", () => {
+        if (
+          typeof RARITY_ORDER !== "undefined" &&
+          !RARITY_ORDER.includes(level)
+        ) {
+          return;
+        }
+
+        if (typeof pendingEffectOverride !== "undefined") {
+          pendingEffectOverride = {
+            title: `✦ ${rarity.label.toUpperCase()} EFFECT ✦`,
+            level,
+            detail: rarity.detail
+          };
+        }
+
+        document
+          .querySelectorAll("[data-preview-rarity]")
+          .forEach(item => {
+            item.classList.toggle("selected", item === button);
+          });
+
+        const message = document.getElementById("replay-message");
+
+        if (message) {
+          message.textContent =
+            `${rarity.label} 연출을 선택했어. 창을 닫고 다음 숫자를 뽑으면 적용돼!`;
+        }
+
+        if (typeof closeReplay === "function") {
+          closeReplay();
+        }
+
+        const status = document.getElementById("status");
+
+        if (status) {
+          status.textContent =
+            `다음 추첨에 ${rarity.label} 연출이 예약됐어.`;
+        }
+      });
+
+      grid.appendChild(button);
+    });
+  }
+
+  function installExtendedRarityIntegrations() {
+    try {
+      installRarityDataIntegration();
+      installRareHistoryFilterOptions();
+      installAutoStopOptions();
+      installReplayPreviewOptions();
+    } catch (error) {
+      console.error(
+        "[Violet Random] 추가 희귀도 연동 중 오류가 발생했어.",
+        error
+      );
+    }
+  }
+
+  installExtendedRarityIntegrations();
+
+  /* =========================================
+     8. 외부 파일에서 사용할 수 있는 정보
   ========================================= */
 
   window.VioletRandomExtraRarities = {
     rarities: CUSTOM_RARITIES,
-
     getCustomPattern,
-
     playCustomImpact,
-
     version: "1.0.0"
   };
 
@@ -697,3 +1153,4 @@
     "[Violet Random] 추가 희귀도 모듈이 준비됐어."
   );
 })();
+```
